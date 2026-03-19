@@ -11,12 +11,20 @@ type GenerateState =
   | { status: 'error'; message: string }
 
 function emptyResult(): GeneratedResult {
-  return { definitions: [], examples: [], synonyms: [], antonyms: [], notes: '' }
+  return {
+    definition: '',
+    simpleDefinition: '',
+    exampleSentence: '',
+    synonyms: [],
+    nuanceNote: '',
+    gmatUsageNote: '',
+    definitions: [],
+    examples: [],
+  }
 }
 
 export function HomePage() {
-  const [word, setWord] = useState('')
-  const [context, setContext] = useState('')
+  const [text, setText] = useState('')
   const [state, setState] = useState<GenerateState>({ status: 'idle' })
   const [saving, setSaving] = useState(false)
   const [userReady, setUserReady] = useState(false)
@@ -24,7 +32,7 @@ export function HomePage() {
 
   useEffect(() => onAuthStateChanged(auth, () => setUserReady(true)), [])
 
-  const canGenerate = useMemo(() => word.trim().length > 0, [word])
+  const canGenerate = useMemo(() => text.trim().length > 0, [text])
 
   async function generate() {
     setState({ status: 'loading' })
@@ -42,7 +50,7 @@ export function HomePage() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ word: word.trim(), context: context.trim() || undefined }),
+        body: JSON.stringify({ text: text.trim() }),
       })
 
       if (!res.ok) {
@@ -64,7 +72,9 @@ export function HomePage() {
     if (state.status !== 'ready') return
     setSaving(true)
     try {
-      const { id } = await saveWord({ word, result: state.result })
+      const trimmed = text.trim()
+      const type = trimmed.includes(' ') ? 'phrase' : 'word'
+      const { id } = await saveWord({ text: trimmed, type, result: state.result })
       setState({
         status: 'ready',
         result: state.result,
@@ -90,18 +100,11 @@ export function HomePage() {
         <div style={{ display: 'grid', gap: 10 }}>
           <input
             className="input"
-            placeholder="Word (e.g., 'obdurate')"
-            value={word}
-            onChange={(e) => setWord(e.target.value)}
+            placeholder="Word or phrase (e.g., 'obdurate' or 'on the verge of')"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
             autoCapitalize="none"
             autoCorrect="off"
-          />
-          <textarea
-            className="input"
-            placeholder="Optional context (where you saw it)"
-            value={context}
-            onChange={(e) => setContext(e.target.value)}
-            rows={3}
           />
 
           <div style={{ display: 'flex', gap: 10 }}>
@@ -115,8 +118,7 @@ export function HomePage() {
             <button
               className="btn"
               onClick={() => {
-                setWord('')
-                setContext('')
+                setText('')
                 setState({ status: 'idle' })
               }}
               disabled={state.status === 'loading'}
@@ -152,7 +154,7 @@ export function HomePage() {
         <div style={{ height: 10 }} />
 
         {state.status === 'idle' ? (
-          <div className="muted">Enter a word and tap Generate.</div>
+          <div className="muted">Enter a word or phrase and tap Generate.</div>
         ) : null}
         {state.status === 'error' ? (
           <div style={{ color: 'var(--danger)' }}>{state.message}</div>
@@ -167,20 +169,39 @@ export function HomePage() {
 function ResultView({ result }: { result: GeneratedResult }) {
   return (
     <div style={{ display: 'grid', gap: 12 }}>
-      <Section title="Definitions" items={result.definitions} />
-      <Section title="Examples" items={result.examples} />
-      <Section title="Synonyms" items={result.synonyms} inline />
-      <Section title="Antonyms" items={result.antonyms} inline />
-      {result.notes ? (
-        <div>
-          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>
-            Notes
-          </div>
-          <div className="muted" style={{ whiteSpace: 'pre-wrap' }}>
-            {result.notes}
-          </div>
-        </div>
+      <Single title="Definition" value={result.definition} />
+      <Single title="Simple definition" value={result.simpleDefinition} />
+      <Single title="Example sentence" value={result.exampleSentence ?? ''} />
+      <Section title="Synonyms" items={result.synonyms ?? []} inline />
+      <Single title="Nuance note" value={result.nuanceNote ?? ''} />
+      <Single title="GMAT usage note" value={result.gmatUsageNote ?? ''} />
+
+      {(result.definitions ?? []).length > 0 ? (
+        <Section title="Extra definitions" items={result.definitions ?? []} />
       ) : null}
+      {(result.examples ?? []).length > 0 ? (
+        <Section title="Extra examples" items={result.examples ?? []} />
+      ) : null}
+    </div>
+  )
+}
+
+function Single(props: { title: string; value: string }) {
+  const v = props.value?.trim()
+  return (
+    <div>
+      <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>
+        {props.title}
+      </div>
+      {v ? (
+        <div className="muted" style={{ whiteSpace: 'pre-wrap' }}>
+          {v}
+        </div>
+      ) : (
+        <div className="muted" style={{ fontSize: 13 }}>
+          —
+        </div>
+      )}
     </div>
   )
 }

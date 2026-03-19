@@ -20,26 +20,53 @@ function requireUserId(): string {
 }
 
 export async function saveWord(params: {
-  word: string
+  // New shape (preferred)
+  text?: string
+  type?: 'word' | 'phrase'
+  // Back-compat shape
+  word?: string
   result: GeneratedResult
   tags?: string[]
 }) {
   const uid = requireUserId()
-  const wordNormalized = params.word.trim()
-  if (!wordNormalized) throw new Error('Word is required.')
+  const rawText = (params.text ?? params.word ?? '').trim()
+  if (!rawText) throw new Error('Text is required.')
+  const normalizedText = rawText.replace(/\s+/g, ' ')
+  const inferredType: 'word' | 'phrase' =
+    params.type ?? (normalizedText.includes(' ') ? 'phrase' : 'word')
+  const textLower = normalizedText.toLowerCase()
 
   const wordsCol = collection(db, 'users', uid, 'words')
-  const existingQ = query(
-    wordsCol,
-    where('word', '==', wordNormalized.toLowerCase()),
+  // Prefer dedupe by textLower (works for both words and phrases).
+  const existingByText = await getDocs(
+    query(wordsCol, where('textLower', '==', textLower)),
   )
-  const existing = await getDocs(existingQ)
+  // Back-compat: older docs might only have `word` for single words.
+  const existingByWord =
+    inferredType === 'word'
+      ? await getDocs(query(wordsCol, where('word', '==', textLower)))
+      : null
+  const existing =
+    !existingByText.empty ? existingByText : existingByWord ?? existingByText
 
   const payload: Omit<WordDoc, 'createdAt' | 'updatedAt'> & {
     createdAt?: unknown
     updatedAt: unknown
   } = {
-    word: wordNormalized.toLowerCase(),
+    // legacy field (keep for compatibility; only meaningful for single words)
+    word: inferredType === 'word' ? textLower : textLower,
+    // new fields for simplified model
+    text: normalizedText,
+    textLower,
+    type: inferredType,
+    definition: params.result.definition ?? '',
+    simpleDefinition: params.result.simpleDefinition ?? '',
+    exampleSentence: params.result.exampleSentence,
+    synonyms: Array.isArray(params.result.synonyms) ? params.result.synonyms : [],
+    nuanceNote: params.result.nuanceNote,
+    gmatUsageNote: params.result.gmatUsageNote,
+    status: 'learning',
+    flagged: false,
     source: 'gpt',
     result: params.result,
     tags: params.tags ?? [],

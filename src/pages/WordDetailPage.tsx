@@ -63,17 +63,19 @@ function WordDetailView({ data }: { data: WordDoc }) {
       </div>
 
       <div style={{ display: 'grid', gap: 12 }}>
-        <Block title="Definitions" items={data.result.definitions} />
-        <Block title="Examples" items={data.result.examples} />
-        <Block title="Synonyms" items={data.result.synonyms} inline />
-        <Block title="Antonyms" items={data.result.antonyms} inline />
-        {data.result.notes ? (
+        <Block title="Definitions" items={data.result.definitions ?? []} />
+        <Block title="Examples" items={data.result.examples ?? []} />
+        <Block title="Synonyms" items={data.result.synonyms ?? []} inline />
+        <Block title="Antonyms" items={data.result.antonyms ?? []} inline />
+        {data.result.nuanceNote || data.result.gmatUsageNote ? (
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>
               Notes
             </div>
             <div className="muted" style={{ whiteSpace: 'pre-wrap' }}>
-              {data.result.notes}
+              {[data.result.nuanceNote, data.result.gmatUsageNote]
+                .filter(Boolean)
+                .join('\n\n')}
             </div>
           </div>
         ) : null}

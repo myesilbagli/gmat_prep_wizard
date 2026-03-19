@@ -1,9 +1,16 @@
 export type GeneratedResult = {
-  definitions: string[]
-  examples: string[]
-  synonyms: string[]
-  antonyms: string[]
-  notes: string
+  // New (preferred) structured fields
+  definition: string
+  simpleDefinition: string
+  exampleSentence?: string
+  synonyms?: string[]
+  nuanceNote?: string
+  gmatUsageNote?: string
+
+  // Keep extra detail (optional) for richer displays / future use.
+  definitions?: string[]
+  examples?: string[]
+  antonyms?: string[]
 }
 
 export type WordDoc = {
@@ -14,5 +21,19 @@ export type WordDoc = {
   result: GeneratedResult
   tags: string[]
   difficulty?: number
+  // New fields used by the simplified vocab model.
+  text?: string
+  textLower?: string
+  type?: 'word' | 'phrase'
+  definition?: string
+  simpleDefinition?: string
+  exampleSentence?: string
+  synonyms?: string[]
+  nuanceNote?: string
+  gmatUsageNote?: string
+  // Back-compat (older docs)
+  note?: string
+  status?: 'do_not_know' | 'learning' | 'know'
+  flagged?: boolean
 }
 

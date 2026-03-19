@@ -80,7 +80,7 @@ export function AppLayout() {
             Lookup
           </NavLink>
           <NavLink
-            to="/words"
+            to="/learn"
             style={({ isActive }) => ({
               textDecoration: 'none',
               padding: '10px 12px',
@@ -89,7 +89,19 @@ export function AppLayout() {
               border: isActive ? '1px solid rgba(124,58,237,0.55)' : '1px solid transparent',
             })}
           >
-            My Words
+            Learn
+          </NavLink>
+          <NavLink
+            to="/test"
+            style={({ isActive }) => ({
+              textDecoration: 'none',
+              padding: '10px 12px',
+              borderRadius: 12,
+              background: isActive ? 'rgba(124,58,237,0.18)' : 'transparent',
+              border: isActive ? '1px solid rgba(124,58,237,0.55)' : '1px solid transparent',
+            })}
+          >
+            Test
           </NavLink>
         </div>
       </nav>
