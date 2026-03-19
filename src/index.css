@@ -1,16 +1,22 @@
 :root {
-  --bg: #0b0c10;
+  /* Default theme = dark */
+  --bg: #0b0e14;
   --surface: #11131a;
   --surface-2: #171a24;
   --text: #e9eaf0;
   --muted: #a6adbb;
   --border: rgba(255, 255, 255, 0.10);
   --accent: #7c3aed;
+  --accent-gradient-start: #7b81f5;
+  --accent-gradient-end: #6366f1;
   --accent-2: #22c55e;
   --danger: #ef4444;
 
   --radius: 14px;
+  --radius-pill: 999px;
   --shadow: rgba(0, 0, 0, 0.35) 0 14px 40px -20px;
+  --shadow-glow: 0 0 24px rgba(99, 102, 241, 0.25);
+  --header-bg: rgba(11, 14, 20, 0.85);
 
   --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica,
     Arial, "Apple Color Emoji", "Segoe UI Emoji";
@@ -28,6 +34,22 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+:root[data-theme='light'] {
+  --bg: #f5f5fb;
+  --surface: #ffffff;
+  --surface-2: #f3f4ff;
+  --text: #0b1220;
+  --muted: rgba(11, 18, 32, 0.68);
+  --border: rgba(11, 18, 32, 0.12);
+  --shadow: rgba(0, 0, 0, 0.12) 0 14px 40px -20px;
+  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.18);
+  --header-bg: rgba(245, 245, 251, 0.82);
+  color-scheme: light;
+  background: radial-gradient(1200px 700px at 20% -10%, rgba(124, 58, 237, 0.10), transparent 55%),
+    radial-gradient(900px 600px at 90% 0%, rgba(99, 102, 241, 0.08), transparent 55%),
+    var(--bg);
 }
 
 #root {
@@ -59,7 +81,7 @@ textarea {
 }
 
 .card {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+  background: linear-gradient(180deg, var(--surface), var(--surface-2));
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
@@ -68,14 +90,22 @@ textarea {
 
 .btn {
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.06);
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
   color: var(--text);
   border-radius: 12px;
   padding: 10px 12px;
 }
 .btnPrimary {
-  border-color: rgba(124, 58, 237, 0.6);
-  background: rgba(124, 58, 237, 0.18);
+  border: none;
+  background: linear-gradient(135deg, var(--accent-gradient-start), var(--accent-gradient-end));
+  color: #fff;
+  border-radius: var(--radius-pill);
+  padding: 12px 20px;
+  font-weight: 700;
+  box-shadow: var(--shadow-glow);
+}
+.btnPrimary:hover:not(:disabled) {
+  filter: brightness(1.08);
 }
 .btn:disabled {
   opacity: 0.6;
@@ -86,7 +116,7 @@ textarea {
   padding: 12px 12px;
   border-radius: 12px;
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.05);
+  background: color-mix(in srgb, var(--surface) 75%, transparent);
   color: var(--text);
   outline: none;
 }

@@ -7,6 +7,7 @@ import {
   deleteVocabItem,
 } from '../lib/vocab'
 import { auth } from '../lib/firebase'
+import { IconFlag, IconSearch, IconTrash } from '../components/Icons'
 
 type Filter = 'all' | 'do_not_know' | 'learning' | 'know' | 'flagged'
 type ViewMode = 'list' | 'flashcards' | 'paragraph'
@@ -221,141 +222,164 @@ export function LearnPage() {
         }
       `}</style>
       {/* #endregion agent log */}
-      <div style={{ marginBottom: 12 }}>
-        <h2 style={{ margin: 0, fontSize: 20 }}>Learn</h2>
-        <div className="muted" style={{ fontSize: 13 }}>
-          Read and organize your saved words and phrases.
-        </div>
+      <div style={{ marginBottom: 24 }}>
+        <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, letterSpacing: -0.3 }}>
+          My Learning Path
+        </h1>
+        <p className="muted" style={{ margin: '8px 0 0', fontSize: 15 }}>
+          Refine your GMAT vocabulary with targeted study sessions.
+        </p>
       </div>
 
       <div
         className="card"
         style={{
-          padding: 12,
-          marginBottom: 12,
+          padding: 14,
+          marginBottom: 16,
           display: 'grid',
-          gap: 10,
+          gap: 12,
         }}
       >
-        <input
-          className="input"
-          placeholder="Search by text…"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
         <div
           style={{
             display: 'flex',
-            flexWrap: 'wrap',
-            gap: 6,
-            fontSize: 13,
+            alignItems: 'center',
+            gap: 10,
+            padding: '10px 14px',
+            borderRadius: 12,
+            border: '1px solid var(--border)',
+            background: 'var(--bg)',
           }}
         >
-          <FilterChip
-            label="All"
-            active={filter === 'all'}
-            onClick={() => setFilter('all')}
-          />
-          <FilterChip
-            label="Do Not Know"
-            active={filter === 'do_not_know'}
-            onClick={() => setFilter('do_not_know')}
-          />
-          <FilterChip
-            label="Learning"
-            active={filter === 'learning'}
-            onClick={() => setFilter('learning')}
-          />
-          <FilterChip
-            label="Know"
-            active={filter === 'know'}
-            onClick={() => setFilter('know')}
-          />
-          <FilterChip
-            label="Flagged"
-            active={filter === 'flagged'}
-            onClick={() => setFilter('flagged')}
+          <IconSearch style={{ color: 'var(--muted)', flexShrink: 0 }} />
+          <input
+            className="input"
+            placeholder="Search words..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            style={{
+              border: 'none',
+              background: 'transparent',
+              padding: 0,
+              flex: 1,
+            }}
           />
         </div>
         <div
           style={{
             display: 'flex',
-            gap: 8,
-            marginTop: 8,
-            fontSize: 13,
+            flexWrap: 'wrap',
             alignItems: 'center',
+            gap: 8,
           }}
         >
-          <button
-            type="button"
-            className="btn"
-            onClick={() => {
-              setViewMode('list')
-              setShowAnswer(false)
-            }}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            <FilterChip
+              label="All"
+              active={filter === 'all'}
+              onClick={() => setFilter('all')}
+            />
+            <FilterChip
+              label="Do Not Know"
+              active={filter === 'do_not_know'}
+              onClick={() => setFilter('do_not_know')}
+            />
+            <FilterChip
+              label="Learning"
+              active={filter === 'learning'}
+              onClick={() => setFilter('learning')}
+            />
+            <FilterChip
+              label="Know"
+              active={filter === 'know'}
+              onClick={() => setFilter('know')}
+            />
+            <FilterChip
+              label="Flagged"
+              active={filter === 'flagged'}
+              onClick={() => setFilter('flagged')}
+              icon={<IconFlag style={{ marginRight: 4 }} />}
+            />
+          </div>
+          <div
             style={{
-              padding: '6px 10px',
-              borderRadius: 999,
-              border: viewMode === 'list'
-                ? '1px solid rgba(124,58,237,0.7)'
-                : '1px solid var(--border)',
-              background: viewMode === 'list'
-                ? 'rgba(124,58,237,0.18)'
-                : 'rgba(255,255,255,0.04)',
-              fontSize: 12,
+              marginLeft: 'auto',
+              display: 'flex',
+              gap: 6,
+              alignItems: 'center',
             }}
           >
-            List view
-          </button>
-          <button
-            type="button"
-            className="btn"
-            onClick={() => {
-              setViewMode('flashcards')
-              setFlashIndex(0)
-              setShowAnswer(false)
-            }}
-            style={{
-              padding: '6px 10px',
-              borderRadius: 999,
-              border: viewMode === 'flashcards'
-                ? '1px solid rgba(124,58,237,0.7)'
-                : '1px solid var(--border)',
-              background: viewMode === 'flashcards'
-                ? 'rgba(124,58,237,0.18)'
-                : 'rgba(255,255,255,0.04)',
-              fontSize: 12,
-            }}
-          >
-            Flashcards
-          </button>
-          <button
-            type="button"
-            className="btn"
-            onClick={() => {
-              setViewMode('paragraph')
-              setShowAnswer(false)
-              setParaState({ status: 'idle' })
-            }}
-            style={{
-              padding: '6px 10px',
-              borderRadius: 999,
-              border: viewMode === 'paragraph'
-                ? '1px solid rgba(124,58,237,0.7)'
-                : '1px solid var(--border)',
-              background: viewMode === 'paragraph'
-                ? 'rgba(124,58,237,0.18)'
-                : 'rgba(255,255,255,0.04)',
-              fontSize: 12,
-            }}
-          >
-            Paragraph
-          </button>
-          {viewMode === 'flashcards' && (
-            <span className="muted" style={{ fontSize: 12 }}>
-              {filtered.length} item{filtered.length === 1 ? '' : 's'} in deck
-            </span>
-          )}
+            <button
+              type="button"
+              className="btn"
+              onClick={() => {
+                setViewMode('list')
+                setShowAnswer(false)
+              }}
+              style={{
+                padding: '6px 12px',
+                borderRadius: 999,
+                border: viewMode === 'list'
+                  ? '1px solid var(--accent-gradient-end)'
+                  : '1px solid var(--border)',
+                background: viewMode === 'list'
+                  ? 'rgba(99, 102, 241, 0.18)'
+                  : 'rgba(255,255,255,0.04)',
+                fontSize: 12,
+              }}
+            >
+              List view
+            </button>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => {
+                setViewMode('flashcards')
+                setFlashIndex(0)
+                setShowAnswer(false)
+              }}
+              style={{
+                padding: '6px 12px',
+                borderRadius: 999,
+                border: viewMode === 'flashcards'
+                  ? '1px solid var(--accent-gradient-end)'
+                  : '1px solid var(--border)',
+                background: viewMode === 'flashcards'
+                  ? 'rgba(99, 102, 241, 0.18)'
+                  : 'rgba(255,255,255,0.04)',
+                fontSize: 12,
+              }}
+            >
+              Flashcards
+            </button>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => {
+                setViewMode('paragraph')
+                setShowAnswer(false)
+                setParaState({ status: 'idle' })
+              }}
+              style={{
+                padding: '6px 12px',
+                borderRadius: 999,
+                border: viewMode === 'paragraph'
+                  ? '1px solid var(--accent-gradient-end)'
+                  : '1px solid var(--border)',
+                background: viewMode === 'paragraph'
+                  ? 'rgba(99, 102, 241, 0.18)'
+                  : 'rgba(255,255,255,0.04)',
+                fontSize: 12,
+              }}
+            >
+              Paragraph
+            </button>
+            {viewMode === 'flashcards' && (
+              <span className="muted" style={{ fontSize: 12 }}>
+                {filtered.length} item{filtered.length === 1 ? '' : 's'} in deck
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -393,10 +417,10 @@ export function LearnPage() {
       ) : viewMode === 'paragraph' ? (
         <div
           className="card"
-          style={{ padding: 14, marginTop: 8, overflow: 'visible' }}
+          style={{ padding: 18, marginTop: 8, overflow: 'visible' }}
         >
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <div style={{ fontWeight: 800 }}>Paragraph practice</div>
+            <div style={{ fontWeight: 800, fontSize: 16 }}>Paragraph practice</div>
             <span className="muted" style={{ fontSize: 12 }}>
               Uses 5 random items from Do Not Know + Learning
             </span>
@@ -530,6 +554,7 @@ function FilterChip(props: {
   label: string
   active: boolean
   onClick: () => void
+  icon?: React.ReactNode
 }) {
   return (
     <button
@@ -540,14 +565,17 @@ function FilterChip(props: {
         padding: '6px 10px',
         borderRadius: 999,
         border: props.active
-          ? '1px solid rgba(124,58,237,0.7)'
+          ? '1px solid var(--accent-gradient-end)'
           : '1px solid var(--border)',
         background: props.active
-          ? 'rgba(124,58,237,0.18)'
+          ? 'rgba(99, 102, 241, 0.18)'
           : 'rgba(255,255,255,0.04)',
         fontSize: 12,
+        display: 'inline-flex',
+        alignItems: 'center',
       }}
     >
+      {props.icon}
       {props.label}
     </button>
   )
@@ -565,48 +593,96 @@ function VocabCard(props: {
     <div
       className="card"
       style={{
-        padding: 12,
+        padding: 16,
         display: 'grid',
-        gap: 8,
+        gap: 12,
       }}
     >
       <div
         style={{
           display: 'flex',
           justifyContent: 'space-between',
-          gap: 10,
+          gap: 12,
           alignItems: 'flex-start',
         }}
       >
         <div>
-          <div style={{ fontWeight: 700 }}>{item.text}</div>
           <div
-            className="muted"
-            style={{ fontSize: 11, textTransform: 'uppercase', marginTop: 2 }}
+            style={{
+              fontSize: 20,
+              fontWeight: 800,
+              letterSpacing: -0.2,
+              color: 'var(--text)',
+            }}
           >
-            {item.type === 'phrase' ? 'Phrase' : 'Word'}
+            {item.text}
           </div>
+          <span
+            className="muted"
+            style={{
+              display: 'inline-block',
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: 0.6,
+              textTransform: 'uppercase',
+              marginTop: 6,
+              padding: '4px 8px',
+              borderRadius: 6,
+              border: '1px solid var(--border)',
+              background: 'rgba(255,255,255,0.04)',
+            }}
+          >
+            {item.type === 'phrase' ? 'PHRASE' : 'WORD'}
+          </span>
         </div>
-        <button
-          type="button"
-          className="btn"
-          onClick={() => props.onToggleFlagged(item.id, !item.flagged)}
-          style={{ fontSize: 12, padding: '6px 8px' }}
-        >
-          {item.flagged ? 'Unflag' : 'Flag'}
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <button
+            type="button"
+            className="btn"
+            onClick={() => props.onToggleFlagged(item.id, !item.flagged)}
+            style={{
+              padding: '8px',
+              border: '1px solid var(--border)',
+              borderRadius: 10,
+              color: item.flagged ? 'var(--accent)' : 'var(--muted)',
+            }}
+            aria-label={item.flagged ? 'Unflag' : 'Flag'}
+          >
+            <IconFlag />
+          </button>
+          <button
+            type="button"
+            className="btn"
+            onClick={() => {
+              const ok = window.confirm(
+                `Delete "${item.text}" from your library? This cannot be undone.`,
+              )
+              if (!ok) return
+              void deleteVocabItem(item.id)
+            }}
+            style={{
+              padding: '8px',
+              border: '1px solid var(--border)',
+              borderRadius: 10,
+              color: 'var(--danger)',
+            }}
+            aria-label="Delete"
+          >
+            <IconTrash />
+          </button>
+        </div>
       </div>
 
-      <div className="muted" style={{ fontSize: 13 }}>
+      <p className="muted" style={{ fontSize: 14, lineHeight: 1.5, margin: 0 }}>
         {item.simpleDefinition || item.definition || 'No definition available yet.'}
-      </div>
+      </p>
 
       <div
         style={{
           display: 'flex',
           flexWrap: 'wrap',
-          gap: 6,
-          marginTop: 4,
+          gap: 8,
+          alignItems: 'center',
         }}
       >
         <StatusChip
@@ -627,29 +703,8 @@ function VocabCard(props: {
         <button
           type="button"
           className="btn"
-          onClick={() => {
-            const ok = window.confirm(
-              `Delete "${item.text}" from your library? This cannot be undone.`,
-            )
-            if (!ok) return
-            // optimistic removal is handled by parent via refetch or state update
-            void deleteVocabItem(item.id)
-          }}
-          style={{
-            fontSize: 12,
-            padding: '6px 10px',
-            color: '#fecaca',
-            borderColor: 'rgba(248,113,113,0.6)',
-            marginLeft: 'auto',
-          }}
-        >
-          Delete
-        </button>
-        <button
-          type="button"
-          className="btn"
           onClick={() => setOpen((v) => !v)}
-          style={{ fontSize: 12, padding: '6px 10px' }}
+          style={{ fontSize: 12, padding: '6px 12px', marginLeft: 'auto' }}
         >
           {open ? 'Hide details' : 'Show details'}
         </button>
@@ -659,10 +714,10 @@ function VocabCard(props: {
         <div
           style={{
             borderTop: '1px solid var(--border)',
-            marginTop: 6,
-            paddingTop: 8,
+            marginTop: 4,
+            paddingTop: 12,
             display: 'grid',
-            gap: 6,
+            gap: 8,
             fontSize: 13,
           }}
         >
@@ -835,10 +890,10 @@ function StatusChip(props: {
         padding: '6px 10px',
         borderRadius: 999,
         border: props.active
-          ? '1px solid rgba(124,58,237,0.7)'
+          ? '1px solid var(--accent-gradient-end)'
           : '1px solid var(--border)',
         background: props.active
-          ? 'rgba(124,58,237,0.18)'
+          ? 'rgba(99, 102, 241, 0.18)'
           : 'rgba(255,255,255,0.04)',
         fontSize: 12,
       }}

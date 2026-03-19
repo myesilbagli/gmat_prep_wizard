@@ -333,7 +333,7 @@ async function handleGenerateQuiz(body: any, uid: string, res: any) {
   const rawIds = Array.isArray(body?.itemIds) ? body.itemIds : []
   const itemIds = rawIds.map((x: unknown) => String(x)).filter(Boolean)
   const count =
-    typeof body?.count === 'number' && body.count > 0 && body.count <= 20
+    typeof body?.count === 'number' && body.count > 0 && body.count <= 50
       ? body.count
       : itemIds.length
 

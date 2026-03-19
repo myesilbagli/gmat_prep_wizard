@@ -3,6 +3,13 @@ import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from '../lib/firebase'
 import type { GeneratedResult } from '../lib/types'
 import { saveWord } from '../lib/words'
+import {
+  IconBook,
+  IconBookmark,
+  IconLightbulb,
+  IconQuote,
+  IconStar,
+} from '../components/Icons'
 
 type GenerateState =
   | { status: 'idle' }
@@ -54,8 +61,8 @@ export function HomePage() {
       })
 
       if (!res.ok) {
-        const text = await res.text().catch(() => '')
-        throw new Error(text || `Request failed (${res.status})`)
+        const resText = await res.text().catch(() => '')
+        throw new Error(resText || `Request failed (${res.status})`)
       }
 
       const json = (await res.json()) as GeneratedResult
@@ -83,7 +90,7 @@ export function HomePage() {
     } catch (e) {
       setState({
         status: 'error',
-        message: e instanceof Error ? e.message : 'Failed to save',
+        message: e instanceof Error ? e.message : 'Unknown error',
       })
     } finally {
       setSaving(false)
@@ -91,164 +98,319 @@ export function HomePage() {
   }
 
   return (
-    <div className="container" style={{ paddingBottom: 18 }}>
-      <div className="card" style={{ padding: 16 }}>
-        <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>
-          Lookup & Generate
-        </div>
+    <div className="container" style={{ paddingTop: 24, paddingBottom: 32 }}>
+      <div style={{ marginBottom: 24 }}>
+        <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, letterSpacing: -0.3 }}>
+          Expand your lexicon
+        </h1>
+        <p className="muted" style={{ margin: '8px 0 0', fontSize: 15 }}>
+          Enter a high-frequency GMAT word to decode its meaning and nuances.
+        </p>
+      </div>
 
-        <div style={{ display: 'grid', gap: 10 }}>
+      <div style={{ display: 'grid', gap: 14 }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '12px 14px',
+            borderRadius: 14,
+            border: '1px solid var(--border)',
+            background: 'var(--surface)',
+          }}
+        >
           <input
             className="input"
-            placeholder="Word or phrase (e.g., 'obdurate' or 'on the verge of')"
+            placeholder="Lookup & Generate"
             value={text}
             onChange={(e) => setText(e.target.value)}
             autoCapitalize="none"
             autoCorrect="off"
+            style={{
+              border: 'none',
+              background: 'transparent',
+              padding: 0,
+              flex: 1,
+            }}
           />
-
-          <div style={{ display: 'flex', gap: 10 }}>
-            <button
-              className="btn btnPrimary"
-              onClick={generate}
-              disabled={!canGenerate || state.status === 'loading' || !userReady}
-            >
-              {state.status === 'loading' ? 'Generating…' : 'Generate'}
-            </button>
-            <button
-              className="btn"
-              onClick={() => {
-                setText('')
-                setState({ status: 'idle' })
-              }}
-              disabled={state.status === 'loading'}
-            >
-              Reset
-            </button>
-          </div>
-
-          {!user ? (
-            <div className="muted" style={{ fontSize: 13 }}>
-              Sign in to generate and save your words.
-            </div>
-          ) : null}
-        </div>
-      </div>
-
-      <div style={{ height: 12 }} />
-
-      <div className="card" style={{ padding: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, flex: 1 }}>
-            Result
-          </div>
           <button
+            type="button"
             className="btn"
-            onClick={save}
-            disabled={saving || state.status !== 'ready'}
+            onClick={() => {
+              setText('')
+              setState({ status: 'idle' })
+            }}
+            disabled={state.status === 'loading'}
+            style={{ padding: '8px 12px', fontSize: 13 }}
           >
-            {saving ? 'Saving…' : 'Save'}
+            Reset
           </button>
         </div>
 
-        <div style={{ height: 10 }} />
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <button
+            className="btn btnPrimary"
+            onClick={generate}
+            disabled={!canGenerate || state.status === 'loading' || !userReady}
+          >
+            {state.status === 'loading' ? 'Generating…' : 'Generate Analysis'}
+          </button>
+        </div>
 
-        {state.status === 'idle' ? (
-          <div className="muted">Enter a word or phrase and tap Generate.</div>
+        {!user ? (
+          <p className="muted" style={{ fontSize: 13, margin: 0 }}>
+            Sign in to generate and save your words.
+          </p>
         ) : null}
-        {state.status === 'error' ? (
-          <div style={{ color: 'var(--danger)' }}>{state.message}</div>
-        ) : null}
-        {state.status === 'loading' ? <div className="muted">Working…</div> : null}
-        {state.status === 'ready' ? <ResultView result={state.result} /> : null}
+      </div>
+
+      <div style={{ height: 24 }} />
+
+      <div className="card" style={{ padding: 20 }}>
+        {state.status === 'idle' && (
+          <p className="muted" style={{ margin: 0, fontSize: 14 }}>
+            Enter a word or phrase and tap Generate Analysis.
+          </p>
+        )}
+        {state.status === 'loading' && (
+          <p className="muted" style={{ margin: 0, fontSize: 14 }}>
+            Working…
+          </p>
+        )}
+        {state.status === 'error' && (
+          <p style={{ margin: 0, color: 'var(--danger)', fontSize: 14 }}>
+            {state.message}
+          </p>
+        )}
+        {state.status === 'ready' && (
+          <WordAnalysisCard
+            word={text.trim()}
+            result={state.result}
+            onSave={save}
+            saving={saving}
+          />
+        )}
       </div>
     </div>
   )
 }
 
-function ResultView({ result }: { result: GeneratedResult }) {
-  return (
-    <div style={{ display: 'grid', gap: 12 }}>
-      <Single title="Definition" value={result.definition} />
-      <Single title="Simple definition" value={result.simpleDefinition} />
-      <Single title="Example sentence" value={result.exampleSentence ?? ''} />
-      <Section title="Synonyms" items={result.synonyms ?? []} inline />
-      <Single title="Nuance note" value={result.nuanceNote ?? ''} />
-      <Single title="GMAT usage note" value={result.gmatUsageNote ?? ''} />
-
-      {(result.definitions ?? []).length > 0 ? (
-        <Section title="Extra definitions" items={result.definitions ?? []} />
-      ) : null}
-      {(result.examples ?? []).length > 0 ? (
-        <Section title="Extra examples" items={result.examples ?? []} />
-      ) : null}
-    </div>
-  )
-}
-
-function Single(props: { title: string; value: string }) {
-  const v = props.value?.trim()
-  return (
-    <div>
-      <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>
-        {props.title}
-      </div>
-      {v ? (
-        <div className="muted" style={{ whiteSpace: 'pre-wrap' }}>
-          {v}
-        </div>
-      ) : (
-        <div className="muted" style={{ fontSize: 13 }}>
-          —
-        </div>
-      )}
-    </div>
-  )
-}
-
-function Section(props: {
-  title: string
-  items: string[]
-  inline?: boolean
+function WordAnalysisCard({
+  word,
+  result,
+  onSave,
+  saving,
+}: {
+  word: string
+  result: GeneratedResult
+  onSave: () => void
+  saving: boolean
 }) {
-  const items = (props.items ?? []).filter(Boolean)
+  const typeLabel = word.includes(' ') ? 'PHRASE' : 'WORD'
+  const exampleSentence = result.exampleSentence ?? ''
+  const wordRegex = new RegExp(`\\b(${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})\\b`, 'gi')
+
   return (
-    <div>
-      <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>
-        {props.title}
-      </div>
-      {items.length === 0 ? (
-        <div className="muted" style={{ fontSize: 13 }}>
-          —
+    <div style={{ display: 'grid', gap: 20 }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          gap: 12,
+        }}
+      >
+        <div>
+          <div
+            className="muted"
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: 0.8,
+              textTransform: 'uppercase',
+              marginBottom: 4,
+            }}
+          >
+            {typeLabel} OF THE DAY
+          </div>
+          <div
+            style={{
+              fontSize: 28,
+              fontWeight: 800,
+              letterSpacing: -0.3,
+              color: 'var(--text)',
+            }}
+          >
+            {word}
+          </div>
         </div>
-      ) : props.inline ? (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {items.map((x, i) => (
-            <span
-              key={`${x}-${i}`}
+        <button
+          type="button"
+          className="btn btnPrimary"
+          onClick={onSave}
+          disabled={saving}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '10px 16px',
+          }}
+        >
+          <IconBookmark style={{ flexShrink: 0 }} />
+          {saving ? 'Saving…' : 'Save'}
+        </button>
+      </div>
+
+      {(result.simpleDefinition || result.definition) && (
+        <div style={{ display: 'flex', gap: 12 }}>
+          <div style={{ color: 'var(--muted)', flexShrink: 0, marginTop: 2 }}>
+            <IconBook />
+          </div>
+          <div>
+            <div
               style={{
-                fontFamily: 'var(--mono)',
-                fontSize: 13,
-                padding: '6px 10px',
-                borderRadius: 999,
-                border: '1px solid var(--border)',
-                background: 'rgba(255,255,255,0.04)',
+                fontSize: 12,
+                fontWeight: 700,
+                color: 'var(--muted)',
+                marginBottom: 4,
               }}
             >
-              {x}
-            </span>
-          ))}
+              Simple definition
+            </div>
+            <p className="muted" style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>
+              {result.simpleDefinition || result.definition}
+            </p>
+          </div>
         </div>
-      ) : (
-        <ol style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 6 }}>
-          {items.map((x, i) => (
-            <li key={`${x}-${i}`} className="muted">
-              {x}
-            </li>
-          ))}
-        </ol>
+      )}
+
+      {result.definition && result.definition !== result.simpleDefinition && (
+        <div>
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              color: 'var(--muted)',
+              marginBottom: 6,
+            }}
+          >
+            Definition
+          </div>
+          <p className="muted" style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>
+            {result.definition}
+          </p>
+        </div>
+      )}
+
+      {exampleSentence && (
+        <div style={{ display: 'flex', gap: 12 }}>
+          <div style={{ color: 'var(--muted)', flexShrink: 0, marginTop: 2 }}>
+            <IconQuote />
+          </div>
+          <div>
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 700,
+                color: 'var(--muted)',
+                marginBottom: 4,
+              }}
+            >
+              Example
+            </div>
+            <p className="muted" style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>
+              {exampleSentence.split(wordRegex).map((part, i) =>
+                i % 2 === 1 ? (
+                  <strong key={i} style={{ color: 'var(--text)' }}>
+                    {part}
+                  </strong>
+                ) : (
+                  <span key={i}>{part}</span>
+                ),
+              )}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {result.synonyms && result.synonyms.length > 0 && (
+        <div>
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              color: 'var(--muted)',
+              marginBottom: 8,
+            }}
+          >
+            Synonyms
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {result.synonyms.map((s, i) => (
+              <span
+                key={`${s}-${i}`}
+                style={{
+                  fontSize: 13,
+                  padding: '6px 12px',
+                  borderRadius: 999,
+                  border: '1px solid var(--border)',
+                  background: 'rgba(255,255,255,0.04)',
+                  color: 'var(--muted)',
+                }}
+              >
+                {s}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {result.nuanceNote && (
+        <div style={{ display: 'flex', gap: 12 }}>
+          <div style={{ color: 'var(--muted)', flexShrink: 0, marginTop: 2 }}>
+            <IconLightbulb />
+          </div>
+          <div>
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 700,
+                color: 'var(--muted)',
+                marginBottom: 4,
+              }}
+            >
+              Nuance note
+            </div>
+            <p className="muted" style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>
+              {result.nuanceNote}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {result.gmatUsageNote && (
+        <div style={{ display: 'flex', gap: 12 }}>
+          <div style={{ color: 'var(--muted)', flexShrink: 0, marginTop: 2 }}>
+            <IconStar />
+          </div>
+          <div>
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 700,
+                color: 'var(--muted)',
+                marginBottom: 4,
+              }}
+            >
+              GMAT usage note
+            </div>
+            <p className="muted" style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>
+              {result.gmatUsageNote}
+            </p>
+          </div>
+        </div>
       )}
     </div>
   )
 }
-
