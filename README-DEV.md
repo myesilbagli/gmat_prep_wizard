@@ -84,3 +84,38 @@ After deploy, set:
 
 - `VITE_FUNCTIONS_BASE_URL=https://us-central1-gmat-prep-36738.cloudfunctions.net/api`
 
+## Mobile app (Expo)
+
+Mobile lives in `mobile/` and shares backend + selected domain logic from `shared/`.
+
+### Mobile env
+
+Create `mobile/.env` from `mobile/.env.example`:
+
+- `EXPO_PUBLIC_FIREBASE_API_KEY`
+- `EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN`
+- `EXPO_PUBLIC_FIREBASE_PROJECT_ID`
+- `EXPO_PUBLIC_FIREBASE_APP_ID`
+- `EXPO_PUBLIC_FUNCTIONS_BASE_URL`
+
+Use the same Firebase project values as web.
+
+### Run mobile locally
+
+```bash
+npm install
+npm run mobile:start
+```
+
+Optional platform launch:
+
+```bash
+npm run mobile:ios
+npm run mobile:android
+```
+
+### Internal beta prep
+
+- Expo build config: `mobile/eas.json`
+- QA checklist: `mobile/BETA-CHECKLIST.md`
+

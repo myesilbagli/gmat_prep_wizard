@@ -34,15 +34,16 @@ export function HomePage() {
   const [text, setText] = useState('')
   const [state, setState] = useState<GenerateState>({ status: 'idle' })
   const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
   const [userReady, setUserReady] = useState(false)
   const user = auth.currentUser
 
   useEffect(() => onAuthStateChanged(auth, () => setUserReady(true)), [])
-
   const canGenerate = useMemo(() => text.trim().length > 0, [text])
 
   async function generate() {
     setState({ status: 'loading' })
+    setSaved(false)
     try {
       const token = await auth.currentUser?.getIdToken()
       if (!token) throw new Error('Please sign in first.')
@@ -82,6 +83,7 @@ export function HomePage() {
       const trimmed = text.trim()
       const type = trimmed.includes(' ') ? 'phrase' : 'word'
       const { id } = await saveWord({ text: trimmed, type, result: state.result })
+      setSaved(true)
       setState({
         status: 'ready',
         result: state.result,
@@ -114,7 +116,7 @@ export function HomePage() {
             display: 'flex',
             alignItems: 'center',
             gap: 10,
-            padding: '12px 14px',
+            padding: '14px 16px',
             borderRadius: 14,
             border: '1px solid var(--border)',
             background: 'var(--surface)',
@@ -124,35 +126,37 @@ export function HomePage() {
             className="input"
             placeholder="Lookup & Generate"
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => {
+              setText(e.target.value)
+              if (saved) setSaved(false)
+            }}
+            onKeyDown={(e) => {
+              if (
+                e.key === 'Enter' &&
+                canGenerate &&
+                state.status !== 'loading' &&
+                userReady
+              ) {
+                e.preventDefault()
+                void generate()
+              }
+            }}
             autoCapitalize="none"
             autoCorrect="off"
             style={{
               border: 'none',
               background: 'transparent',
-              padding: 0,
+              minHeight: 28,
+              padding: '4px 0',
               flex: 1,
             }}
           />
           <button
             type="button"
-            className="btn"
-            onClick={() => {
-              setText('')
-              setState({ status: 'idle' })
-            }}
-            disabled={state.status === 'loading'}
-            style={{ padding: '8px 12px', fontSize: 13 }}
-          >
-            Reset
-          </button>
-        </div>
-
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <button
             className="btn btnPrimary"
             onClick={generate}
             disabled={!canGenerate || state.status === 'loading' || !userReady}
+            style={{ padding: '8px 12px', fontSize: 13 }}
           >
             {state.status === 'loading' ? 'Generating…' : 'Generate Analysis'}
           </button>
@@ -174,9 +178,7 @@ export function HomePage() {
           </p>
         )}
         {state.status === 'loading' && (
-          <p className="muted" style={{ margin: 0, fontSize: 14 }}>
-            Working…
-          </p>
+          <LookupLoading word={text.trim()} />
         )}
         {state.status === 'error' && (
           <p style={{ margin: 0, color: 'var(--danger)', fontSize: 14 }}>
@@ -189,8 +191,31 @@ export function HomePage() {
             result={state.result}
             onSave={save}
             saving={saving}
+            saved={saved}
           />
         )}
+      </div>
+    </div>
+  )
+}
+
+function LookupLoading({ word }: { word: string }) {
+  return (
+    <div style={{ display: 'grid', gap: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <span className="lookupLoadingDot" />
+        <p className="muted" style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>
+          Generating analysis{word ? ` for "${word}"` : ''}...
+        </p>
+      </div>
+      <div className="lookupSkeleton" style={{ width: '34%' }} />
+      <div className="lookupSkeleton" style={{ width: '100%' }} />
+      <div className="lookupSkeleton" style={{ width: '92%' }} />
+      <div className="lookupSkeleton" style={{ width: '76%' }} />
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div className="lookupSkeleton" style={{ width: 88, borderRadius: 999 }} />
+        <div className="lookupSkeleton" style={{ width: 96, borderRadius: 999 }} />
+        <div className="lookupSkeleton" style={{ width: 78, borderRadius: 999 }} />
       </div>
     </div>
   )
@@ -201,11 +226,13 @@ function WordAnalysisCard({
   result,
   onSave,
   saving,
+  saved,
 }: {
   word: string
   result: GeneratedResult
   onSave: () => void
   saving: boolean
+  saved: boolean
 }) {
   const typeLabel = word.includes(' ') ? 'PHRASE' : 'WORD'
   const exampleSentence = result.exampleSentence ?? ''
@@ -249,7 +276,7 @@ function WordAnalysisCard({
           type="button"
           className="btn btnPrimary"
           onClick={onSave}
-          disabled={saving}
+          disabled={saving || saved}
           style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -258,7 +285,7 @@ function WordAnalysisCard({
           }}
         >
           <IconBookmark style={{ flexShrink: 0 }} />
-          {saving ? 'Saving…' : 'Save'}
+          {saving ? 'Saving…' : saved ? 'Saved' : 'Save'}
         </button>
       </div>
 

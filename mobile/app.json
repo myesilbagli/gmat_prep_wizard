@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "GMAT Vocab Wizard",
+    "slug": "gmat-vocab-wizard",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.gmatwizard.mobile"
+    },
+    "android": {
+      "package": "com.gmatwizard.mobile"
+    }
+  }
+}

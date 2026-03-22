@@ -20,6 +20,7 @@
 
   --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica,
     Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-academic: "Crimson Pro", Georgia, "Times New Roman", serif;
   --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
     "Courier New", monospace;
 
@@ -127,4 +128,473 @@ textarea {
 
 .muted {
   color: var(--muted);
+}
+
+@keyframes lookupSkeletonPulse {
+  0% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.45;
+  }
+}
+
+@keyframes lookupDotBounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0.7);
+    opacity: 0.45;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.lookupSkeleton {
+  height: 12px;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--surface-2) 84%, transparent),
+    color-mix(in srgb, var(--accent-gradient-end) 22%, var(--surface-2)),
+    color-mix(in srgb, var(--surface-2) 84%, transparent)
+  );
+  background-size: 200% 100%;
+  animation: lookupSkeletonPulse 1.25s ease-in-out infinite;
+}
+
+.lookupLoadingDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+  background: var(--accent-gradient-end);
+  animation: lookupDotBounce 1s ease-in-out infinite;
+}
+
+/* Learn: paragraph loading shell (layout only; skeletons reuse .lookupSkeleton) */
+.learnParaLoadingShell {
+  display: grid;
+  gap: 16;
+  margin-top: 12;
+  padding-top: 12;
+  border-top: 1px solid var(--border);
+}
+
+@keyframes paragraphTextFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.paragraphTextFadeIn {
+  animation: paragraphTextFadeIn 0.28s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .paragraphTextFadeIn {
+    animation: none;
+  }
+}
+
+/* Learn: flashcard deck progress (Test-style bar) */
+.learnFlashProgressTrack {
+  height: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-2) 90%, transparent);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.learnFlashProgressFill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent-gradient-start), var(--accent-gradient-end));
+  transition: width 0.25s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .learnFlashProgressFill {
+    transition: none;
+  }
+}
+
+.learnFlashcardFace {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .learnFlashcardFace {
+    transition: none;
+  }
+}
+
+/* Learn: Stitch-inspired premium flashcard (tokens only; works in light + dark) */
+.learnFlashZone {
+  position: relative;
+  margin-top: 4px;
+}
+
+.learnFlashAmbient {
+  position: absolute;
+  inset: -2.5rem;
+  border-radius: 3rem;
+  background: radial-gradient(
+      ellipse at 30% 20%,
+      color-mix(in srgb, var(--accent-gradient-start) 18%, transparent),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse at 80% 90%,
+      color-mix(in srgb, var(--accent) 14%, transparent),
+      transparent 55%
+    );
+  filter: blur(48px);
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .learnFlashAmbient {
+    filter: none;
+    opacity: 0.35;
+  }
+}
+
+.learnFlashPremium {
+  position: relative;
+  z-index: 1;
+  border-radius: 2rem;
+  padding: clamp(1.75rem, 4vw, 3.5rem) clamp(1.25rem, 4vw, 2.75rem);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--surface) 72%, transparent) 0%,
+    color-mix(in srgb, var(--surface-2) 55%, transparent) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--accent-gradient-end) 14%, var(--border));
+  box-shadow: var(--shadow), inset 0 1px 0 color-mix(in srgb, var(--text) 6%, transparent);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.learnFlashPremium::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent-gradient-end) 22%, transparent),
+    transparent 42%,
+    transparent 58%,
+    color-mix(in srgb, var(--accent) 18%, transparent)
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.learnFlashEyebrow {
+  margin: 0 0 1.25rem;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--accent-gradient-end) 45%, var(--muted));
+}
+
+.learnFlashWord {
+  font-family: var(--font-academic);
+  font-size: clamp(2.75rem, 10vw, 4.25rem);
+  font-weight: 600;
+  font-style: italic;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  margin: 0 0 0.75rem;
+  max-width: 100%;
+  word-break: break-word;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--text) 95%, var(--accent-gradient-end)),
+    color-mix(in srgb, var(--accent-gradient-end) 82%, var(--text))
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 28px color-mix(in srgb, var(--accent-gradient-end) 22%, transparent));
+}
+
+:root[data-theme='light'] .learnFlashWord {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--text) 92%, var(--accent-gradient-end)),
+    color-mix(in srgb, var(--accent-gradient-end) 65%, var(--text))
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.learnFlashTypePill {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  background: color-mix(in srgb, var(--surface-2) 80%, transparent);
+  margin-bottom: 1.5rem;
+}
+
+.learnFlashFlagBtn {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
+  background: color-mix(in srgb, var(--surface) 50%, transparent);
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.learnFlashFlagBtn:hover {
+  color: var(--accent-gradient-end);
+  border-color: color-mix(in srgb, var(--accent-gradient-end) 45%, var(--border));
+  background: color-mix(in srgb, var(--accent-gradient-end) 10%, var(--surface));
+}
+
+.learnFlashFlagBtn[aria-pressed='true'] {
+  color: var(--accent-gradient-end);
+  border: 2px solid var(--accent-gradient-end);
+  background: rgba(99, 102, 241, 0.12);
+}
+
+.learnFlashRevealBlock {
+  width: 100%;
+  max-width: 28rem;
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1.5rem;
+}
+
+.learnFlashRevealBtn {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  padding: 1.1rem 1.25rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--text) 18%, transparent);
+  font-family: var(--sans);
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #fff;
+  cursor: pointer;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent-gradient-start) 92%, #000),
+    color-mix(in srgb, var(--accent) 88%, #1e1b4b)
+  );
+  box-shadow: 0 18px 38px color-mix(in srgb, var(--accent-gradient-end) 28%, transparent);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.2s ease;
+}
+
+.learnFlashRevealBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 22px 48px color-mix(in srgb, var(--accent-gradient-end) 38%, transparent);
+  filter: brightness(1.05);
+}
+
+.learnFlashRevealBtn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.learnFlashRevealBtn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.learnFlashRevealBtn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--text) 14%, transparent),
+    transparent
+  );
+  transform: translateX(-100%);
+  transition: transform 0.55s ease;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .learnFlashRevealBtn:hover:not(:disabled)::after {
+    transform: translateX(100%);
+  }
+}
+
+.learnFlashHintLine {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  opacity: 0.55;
+}
+
+.learnFlashHintLine::before,
+.learnFlashHintLine::after {
+  content: '';
+  height: 1px;
+  width: 2rem;
+  background: var(--muted);
+}
+
+.learnFlashHintText {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.learnFlashAnswerPanel {
+  text-align: left;
+  border-radius: 1rem;
+  border: 2px solid var(--accent-gradient-end);
+  background: rgba(99, 102, 241, 0.08);
+  padding: 1rem 1.1rem;
+}
+
+:root[data-theme='light'] .learnFlashAnswerPanel {
+  background: color-mix(in srgb, var(--accent-gradient-end) 10%, var(--surface));
+}
+
+.learnFlashStatusRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.65rem;
+  margin-top: 2rem;
+  padding-top: 0.25rem;
+}
+
+.learnFlashStatusBtn {
+  padding: 0.65rem 1.25rem;
+  border-radius: 1rem;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: 1px solid color-mix(in srgb, var(--text) 6%, transparent);
+  background: color-mix(in srgb, var(--surface) 45%, transparent);
+  color: var(--muted);
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.learnFlashStatusBtn:hover {
+  background: color-mix(in srgb, var(--surface-2) 70%, transparent);
+}
+
+.learnFlashStatusBtn--risk:hover {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  border-color: color-mix(in srgb, var(--danger) 35%, var(--border));
+  color: color-mix(in srgb, var(--danger) 92%, var(--text));
+}
+
+.learnFlashStatusBtn--safe:hover {
+  background: color-mix(in srgb, var(--accent-2) 14%, transparent);
+  border-color: color-mix(in srgb, var(--accent-2) 40%, var(--border));
+  color: color-mix(in srgb, var(--accent-2) 95%, var(--text));
+}
+
+.learnFlashStatusBtn--active {
+  border: 1px solid color-mix(in srgb, var(--accent-gradient-end) 45%, var(--border));
+  background: rgba(99, 102, 241, 0.12);
+  color: color-mix(in srgb, var(--accent-gradient-end) 95%, var(--text));
+  box-shadow: 0 0 22px color-mix(in srgb, var(--accent-gradient-end) 12%, transparent);
+}
+
+.learnFlashNavRow {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 2.5rem;
+}
+
+.learnFlashNavBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 1rem;
+  border-radius: 1rem;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.learnFlashNavBtn:hover {
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .learnFlashNavBtn:first-child:hover svg {
+    transform: translateX(-3px);
+  }
+  .learnFlashNavBtn:last-child:hover svg {
+    transform: translateX(3px);
+  }
+}
+
+.learnFlashNavDot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--muted) 35%, transparent);
+}
+
+.learnFlashProgressInset {
+  width: 100%;
+  max-width: 16rem;
+  margin: 0 auto 1rem;
 }
