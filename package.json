@@ -1,5 +1,5 @@
 {
-  "name": "gmat-vr-wizard",
+  "name": "gmat-lexicon",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -16,7 +16,9 @@
     "deploy:functions": "firebase deploy --only functions",
     "mobile:start": "npm --workspace mobile run start",
     "mobile:ios": "npm --workspace mobile run ios",
-    "mobile:android": "npm --workspace mobile run android"
+    "mobile:android": "npm --workspace mobile run android",
+    "mobile:eas:build:ios": "npm --workspace mobile run eas:build:ios",
+    "mobile:eas:submit:ios": "npm --workspace mobile run eas:submit:ios"
   },
   "dependencies": {
     "firebase": "^12.10.0",

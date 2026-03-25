@@ -1,6 +1,8 @@
 import {
   createUserWithEmailAndPassword,
+  GoogleAuthProvider,
   onAuthStateChanged,
+  signInWithCredential,
   signInWithEmailAndPassword,
   signOut,
   type User,
@@ -21,4 +23,9 @@ export async function signUpWithEmail(email: string, password: string) {
 
 export async function signOutUser() {
   await signOut(auth)
+}
+
+export async function signInWithGoogleIdToken(idToken: string) {
+  const credential = GoogleAuthProvider.credential(idToken)
+  await signInWithCredential(auth, credential)
 }

@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
+import { Link } from 'react-router-dom'
 import { auth } from '../lib/firebase'
+import { listVocabItems } from '../lib/vocab'
 import type { GeneratedResult } from '../lib/types'
 import { saveWord } from '../lib/words'
+import { ensureUserProfileDefaults } from '../lib/userProfile'
 import {
   IconBook,
   IconBookmark,
@@ -37,8 +40,54 @@ export function HomePage() {
   const [saved, setSaved] = useState(false)
   const [userReady, setUserReady] = useState(false)
   const user = auth.currentUser
+  const [deckStats, setDeckStats] = useState<{
+    total: number
+    learning: number
+    mastered: number
+    flagged: number
+  } | null>(null)
+  const [profileLoading, setProfileLoading] = useState(false)
+  const [streak, setStreak] = useState<number | null>(null)
+  const [sessionCount, setSessionCount] = useState<number | null>(null)
 
-  useEffect(() => onAuthStateChanged(auth, () => setUserReady(true)), [])
+  async function loadDeckStats() {
+    if (!auth.currentUser) {
+      setDeckStats(null)
+      return
+    }
+    try {
+      const items = await listVocabItems()
+      setDeckStats({
+        total: items.length,
+        learning: items.filter((i) => i.status === 'learning').length,
+        mastered: items.filter((i) => i.status === 'mastered').length,
+        flagged: items.filter((i) => i.flagged).length,
+      })
+    } catch {
+      setDeckStats(null)
+    }
+  }
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUserReady(true)
+      void loadDeckStats()
+      if (u) {
+        setProfileLoading(true)
+        void ensureUserProfileDefaults()
+          .then((p) => {
+            setStreak(p.streakCurrent)
+            setSessionCount(p.sessionCount)
+          })
+          .catch(() => {})
+          .finally(() => setProfileLoading(false))
+      } else {
+        setStreak(null)
+        setSessionCount(null)
+      }
+    })
+    return () => unsub()
+  }, [])
   const canGenerate = useMemo(() => text.trim().length > 0, [text])
 
   async function generate() {
@@ -89,6 +138,7 @@ export function HomePage() {
         result: state.result,
       })
       window.history.replaceState({}, '', `/words/${id}`)
+      void loadDeckStats()
     } catch (e) {
       setState({
         status: 'error',
@@ -103,12 +153,99 @@ export function HomePage() {
     <div className="container" style={{ paddingTop: 24, paddingBottom: 32 }}>
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, letterSpacing: -0.3 }}>
-          Expand your lexicon
+          Today
         </h1>
         <p className="muted" style={{ margin: '8px 0 0', fontSize: 15 }}>
-          Enter a high-frequency GMAT word to decode its meaning and nuances.
+          Your streak, daily session, and quick lookup in one place.
         </p>
       </div>
+
+      {user && (
+        <div
+          className="card"
+          style={{
+            padding: 18,
+            marginBottom: 20,
+            display: 'grid',
+            gap: 14,
+          }}
+        >
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12 }}>
+            <div>
+              <div className="muted" style={{ fontSize: 11, fontWeight: 700, letterSpacing: 0.6 }}>
+                STREAK
+              </div>
+              <div style={{ fontSize: 26, fontWeight: 800 }}>
+                {profileLoading ? '…' : streak ?? 0}{' '}
+                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--muted)' }}>
+                  day{(streak ?? 0) === 1 ? '' : 's'}
+                </span>
+              </div>
+              <p className="muted" style={{ margin: '6px 0 0', fontSize: 12 }}>
+                Complete a full daily session to extend your streak.
+              </p>
+              <p className="muted" style={{ margin: '4px 0 0', fontSize: 12 }}>
+                Sessions completed: {profileLoading ? '…' : sessionCount ?? 0}
+              </p>
+            </div>
+            <div style={{ marginLeft: 'auto', width: '100%', maxWidth: 280 }}>
+              <Link
+                to="/session"
+                className="btn btnPrimary"
+                style={{
+                  display: 'block',
+                  textAlign: 'center',
+                  padding: '14px 18px',
+                  fontSize: 16,
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                }}
+              >
+                Start session
+              </Link>
+            </div>
+          </div>
+
+        </div>
+      )}
+
+      {deckStats ? (
+        <div
+          className="card"
+          style={{
+            padding: 16,
+            marginBottom: 20,
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            gap: 12,
+          }}
+        >
+          <span className="muted" style={{ fontSize: 12, fontWeight: 700 }}>
+            Your deck
+          </span>
+          <span style={{ fontSize: 13 }}>
+            {deckStats.total} total · {deckStats.learning} learning · {deckStats.mastered}{' '}
+            mastered · {deckStats.flagged} flagged
+          </span>
+          <div style={{ marginLeft: 'auto', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            <Link
+              to="/learn?filter=learning"
+              className="btn btnPrimary"
+              style={{ fontSize: 12, padding: '8px 14px', textDecoration: 'none' }}
+            >
+              Review learning
+            </Link>
+            <Link
+              to="/learn?filter=flagged"
+              className="btn"
+              style={{ fontSize: 12, padding: '8px 14px', textDecoration: 'none' }}
+            >
+              Review flagged
+            </Link>
+          </div>
+        </div>
+      ) : null}
 
       <div style={{ display: 'grid', gap: 14 }}>
         <div
@@ -259,7 +396,7 @@ function WordAnalysisCard({
               marginBottom: 4,
             }}
           >
-            {typeLabel} OF THE DAY
+            {typeLabel}
           </div>
           <div
             style={{

@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import type { VocabItem, VocabStatus } from '../lib/vocab'
 import {
   listVocabItems,
+  recordWordExposure,
   toggleVocabFlagged,
   updateVocabStatus,
   deleteVocabItem,
@@ -15,7 +17,8 @@ import {
   IconTrash,
 } from '../components/Icons'
 
-type Filter = 'all' | 'do_not_know' | 'learning' | 'know' | 'flagged'
+type Filter = 'all' | 'learning' | 'mastered' | 'flagged'
+type KindFilter = 'all' | 'word' | 'phrase'
 type ViewMode = 'list' | 'flashcards' | 'paragraph'
 
 type ParagraphPart =
@@ -24,13 +27,13 @@ type ParagraphPart =
 
 type ParagraphResponse = { parts: ParagraphPart[] }
 
-const isDev = import.meta.env.DEV
-
 export function LearnPage() {
+  const [searchParams] = useSearchParams()
   const [items, setItems] = useState<VocabItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<Filter>('all')
+  const [kindFilter, setKindFilter] = useState<KindFilter>('all')
   const [query, setQuery] = useState('')
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [flashIndex, setFlashIndex] = useState(0)
@@ -63,24 +66,31 @@ export function LearnPage() {
     }
   }, [])
 
+  useEffect(() => {
+    const f = searchParams.get('filter')
+    if (f === 'learning' || f === 'mastered' || f === 'flagged') {
+      setFilter(f)
+    }
+  }, [searchParams])
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     return items.filter((item) => {
-      if (filter === 'do_not_know' && item.status !== 'do_not_know') return false
       if (filter === 'learning' && item.status !== 'learning') return false
-      if (filter === 'know' && item.status !== 'know') return false
+      if (filter === 'mastered' && item.status !== 'mastered') return false
       if (filter === 'flagged' && !item.flagged) return false
+      if (kindFilter === 'word' && item.type !== 'word') return false
+      if (kindFilter === 'phrase' && item.type !== 'phrase') return false
       if (q && !item.text.toLowerCase().includes(q)) return false
       return true
     })
-  }, [items, filter, query])
+  }, [items, filter, kindFilter, query])
 
   // Count based on the filter toggle only (independent from search query).
   const wordsInFilterCount = useMemo(() => {
     return items.filter((item) => {
-      if (filter === 'do_not_know') return item.status === 'do_not_know'
       if (filter === 'learning') return item.status === 'learning'
-      if (filter === 'know') return item.status === 'know'
+      if (filter === 'mastered') return item.status === 'mastered'
       if (filter === 'flagged') return item.flagged
       return true
     }).length
@@ -117,6 +127,11 @@ export function LearnPage() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [viewMode, filtered.length])
 
+  useEffect(() => {
+    if (viewMode !== 'flashcards' || !flashItem) return
+    void recordWordExposure(flashItem.id).catch(() => {})
+  }, [viewMode, flashItem?.id])
+
   async function handleStatusChange(id: string, status: VocabStatus) {
     setItems((prev) =>
       prev.map((it) => (it.id === id ? { ...it, status } : it)),
@@ -143,9 +158,7 @@ export function LearnPage() {
   }
 
   function pickLearningItems(): VocabItem[] {
-    const pool = items.filter(
-      (it) => it.status === 'learning' || it.status === 'do_not_know',
-    )
+    const pool = items.filter((it) => it.status === 'learning')
     if (pool.length <= 5) return pool
     const copy = [...pool]
     // Fisher–Yates shuffle
@@ -160,33 +173,10 @@ export function LearnPage() {
     setParaState({ status: 'loading' })
     try {
       const picked = pickLearningItems()
-      if (isDev) {
-        fetch('http://127.0.0.1:7471/ingest/77952ae0-e8f1-433e-b4e8-713bdadce68f', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'a01660' },
-          body: JSON.stringify({
-            sessionId: 'a01660',
-            runId: 'pre-fix',
-            hypothesisId: 'H1',
-            location: 'src/pages/LearnPage.tsx:generateParagraph:pick',
-            message: 'Picked learning items',
-            data: {
-              pickedCount: picked.length,
-              pickedTextTypes: picked.map((p) => ({
-                textType: typeof p.text,
-                textPreview: String(p.text).slice(0, 40),
-                status: p.status,
-                type: p.type,
-              })),
-            },
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {})
-      }
       if (!picked.length) {
         setParaState({
           status: 'error',
-          message: 'No Learning / Do Not Know items found yet.',
+          message: 'No Learning items found yet. Mark words as Learning or add new words from Lookup.',
         })
         return
       }
@@ -208,31 +198,6 @@ export function LearnPage() {
         })),
       }
 
-      if (isDev) {
-        fetch('http://127.0.0.1:7471/ingest/77952ae0-e8f1-433e-b4e8-713bdadce68f', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'a01660' },
-          body: JSON.stringify({
-            sessionId: 'a01660',
-            runId: 'pre-fix',
-            hypothesisId: 'H2',
-            location: 'src/pages/LearnPage.tsx:generateParagraph:request',
-            message: 'About to request generateParagraph',
-            data: {
-              baseUrl,
-              endpoint,
-              itemsCount: payload.items.length,
-              itemTextTypes: payload.items.map((i) => ({
-                textType: typeof i.text,
-                textPreview: String(i.text).slice(0, 40),
-                type: i.type,
-              })),
-            },
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {})
-      }
-
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -244,69 +209,18 @@ export function LearnPage() {
 
       if (!res.ok) {
         const errText = await res.text().catch(() => '')
-        if (isDev) {
-          fetch('http://127.0.0.1:7471/ingest/77952ae0-e8f1-433e-b4e8-713bdadce68f', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'a01660' },
-            body: JSON.stringify({
-              sessionId: 'a01660',
-              runId: 'pre-fix',
-              hypothesisId: 'H3',
-              location: 'src/pages/LearnPage.tsx:generateParagraph:response',
-              message: 'generateParagraph non-OK response',
-              data: {
-                status: res.status,
-                statusText: res.statusText,
-                bodyPreview: String(errText).slice(0, 300),
-              },
-              timestamp: Date.now(),
-            }),
-          }).catch(() => {})
-        }
         throw new Error(errText || `Request failed (${res.status})`)
       }
 
       const jsonText = await res.text()
-      if (isDev) {
-        fetch('http://127.0.0.1:7471/ingest/77952ae0-e8f1-433e-b4e8-713bdadce68f', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'a01660' },
-          body: JSON.stringify({
-            sessionId: 'a01660',
-            runId: 'pre-fix',
-            hypothesisId: 'H4',
-            location: 'src/pages/LearnPage.tsx:generateParagraph:response',
-            message: 'generateParagraph OK response',
-            data: { status: res.status, bodyPreview: String(jsonText).slice(0, 300) },
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {})
-      }
-
       const json = JSON.parse(jsonText) as ParagraphResponse
       if (!json || !Array.isArray(json.parts)) {
         throw new Error('Bad response from server')
       }
-      if (isDev) {
-        fetch('http://127.0.0.1:7471/ingest/77952ae0-e8f1-433e-b4e8-713bdadce68f', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'a01660' },
-          body: JSON.stringify({
-            sessionId: 'a01660',
-            runId: 'pre-fix',
-            hypothesisId: 'H5',
-            location: 'src/pages/LearnPage.tsx:generateParagraph:parsed',
-            message: 'Parsed paragraph response parts summary',
-            data: {
-              partsCount: json.parts.length,
-              head: json.parts.slice(0, 12),
-              tail: json.parts.slice(Math.max(0, json.parts.length - 12)),
-            },
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {})
-      }
       setParaState({ status: 'ready', parts: json.parts, picked })
+      for (const p of picked) {
+        void recordWordExposure(p.id).catch(() => {})
+      }
     } catch (e) {
       setParaState({
         status: 'error',
@@ -317,7 +231,6 @@ export function LearnPage() {
 
   return (
     <div className="container" style={{ paddingBottom: 18 }}>
-      {/* #region agent log */}
       <style>{`
         .paraWordWrap { position: relative; display: inline-block; }
         .paraTooltip {
@@ -348,7 +261,6 @@ export function LearnPage() {
           visibility: visible;
         }
       `}</style>
-      {/* #endregion agent log */}
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, letterSpacing: -0.3 }}>
           My Learning Path
@@ -407,19 +319,14 @@ export function LearnPage() {
               onClick={() => setFilter('all')}
             />
             <FilterChip
-              label="Do Not Know"
-              active={filter === 'do_not_know'}
-              onClick={() => setFilter('do_not_know')}
-            />
-            <FilterChip
               label="Learning"
               active={filter === 'learning'}
               onClick={() => setFilter('learning')}
             />
             <FilterChip
-              label="Know"
-              active={filter === 'know'}
-              onClick={() => setFilter('know')}
+              label="Mastered"
+              active={filter === 'mastered'}
+              onClick={() => setFilter('mastered')}
             />
             <FilterChip
               label="Flagged"
@@ -432,6 +339,26 @@ export function LearnPage() {
                 {wordsInFilterCount} word{wordsInFilterCount === 1 ? '' : 's'}
               </span>
             ) : null}
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+            <span className="muted" style={{ fontSize: 11, fontWeight: 700 }}>
+              Type:
+            </span>
+            <FilterChip
+              label="All types"
+              active={kindFilter === 'all'}
+              onClick={() => setKindFilter('all')}
+            />
+            <FilterChip
+              label="Words"
+              active={kindFilter === 'word'}
+              onClick={() => setKindFilter('word')}
+            />
+            <FilterChip
+              label="Phrases"
+              active={kindFilter === 'phrase'}
+              onClick={() => setKindFilter('phrase')}
+            />
           </div>
           <div
             style={{
@@ -555,7 +482,7 @@ export function LearnPage() {
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <div style={{ fontWeight: 800, fontSize: 16 }}>Paragraph practice</div>
             <span className="muted" style={{ fontSize: 12 }}>
-              Uses 5 random items from Do Not Know + Learning
+              Uses up to 5 random items marked Learning
             </span>
           </div>
 
@@ -665,40 +592,6 @@ function ParagraphText(props: { parts: ParagraphPart[]; picked: VocabItem[] }) {
     })
     return m
   }, [props.picked])
-
-  useEffect(() => {
-    if (!isDev) return
-    const targets = props.parts
-      .filter((p) => p.kind === 'target')
-      .map((p) => (p as { text: string }).text)
-    const mismatches = targets
-      .map((t) => ({
-        text: t,
-        normalized: String(t).trim().toLowerCase(),
-        hasMeaning: meaningByTextLower.has(String(t).trim().toLowerCase()),
-      }))
-      .filter((x) => !x.hasMeaning)
-    fetch('http://127.0.0.1:7471/ingest/77952ae0-e8f1-433e-b4e8-713bdadce68f', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'a01660' },
-      body: JSON.stringify({
-        sessionId: 'a01660',
-        runId: 'pre-fix',
-        hypothesisId: 'H6',
-        location: 'src/pages/LearnPage.tsx:ParagraphText:effect',
-        message: 'Paragraph render diagnostics',
-        data: {
-          pickedKeys: [...meaningByTextLower.keys()],
-          targets,
-          targetsCount: targets.length,
-          mismatches,
-          partsHead: props.parts.slice(0, 12),
-          partsTail: props.parts.slice(Math.max(0, props.parts.length - 12)),
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {})
-  }, [props.parts, props.picked, meaningByTextLower])
 
   return (
     <div
@@ -876,19 +769,14 @@ function VocabCard(props: {
         }}
       >
         <StatusChip
-          label="Do Not Know"
-          active={item.status === 'do_not_know'}
-          onClick={() => props.onChangeStatus(item.id, 'do_not_know')}
-        />
-        <StatusChip
           label="Learning"
           active={item.status === 'learning'}
           onClick={() => props.onChangeStatus(item.id, 'learning')}
         />
         <StatusChip
-          label="Know"
-          active={item.status === 'know'}
-          onClick={() => props.onChangeStatus(item.id, 'know')}
+          label="Mastered"
+          active={item.status === 'mastered'}
+          onClick={() => props.onChangeStatus(item.id, 'mastered')}
         />
         <button
           type="button"
@@ -933,8 +821,8 @@ function VocabCard(props: {
 function flashStatusBtnClass(status: VocabStatus, current: VocabStatus) {
   const active = current === status
   if (active) return 'learnFlashStatusBtn learnFlashStatusBtn--active'
-  if (status === 'do_not_know') return 'learnFlashStatusBtn learnFlashStatusBtn--risk'
-  if (status === 'know') return 'learnFlashStatusBtn learnFlashStatusBtn--safe'
+  if (status === 'learning') return 'learnFlashStatusBtn learnFlashStatusBtn--risk'
+  if (status === 'mastered') return 'learnFlashStatusBtn learnFlashStatusBtn--safe'
   return 'learnFlashStatusBtn'
 }
 
@@ -1067,13 +955,6 @@ function FlashcardView(props: {
         <div className="learnFlashStatusRow">
           <button
             type="button"
-            className={flashStatusBtnClass('do_not_know', item.status)}
-            onClick={() => props.onChangeStatus(item.id, 'do_not_know')}
-          >
-            Do Not Know
-          </button>
-          <button
-            type="button"
             className={flashStatusBtnClass('learning', item.status)}
             onClick={() => props.onChangeStatus(item.id, 'learning')}
           >
@@ -1081,10 +962,10 @@ function FlashcardView(props: {
           </button>
           <button
             type="button"
-            className={flashStatusBtnClass('know', item.status)}
-            onClick={() => props.onChangeStatus(item.id, 'know')}
+            className={flashStatusBtnClass('mastered', item.status)}
+            onClick={() => props.onChangeStatus(item.id, 'mastered')}
           >
-            Know
+            Mastered
           </button>
         </div>
       </article>

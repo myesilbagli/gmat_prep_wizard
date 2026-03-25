@@ -1,4 +1,4 @@
-# GMAT Vocab Wizard Mobile
+# GMAT Lexicon (mobile)
 
 Expo + React Native app that mirrors the web app structure and reuses the same Firebase backend.
 
@@ -7,6 +7,10 @@ Expo + React Native app that mirrors the web app structure and reuses the same F
 1. Install dependencies from repo root:
    - `npm install`
 2. Create `mobile/.env` from `mobile/.env.example`.
+   - For Google auth, set:
+     - `EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID`
+     - `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`
+     - `EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID`
 3. Run:
    - `npm run mobile:start`
    - `npm run mobile:ios`

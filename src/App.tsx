@@ -5,10 +5,12 @@ import { MyWordsPage } from './pages/MyWordsPage'
 import { WordDetailPage } from './pages/WordDetailPage'
 import { LearnPage } from './pages/LearnPage'
 import { TestPage } from './pages/TestPage'
+import { SessionPage } from './pages/SessionPage'
 
 function App() {
   return (
     <Routes>
+      <Route path="/session" element={<SessionPage />} />
       <Route element={<AppLayout />}>
         <Route index element={<HomePage />} />
         <Route path="/words" element={<MyWordsPage />} />

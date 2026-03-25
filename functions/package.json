@@ -10,7 +10,8 @@
     "build": "tsc -p tsconfig.json",
     "serve": "npm run build && firebase emulators:start --only functions",
     "lint": "eslint .",
-    "deploy": "firebase deploy --only functions"
+    "deploy": "firebase deploy --only functions",
+    "deploy:functions": "firebase deploy --only functions"
   },
   "dependencies": {
     "dotenv": "^17.3.1",

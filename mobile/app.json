@@ -1,7 +1,9 @@
 {
   "expo": {
-    "name": "GMAT Vocab Wizard",
+    "name": "GMAT Lexicon",
+    "owner": "myesilbagli",
     "slug": "gmat-vocab-wizard",
+    "scheme": "gmatwizard",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
@@ -10,10 +12,22 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.gmatwizard.mobile"
+      "bundleIdentifier": "com.gmatwizard.mobile",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.gmatwizard.mobile"
+    },
+    "plugins": [
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "39a6c2cd-8aa4-4893-abdb-ac6d83978312"
+      }
     }
   }
 }

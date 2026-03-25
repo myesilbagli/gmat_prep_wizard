@@ -62,3 +62,22 @@ export async function generateQuiz(itemIds: string[], mode: QuizMode, count: num
   const data = (await res.json()) as { questions?: QuizQuestion[] }
   return data.questions ?? []
 }
+
+/** Parallel prefetch — all session MCQs before the user advances (no per-step API wait). */
+export async function prefetchSessionMeaningQuestions(params: {
+  reviewIds: string[]
+  newIds: string[]
+  quizIds: string[]
+}): Promise<{
+  review: QuizQuestion[]
+  newWords: QuizQuestion[]
+  quiz: QuizQuestion[]
+}> {
+  const { reviewIds, newIds, quizIds } = params
+  const [review, newWords, quiz] = await Promise.all([
+    reviewIds.length > 0 ? generateQuiz(reviewIds, 'meaning', reviewIds.length) : Promise.resolve([] as QuizQuestion[]),
+    newIds.length > 0 ? generateQuiz(newIds, 'meaning', newIds.length) : Promise.resolve([] as QuizQuestion[]),
+    quizIds.length > 0 ? generateQuiz(quizIds, 'meaning', quizIds.length) : Promise.resolve([] as QuizQuestion[]),
+  ])
+  return { review, newWords, quiz }
+}

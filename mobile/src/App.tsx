@@ -1,36 +1,95 @@
-import { useEffect, useMemo, useState } from 'react'
-import { ActivityIndicator, Pressable, Text, useColorScheme, View } from 'react-native'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { ActivityIndicator, Pressable, Text, View } from 'react-native'
 import type { VocabItem } from '@shared/types'
 import { StatusBar } from 'expo-status-bar'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { ProfileSheet } from './components/ProfileSheet'
 import { AuthProvider, useAuth } from './context/AuthContext'
-import { signOutUser } from './lib/auth'
+import { ThemeProvider, useAppTheme } from './context/ThemeContext'
 import { listVocabItems } from './lib/vocab'
-import { DashboardScreen, computeDashboardStats } from './screens/DashboardScreen'
-import { LearnScreen } from './screens/LearnScreen'
+import { SessionScreen } from './screens/SessionScreen'
+import { computeDashboardStats, TodayScreen } from './screens/TodayScreen'
+import { LearnScreen, type LearnTabPreset } from './screens/LearnScreen'
 import { SignInScreen } from './screens/SignInScreen'
 import { SignUpScreen } from './screens/SignUpScreen'
 import { TestScreen } from './screens/TestScreen'
-import { darkTheme, lightTheme } from './theme'
+import { WelcomeScreen } from './screens/WelcomeScreen'
+import type { AppTheme } from './theme'
 
-function AuthNavigator({ isDark }: { isDark: boolean }) {
-  const theme = isDark ? darkTheme : lightTheme
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin')
+function ShellBackground({ theme, children }: { theme: AppTheme; children: React.ReactNode }) {
+  return (
+    <View style={{ flex: 1, backgroundColor: theme.bg }}>
+      <View
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          top: -72,
+          left: -48,
+          width: 280,
+          height: 280,
+          borderRadius: 140,
+          backgroundColor: theme.glowPurple,
+          opacity: 0.45,
+        }}
+      />
+      <View
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          top: -40,
+          right: -60,
+          width: 240,
+          height: 240,
+          borderRadius: 120,
+          backgroundColor: theme.glowGreen,
+          opacity: 0.4,
+        }}
+      />
+      {children}
+    </View>
+  )
+}
+
+function AuthNavigator() {
+  const { theme } = useAppTheme()
+  const [mode, setMode] = useState<'welcome' | 'signin' | 'signup'>('welcome')
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }}>
-      {mode === 'signin' ? (
-        <SignInScreen theme={theme} onGoSignUp={() => setMode('signup')} />
-      ) : (
-        <SignUpScreen theme={theme} onGoSignIn={() => setMode('signin')} />
-      )}
+      <ShellBackground theme={theme}>
+        {mode === 'welcome' ? (
+          <WelcomeScreen
+            theme={theme}
+            onSignIn={() => setMode('signin')}
+            onSignUp={() => setMode('signup')}
+          />
+        ) : null}
+        {mode === 'signin' ? (
+          <SignInScreen
+            theme={theme}
+            onGoSignUp={() => setMode('signup')}
+            onBack={() => setMode('welcome')}
+          />
+        ) : null}
+        {mode === 'signup' ? (
+          <SignUpScreen
+            theme={theme}
+            onGoSignIn={() => setMode('signin')}
+            onBack={() => setMode('welcome')}
+          />
+        ) : null}
+      </ShellBackground>
     </SafeAreaView>
   )
 }
 
-function MainTabs({ isDark }: { isDark: boolean }) {
-  const theme = isDark ? darkTheme : lightTheme
-  const [tab, setTab] = useState<'dashboard' | 'learn' | 'test'>('dashboard')
+function MainTabs() {
+  const { theme, colorScheme, setColorScheme } = useAppTheme()
+  const [tab, setTab] = useState<'today' | 'learn' | 'test'>('today')
+  const [sessionOpen, setSessionOpen] = useState(false)
+  const [profileOpen, setProfileOpen] = useState(false)
+  const [learnPreset, setLearnPreset] = useState<LearnTabPreset | null>(null)
+  const consumeLearnPreset = useCallback(() => setLearnPreset(null), [])
   const [items, setItems] = useState<VocabItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -62,72 +121,122 @@ function MainTabs({ isDark }: { isDark: boolean }) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }}>
-      <View
-        style={{
-          paddingHorizontal: 16,
-          paddingVertical: 10,
-          borderBottomWidth: 1,
-          borderBottomColor: theme.border,
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <Text style={{ color: theme.text, fontSize: 16, fontWeight: '800' }}>GMAT Vocab Wizard</Text>
-        <Pressable onPress={() => void signOutUser()}>
-          <Text style={{ color: theme.muted }}>Sign out</Text>
-        </Pressable>
-      </View>
-      {error ? (
-        <Text style={{ color: theme.danger, paddingHorizontal: 16, paddingTop: 8 }}>{error}</Text>
-      ) : null}
-      <View style={{ flex: 1 }}>
-        {tab === 'dashboard' ? <DashboardScreen theme={theme} stats={stats} /> : null}
-        {tab === 'learn' ? <LearnScreen theme={theme} items={items} onReload={reloadItems} /> : null}
-        {tab === 'test' ? <TestScreen theme={theme} items={items} /> : null}
-      </View>
-      <View
-        style={{
-          flexDirection: 'row',
-          backgroundColor: theme.surface,
-          borderTopWidth: 1,
-          borderTopColor: theme.border,
-          paddingVertical: 10,
-          paddingHorizontal: 12,
-          gap: 10,
-        }}
-      >
-        <TabButton
-          label="Dashboard"
-          active={tab === 'dashboard'}
-          onPress={() => setTab('dashboard')}
-          color={theme.primary}
-          muted={theme.muted}
-        />
-        <TabButton
-          label="Learn"
-          active={tab === 'learn'}
-          onPress={() => setTab('learn')}
-          color={theme.primary}
-          muted={theme.muted}
-        />
-        <TabButton
-          label="Test"
-          active={tab === 'test'}
-          onPress={() => setTab('test')}
-          color={theme.primary}
-          muted={theme.muted}
-        />
-      </View>
+      <ShellBackground theme={theme}>
+        {sessionOpen ? (
+          <View style={{ flex: 1 }}>
+            <SessionScreen
+              theme={theme}
+              onClose={() => {
+                setSessionOpen(false)
+                void reloadItems()
+              }}
+              onCompleted={() => void reloadItems()}
+            />
+          </View>
+        ) : (
+          <>
+            <View
+              style={{
+                paddingHorizontal: 16,
+                paddingVertical: 10,
+                backgroundColor: theme.headerBg,
+                borderBottomWidth: 1,
+                borderBottomColor: theme.border,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <Text style={{ color: theme.text, fontSize: 16, fontWeight: '800' }}>GMAT Lexicon</Text>
+              <Pressable onPress={() => setProfileOpen(true)} hitSlop={10}>
+                <Text style={{ color: theme.primary, fontSize: 15, fontWeight: '700' }}>Profile</Text>
+              </Pressable>
+            </View>
+            <ProfileSheet
+              theme={theme}
+              colorScheme={colorScheme}
+              setColorScheme={setColorScheme}
+              visible={profileOpen}
+              onClose={() => setProfileOpen(false)}
+            />
+            {error ? (
+              <Text style={{ color: theme.danger, paddingHorizontal: 16, paddingTop: 8 }}>{error}</Text>
+            ) : null}
+            <View style={{ flex: 1 }}>
+              {tab === 'today' ? (
+                <TodayScreen
+                  theme={theme}
+                  stats={stats}
+                  onStartSession={() => setSessionOpen(true)}
+                  onOpenProfile={() => setProfileOpen(true)}
+                  onSavedWord={() => void reloadItems()}
+                  onReviewLearning={() => {
+                    setLearnPreset('learning')
+                    setTab('learn')
+                  }}
+                  onReviewFlagged={() => {
+                    setLearnPreset('flagged')
+                    setTab('learn')
+                  }}
+                />
+              ) : null}
+              {tab === 'learn' ? (
+                <LearnScreen
+                  theme={theme}
+                  items={items}
+                  onReload={reloadItems}
+                  learnPreset={learnPreset}
+                  onConsumedLearnPreset={consumeLearnPreset}
+                  onOpenProfile={() => setProfileOpen(true)}
+                />
+              ) : null}
+              {tab === 'test' ? (
+                <TestScreen theme={theme} items={items} onOpenProfile={() => setProfileOpen(true)} />
+              ) : null}
+            </View>
+            <View
+              style={{
+                flexDirection: 'row',
+                backgroundColor: theme.surface,
+                borderTopWidth: 1,
+                borderTopColor: theme.border,
+                paddingVertical: 10,
+                paddingHorizontal: 12,
+                gap: 10,
+              }}
+            >
+              <TabButton
+                label="Today"
+                active={tab === 'today'}
+                onPress={() => setTab('today')}
+                color={theme.primary}
+                muted={theme.muted}
+              />
+              <TabButton
+                label="Learn"
+                active={tab === 'learn'}
+                onPress={() => setTab('learn')}
+                color={theme.primary}
+                muted={theme.muted}
+              />
+              <TabButton
+                label="Test"
+                active={tab === 'test'}
+                onPress={() => setTab('test')}
+                color={theme.primary}
+                muted={theme.muted}
+              />
+            </View>
+          </>
+        )}
+      </ShellBackground>
     </SafeAreaView>
   )
 }
 
 function RootNavigation() {
   const { loading, user } = useAuth()
-  const scheme = useColorScheme()
-  const isDark = scheme !== 'light'
-  const theme = isDark ? darkTheme : lightTheme
+  const { theme } = useAppTheme()
 
   if (loading) {
     return (
@@ -137,15 +246,22 @@ function RootNavigation() {
     )
   }
 
-  return user ? <MainTabs isDark={isDark} /> : <AuthNavigator isDark={isDark} />
+  return user ? <MainTabs /> : <AuthNavigator />
+}
+
+function AppStatusBar() {
+  const { colorScheme } = useAppTheme()
+  return <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
 }
 
 export default function App() {
   return (
-    <AuthProvider>
-      <StatusBar style="auto" />
-      <RootNavigation />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppStatusBar />
+        <RootNavigation />
+      </AuthProvider>
+    </ThemeProvider>
   )
 }
 

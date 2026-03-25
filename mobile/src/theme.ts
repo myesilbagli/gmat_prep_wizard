@@ -9,6 +9,29 @@ export const darkTheme = {
   primary2: '#7b81f5',
   danger: '#ef4444',
   success: '#22c55e',
+  /** Matches web --header-bg */
+  headerBg: 'rgba(11, 14, 20, 0.92)',
+  /** Subtle radial accents (web :root gradients) */
+  glowPurple: 'rgba(124, 58, 237, 0.22)',
+  glowGreen: 'rgba(34, 197, 94, 0.16)',
+  /** Learn screen (mock-aligned dark glass UI) */
+  learnScreenBg: '#10131a',
+  learnGlass: 'rgba(29, 32, 38, 0.75)',
+  learnGlassBorder: 'rgba(70, 69, 84, 0.4)',
+  learnHeadline: '#bdc2ff',
+  learnAccent: '#bdc2ff',
+  learnAccentStrong: '#7c87f3',
+  learnOnSurface: '#e1e2eb',
+  learnOnSurfaceVariant: '#c7c4d7',
+  learnTertiary: '#ccbeff',
+  learnSearchBg: '#0b0e14',
+  learnPillIdle: '#272a31',
+  learnPillActiveBg: '#bdc2ff',
+  learnPillActiveText: '#332664',
+  learnOutline: '#464554',
+  learnViewToggleBg: '#0b0e14',
+  learnGlowBlob1: 'rgba(189, 194, 255, 0.08)',
+  learnGlowBlob2: 'rgba(204, 190, 255, 0.07)',
 }
 
 export const lightTheme = {
@@ -22,6 +45,26 @@ export const lightTheme = {
   primary2: '#7b81f5',
   danger: '#ef4444',
   success: '#16a34a',
+  headerBg: 'rgba(245, 245, 251, 0.92)',
+  glowPurple: 'rgba(124, 58, 237, 0.1)',
+  glowGreen: 'rgba(99, 102, 241, 0.08)',
+  learnScreenBg: '#f4f4fc',
+  learnGlass: 'rgba(255, 255, 255, 0.92)',
+  learnGlassBorder: 'rgba(11, 18, 32, 0.1)',
+  learnHeadline: '#4f46e5',
+  learnAccent: '#6366f1',
+  learnAccentStrong: '#4f46e5',
+  learnOnSurface: '#0b1220',
+  learnOnSurfaceVariant: 'rgba(11, 18, 32, 0.65)',
+  learnTertiary: '#7c3aed',
+  learnSearchBg: '#ffffff',
+  learnPillIdle: '#e8e9f4',
+  learnPillActiveBg: '#6366f1',
+  learnPillActiveText: '#ffffff',
+  learnOutline: 'rgba(11, 18, 32, 0.25)',
+  learnViewToggleBg: '#eef0f8',
+  learnGlowBlob1: 'rgba(99, 102, 241, 0.12)',
+  learnGlowBlob2: 'rgba(124, 58, 237, 0.08)',
 }
 
 export type AppTheme = typeof darkTheme

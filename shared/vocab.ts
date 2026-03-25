@@ -1,5 +1,18 @@
 import type { VocabItem, VocabStatus } from './types'
 
+/** Map Firestore raw status (including legacy) to canonical learning | mastered. */
+export function mapRawStatusToVocabStatus(raw: unknown): VocabStatus {
+  if (raw === 'mastered') return 'mastered'
+  if (raw === 'know') return 'mastered'
+  if (raw === 'learning' || raw === 'do_not_know') return 'learning'
+  return 'learning'
+}
+
+/** True if we should persist migration to Firestore (legacy enum values). */
+export function rawStatusNeedsFirestoreMigration(raw: unknown): boolean {
+  return raw === 'do_not_know' || raw === 'know'
+}
+
 export function normalizeRawVocabDoc(id: string, data: any): VocabItem {
   const text: string =
     typeof data.text === 'string' && data.text.trim()
@@ -40,10 +53,12 @@ export function normalizeRawVocabDoc(id: string, data: any): VocabItem {
       ? data.result.synonyms.map((s: unknown) => String(s)).filter(Boolean)
       : []
 
-  const status: VocabStatus =
-    data.status === 'do_not_know' || data.status === 'know' || data.status === 'learning'
-      ? data.status
-      : 'learning'
+  const status = mapRawStatusToVocabStatus(data.status)
+
+  const seenCount =
+    typeof data.seenCount === 'number' && Number.isFinite(data.seenCount)
+      ? Math.max(0, Math.floor(data.seenCount))
+      : 0
 
   return {
     id,
@@ -58,6 +73,8 @@ export function normalizeRawVocabDoc(id: string, data: any): VocabItem {
     gmatUsageNote: typeof data.gmatUsageNote === 'string' ? data.gmatUsageNote : undefined,
     status,
     flagged: Boolean(data.flagged),
+    seenCount,
+    lastSeenAt: data.lastSeenAt,
     createdAt: data.createdAt,
     updatedAt: data.updatedAt,
   }

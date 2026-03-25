@@ -33,7 +33,7 @@ export type WordDoc = {
   gmatUsageNote?: string
   // Back-compat (older docs)
   note?: string
-  status?: 'do_not_know' | 'learning' | 'know'
+  status?: 'learning' | 'mastered' | 'do_not_know' | 'know'
   flagged?: boolean
 }
 

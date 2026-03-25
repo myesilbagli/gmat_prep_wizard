@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { listVocabItems, type VocabItem } from '../lib/vocab'
+import { listVocabItems, recordWordExposure, type VocabItem } from '../lib/vocab'
 import { IconPlay } from '../components/Icons'
 
 type QuizMode = 'meaning' | 'gmat'
@@ -50,13 +50,18 @@ export function TestPage() {
   }, [])
 
   const candidateItems = useMemo(() => {
-    const primary = items.filter(
-      (i) => i.status === 'do_not_know' || i.status === 'learning',
-    )
+    const primary = items.filter((i) => i.status === 'learning')
     if (primary.length >= count) return shuffle(primary).slice(0, count)
-    const secondary = items.filter((i) => i.status === 'know')
+    const secondary = items.filter((i) => i.status === 'mastered')
     return shuffle([...primary, ...secondary]).slice(0, count)
   }, [items, count])
+
+  useEffect(() => {
+    if (phase !== 'running' || questions.length === 0) return
+    const q = questions[currentIndex]
+    if (!q?.itemId) return
+    void recordWordExposure(q.itemId).catch(() => {})
+  }, [phase, currentIndex, questions])
 
   async function startQuiz() {
     setQuizError(null)

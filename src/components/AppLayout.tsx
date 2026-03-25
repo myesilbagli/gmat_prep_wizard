@@ -94,7 +94,7 @@ export function AppLayout() {
                 paddingRight: 36,
               }}
             >
-              How to use GMAT Vocab Wizard
+              How to use GMAT Lexicon
             </h2>
             <div
               style={{
@@ -107,21 +107,22 @@ export function AppLayout() {
             >
               <section>
                 <div style={{ fontWeight: 700, marginBottom: 4, color: 'var(--text)' }}>
-                  Sign in
+                  Profile
                 </div>
                 <p className="muted" style={{ margin: 0, fontSize: 13 }}>
-                  Use "Sign in with Google" in the top right. You need to be signed in to save
-                  words and use Learn or Test.
+                  Tap <strong>Profile</strong> in the top right to sign in, change theme, set
+                  exam window + timezone, and sign out.
                 </p>
               </section>
               <section>
                 <div style={{ fontWeight: 700, marginBottom: 4, color: 'var(--text)' }}>
-                  Lookup
+                  Today
                 </div>
                 <p className="muted" style={{ margin: 0, fontSize: 13 }}>
-                  Enter a word or phrase (e.g. <em>obdurate</em> or <em>on the verge of</em>)
-                  and tap Generate. The app creates a definition, simple definition, example
-                  sentence, synonyms, and GMAT usage notes. Tap Save to add it to your library.
+                  See your <strong>streak</strong>, set a fuzzy <strong>exam window</strong> and
+                  timezone, and tap <strong>Start session</strong> for the daily review → new →
+                  quiz flow. Below that, <strong>lookup</strong> a word or phrase (e.g.{' '}
+                  <em>obdurate</em>) and tap Generate to add definitions and examples to your deck.
                 </p>
               </section>
               <section>
@@ -129,13 +130,13 @@ export function AppLayout() {
                   Learn
                 </div>
                 <p className="muted" style={{ margin: 0, fontSize: 13 }}>
-                  Filter by All, Do Not Know, Learning, Know, or Flagged. Search by text.
-                  On each card you can change status, flag, delete, or expand details.
-                  Switch to <strong>Flashcards</strong> to flip through one card at a time
-                  (Show/Hide answer, Prev/Next). Switch to <strong>Paragraph</strong> and
-                  tap Generate paragraph: the app picks 5 random words from your learning
-                  list, builds a short paragraph, and bolds those words—hover a bold word
-                  to see its meaning.
+                  Filter by All, Learning, Mastered, or Flagged; narrow by Words or Phrases.
+                  Search by text. Mark each word <strong>Learning</strong> or{' '}
+                  <strong>Mastered</strong>. On each card you can change status, flag, delete,
+                  or expand details. Switch to <strong>Flashcards</strong> to study one card at
+                  a time. Switch to <strong>Paragraph</strong> and tap Generate paragraph: the
+                  app picks up to 5 random <strong>Learning</strong> words, builds a short
+                  paragraph, and bolds those words—hover a bold word to see its meaning.
                 </p>
               </section>
               <section>
@@ -192,7 +193,7 @@ export function AppLayout() {
               style={{ textDecoration: 'none', color: 'inherit' }}
             >
               <div style={{ fontWeight: 700, letterSpacing: -0.2, fontSize: 17 }}>
-                GMAT Vocab Wizard
+                GMAT Lexicon
               </div>
             </NavLink>
           </div>
@@ -209,7 +210,7 @@ export function AppLayout() {
                 borderBottom: isActive ? '2px solid var(--text)' : '2px solid transparent',
               })}
             >
-              Lookup
+              Today
             </NavLink>
             <NavLink
               to="/learn"
@@ -240,68 +241,6 @@ export function AppLayout() {
           </nav>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-              }}
-              role="switch"
-              aria-label={theme === 'dark' ? 'Dark mode on' : 'Light mode on'}
-              aria-checked={theme === 'dark'}
-            >
-              <span
-                style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: theme === 'light' ? 'var(--accent-gradient-end)' : 'var(--muted)',
-                  cursor: 'pointer',
-                }}
-                onClick={() => setTheme('light')}
-              >
-                Light
-              </span>
-              <button
-                type="button"
-                aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-                onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
-                style={{
-                  position: 'relative',
-                  width: 44,
-                  height: 24,
-                  borderRadius: 999,
-                  border: 'none',
-                  background: 'var(--surface-2)',
-                  cursor: 'pointer',
-                  padding: 0,
-                }}
-              >
-                <span
-                  style={{
-                    position: 'absolute',
-                    top: 2,
-                    left: theme === 'light' ? 2 : 22,
-                    width: 20,
-                    height: 20,
-                    borderRadius: '50%',
-                    background: '#fff',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                    transition: 'left 0.2s ease',
-                  }}
-                />
-              </button>
-              <span
-                style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: theme === 'dark' ? 'var(--accent-gradient-end)' : 'var(--muted)',
-                  cursor: 'pointer',
-                }}
-                onClick={() => setTheme('dark')}
-              >
-                Dark
-              </span>
-            </div>
             <button
               type="button"
               aria-label="How to use the app"
@@ -319,7 +258,7 @@ export function AppLayout() {
             >
               How to Use?
             </button>
-            <AuthButton />
+            <AuthButton theme={theme} setTheme={setTheme} />
           </div>
         </div>
       </header>
