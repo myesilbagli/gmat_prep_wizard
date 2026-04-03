@@ -11,6 +11,8 @@ export type GeneratedResult = {
   definitions?: string[]
   examples?: string[]
   antonyms?: string[]
+  /** Short gloss in main language when not English; stored under `translations[lang]`. */
+  translationSimple?: string
 }
 
 export type WordDoc = {
@@ -31,6 +33,8 @@ export type WordDoc = {
   synonyms?: string[]
   nuanceNote?: string
   gmatUsageNote?: string
+  /** Short meanings keyed by language code (e.g. `tr`). */
+  translations?: Record<string, string>
   // Back-compat (older docs)
   note?: string
   status?: 'learning' | 'mastered' | 'do_not_know' | 'know'

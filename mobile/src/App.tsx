@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ActivityIndicator, Pressable, Text, View } from 'react-native'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import { MaterialIcons } from '@expo/vector-icons'
 import type { VocabItem } from '@shared/types'
 import { StatusBar } from 'expo-status-bar'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ProfileSheet } from './components/ProfileSheet'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider, useAppTheme } from './context/ThemeContext'
+import { DEFAULT_MAIN_LANGUAGE, normalizeMainLanguageCode } from '@shared/languages'
+import { ensureUserProfileDefaults } from './lib/userProfile'
 import { listVocabItems } from './lib/vocab'
 import { SessionScreen } from './screens/SessionScreen'
 import { computeDashboardStats, TodayScreen } from './screens/TodayScreen'
@@ -17,37 +21,7 @@ import { WelcomeScreen } from './screens/WelcomeScreen'
 import type { AppTheme } from './theme'
 
 function ShellBackground({ theme, children }: { theme: AppTheme; children: React.ReactNode }) {
-  return (
-    <View style={{ flex: 1, backgroundColor: theme.bg }}>
-      <View
-        pointerEvents="none"
-        style={{
-          position: 'absolute',
-          top: -72,
-          left: -48,
-          width: 280,
-          height: 280,
-          borderRadius: 140,
-          backgroundColor: theme.glowPurple,
-          opacity: 0.45,
-        }}
-      />
-      <View
-        pointerEvents="none"
-        style={{
-          position: 'absolute',
-          top: -40,
-          right: -60,
-          width: 240,
-          height: 240,
-          borderRadius: 120,
-          backgroundColor: theme.glowGreen,
-          opacity: 0.4,
-        }}
-      />
-      {children}
-    </View>
-  )
+  return <View style={{ flex: 1, backgroundColor: theme.bg }}>{children}</View>
 }
 
 function AuthNavigator() {
@@ -93,6 +67,7 @@ function MainTabs() {
   const [items, setItems] = useState<VocabItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [mainLanguage, setMainLanguage] = useState(DEFAULT_MAIN_LANGUAGE)
   const stats = useMemo(() => computeDashboardStats(items), [items])
 
   async function reloadItems() {
@@ -111,6 +86,24 @@ function MainTabs() {
     void reloadItems()
   }, [])
 
+  useEffect(() => {
+    let cancelled = false
+    void ensureUserProfileDefaults()
+      .then((p) => {
+        if (!cancelled) setMainLanguage(normalizeMainLanguageCode(p.mainLanguage))
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const refreshProfileLanguage = useCallback(() => {
+    void ensureUserProfileDefaults()
+      .then((p) => setMainLanguage(normalizeMainLanguageCode(p.mainLanguage)))
+      .catch(() => {})
+  }, [])
+
   if (loading) {
     return (
       <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.bg }}>
@@ -123,23 +116,24 @@ function MainTabs() {
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }}>
       <ShellBackground theme={theme}>
         {sessionOpen ? (
-          <View style={{ flex: 1 }}>
+          <GestureHandlerRootView style={{ flex: 1 }}>
             <SessionScreen
               theme={theme}
+              mainLanguage={mainLanguage}
               onClose={() => {
                 setSessionOpen(false)
                 void reloadItems()
               }}
               onCompleted={() => void reloadItems()}
             />
-          </View>
+          </GestureHandlerRootView>
         ) : (
           <>
             <View
               style={{
-                paddingHorizontal: 16,
-                paddingVertical: 10,
-                backgroundColor: theme.headerBg,
+                paddingHorizontal: 20,
+                paddingVertical: 12,
+                backgroundColor: theme.learnScreenBg,
                 borderBottomWidth: 1,
                 borderBottomColor: theme.border,
                 flexDirection: 'row',
@@ -147,7 +141,19 @@ function MainTabs() {
                 justifyContent: 'space-between',
               }}
             >
-              <Text style={{ color: theme.text, fontSize: 16, fontWeight: '800' }}>GMAT Lexicon</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <MaterialIcons name="menu-book" size={24} color={theme.learnAccent} />
+                <Text
+                  style={{
+                    color: theme.learnAccent,
+                    fontSize: 20,
+                    fontWeight: '800',
+                    letterSpacing: 3,
+                  }}
+                >
+                  LEXICON
+                </Text>
+              </View>
               <Pressable onPress={() => setProfileOpen(true)} hitSlop={10}>
                 <Text style={{ color: theme.primary, fontSize: 15, fontWeight: '700' }}>Profile</Text>
               </Pressable>
@@ -158,6 +164,7 @@ function MainTabs() {
               setColorScheme={setColorScheme}
               visible={profileOpen}
               onClose={() => setProfileOpen(false)}
+              onProfileSaved={refreshProfileLanguage}
             />
             {error ? (
               <Text style={{ color: theme.danger, paddingHorizontal: 16, paddingTop: 8 }}>{error}</Text>
@@ -166,7 +173,9 @@ function MainTabs() {
               {tab === 'today' ? (
                 <TodayScreen
                   theme={theme}
+                  mainLanguage={mainLanguage}
                   stats={stats}
+                  items={items}
                   onStartSession={() => setSessionOpen(true)}
                   onOpenProfile={() => setProfileOpen(true)}
                   onSavedWord={() => void reloadItems()}
@@ -183,6 +192,7 @@ function MainTabs() {
               {tab === 'learn' ? (
                 <LearnScreen
                   theme={theme}
+                  mainLanguage={mainLanguage}
                   items={items}
                   onReload={reloadItems}
                   learnPreset={learnPreset}

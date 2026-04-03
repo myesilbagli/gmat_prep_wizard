@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native'
 import type { VocabItem, VocabStatus } from '@shared/types'
+import { getNativeGloss } from '@shared/vocab'
 import { BlurView } from 'expo-blur'
 import { Ionicons, MaterialIcons } from '@expo/vector-icons'
 import {
@@ -53,6 +54,7 @@ function statusFooter(theme: AppTheme, item: VocabItem): { dot: string; label: s
 
 export function LearnScreen({
   theme,
+  mainLanguage,
   items,
   onReload,
   learnPreset,
@@ -60,6 +62,7 @@ export function LearnScreen({
   onOpenProfile,
 }: {
   theme: AppTheme
+  mainLanguage: string
   items: VocabItem[]
   onReload: () => Promise<void>
   learnPreset?: LearnTabPreset | null
@@ -109,6 +112,10 @@ export function LearnScreen({
   }, [items, filter, kindFilter, query])
 
   const flashItem = filtered[flashIndex] ?? null
+  const flashNativeGloss = useMemo(
+    () => (flashItem ? getNativeGloss(flashItem, mainLanguage) : undefined),
+    [flashItem, mainLanguage],
+  )
 
   useEffect(() => {
     setFlashIndex(0)
@@ -378,6 +385,7 @@ export function LearnScreen({
                 <WordGlassCard
                   key={item.id}
                   theme={theme}
+                  mainLanguage={mainLanguage}
                   item={item}
                   learnDark={learnDark}
                   fontHeadline={fontHeadline}
@@ -415,11 +423,26 @@ export function LearnScreen({
                 >
                   {flashItem.text}
                 </Text>
-                <Text style={{ fontFamily: fontBody, fontSize: 15, lineHeight: 22, color: theme.learnOnSurfaceVariant }}>
-                  {showAnswer
-                    ? flashItem.simpleDefinition || flashItem.definition
-                    : 'Tap reveal to see the definition.'}
-                </Text>
+                <View style={{ gap: 8 }}>
+                  <Text style={{ fontFamily: fontBody, fontSize: 15, lineHeight: 22, color: theme.learnOnSurfaceVariant }}>
+                    {showAnswer
+                      ? flashItem.simpleDefinition || flashItem.definition
+                      : 'Tap reveal to see the definition.'}
+                  </Text>
+                  {showAnswer && flashNativeGloss ? (
+                    <Text
+                      style={{
+                        fontFamily: fontBody,
+                        fontSize: 14,
+                        lineHeight: 20,
+                        color: theme.learnOutline,
+                        fontStyle: 'italic',
+                      }}
+                    >
+                      {flashNativeGloss}
+                    </Text>
+                  ) : null}
+                </View>
                 <Pressable
                   onPress={() => setShowAnswer((v) => !v)}
                   style={{
@@ -518,6 +541,7 @@ export function LearnScreen({
 
 function WordGlassCard({
   theme,
+  mainLanguage,
   item,
   learnDark,
   fontHeadline,
@@ -532,6 +556,7 @@ function WordGlassCard({
   onSetMastered,
 }: {
   theme: AppTheme
+  mainLanguage: string
   item: VocabItem
   learnDark: boolean
   fontHeadline?: string
@@ -547,6 +572,7 @@ function WordGlassCard({
 }) {
   const typeLabel = item.type === 'word' ? 'WORD' : 'PHRASE'
   const typeMuted = item.type === 'word' ? theme.learnAccent : theme.learnTertiary
+  const nativeLine = getNativeGloss(item, mainLanguage)
 
   return (
     <View
@@ -610,18 +636,32 @@ function WordGlassCard({
           </View>
         </View>
 
-        <Text
-          style={{
-            fontFamily: fontBody,
-            fontSize: 14,
-            lineHeight: 21,
-            color: theme.learnOnSurfaceVariant,
-            marginTop: 12,
-            marginBottom: 18,
-          }}
-        >
-          {item.simpleDefinition || item.definition}
-        </Text>
+        <View style={{ marginTop: 12, marginBottom: 18 }}>
+          <Text
+            style={{
+              fontFamily: fontBody,
+              fontSize: 14,
+              lineHeight: 21,
+              color: theme.learnOnSurfaceVariant,
+            }}
+          >
+            {item.simpleDefinition || item.definition}
+          </Text>
+          {nativeLine ? (
+            <Text
+              style={{
+                fontFamily: fontBody,
+                fontSize: 13,
+                lineHeight: 19,
+                color: theme.learnOutline,
+                fontStyle: 'italic',
+                marginTop: 8,
+              }}
+            >
+              {nativeLine}
+            </Text>
+          ) : null}
+        </View>
 
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
           <MiniStatusChip

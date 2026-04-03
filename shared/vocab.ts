@@ -1,4 +1,5 @@
-import type { VocabItem, VocabStatus } from './types'
+import { normalizeMainLanguageCode } from './languages'
+import type { GeneratedResult, VocabItem, VocabStatus } from './types'
 
 /** Map Firestore raw status (including legacy) to canonical learning | mastered. */
 export function mapRawStatusToVocabStatus(raw: unknown): VocabStatus {
@@ -60,6 +61,25 @@ export function normalizeRawVocabDoc(id: string, data: any): VocabItem {
       ? Math.max(0, Math.floor(data.seenCount))
       : 0
 
+  const meaningQuizStreak =
+    typeof data.meaningQuizStreak === 'number' && Number.isFinite(data.meaningQuizStreak)
+      ? Math.max(0, Math.floor(data.meaningQuizStreak))
+      : undefined
+
+  let lastSessionSwipe: 'weak' | 'strong' | undefined
+  if (data.lastSessionSwipe === 'weak' || data.lastSessionSwipe === 'strong') {
+    lastSessionSwipe = data.lastSessionSwipe
+  }
+
+  let translations: Record<string, string> | undefined
+  if (data.translations && typeof data.translations === 'object' && !Array.isArray(data.translations)) {
+    const o: Record<string, string> = {}
+    for (const [k, v] of Object.entries(data.translations as Record<string, unknown>)) {
+      if (typeof v === 'string' && v.trim()) o[k] = v.trim()
+    }
+    if (Object.keys(o).length) translations = o
+  }
+
   return {
     id,
     text,
@@ -71,11 +91,42 @@ export function normalizeRawVocabDoc(id: string, data: any): VocabItem {
     synonyms,
     nuanceNote: typeof data.nuanceNote === 'string' ? data.nuanceNote : undefined,
     gmatUsageNote: typeof data.gmatUsageNote === 'string' ? data.gmatUsageNote : undefined,
+    translations,
     status,
     flagged: Boolean(data.flagged),
     seenCount,
+    ...(meaningQuizStreak !== undefined ? { meaningQuizStreak } : {}),
+    ...(lastSessionSwipe !== undefined ? { lastSessionSwipe } : {}),
     lastSeenAt: data.lastSeenAt,
     createdAt: data.createdAt,
     updatedAt: data.updatedAt,
   }
+}
+
+/** Short gloss in the learner's main language, if stored and not English. */
+export function getNativeGloss(item: VocabItem, mainLanguage: string): string | undefined {
+  const lang = normalizeMainLanguageCode(mainLanguage)
+  if (lang === 'en') return undefined
+  const t = item.translations?.[lang]
+  return typeof t === 'string' && t.trim() ? t.trim() : undefined
+}
+
+/** Merge Firestore `translations` when saving a generated word; preserves keys for other languages. */
+export function mergeTranslationsForSave(
+  existing: Record<string, string> | undefined,
+  mainLanguage: string | undefined,
+  result: Pick<GeneratedResult, 'translationSimple'>,
+): Record<string, string> | undefined {
+  const lang = normalizeMainLanguageCode(mainLanguage ?? 'en')
+  const prev: Record<string, string> =
+    existing && typeof existing === 'object' && !Array.isArray(existing)
+      ? Object.fromEntries(
+          Object.entries(existing).filter(([, v]) => typeof v === 'string' && String(v).trim()),
+        )
+      : {}
+  if (lang !== 'en') {
+    const gloss = typeof result.translationSimple === 'string' ? result.translationSimple.trim() : ''
+    if (gloss) prev[lang] = gloss
+  }
+  return Object.keys(prev).length ? prev : undefined
 }

@@ -8,8 +8,11 @@ import {
   query,
   serverTimestamp,
   updateDoc,
+  writeBatch,
 } from 'firebase/firestore'
 import type { VocabItem, VocabStatus } from '../../shared/types'
+import type { SessionWordOutcome } from '../../shared/sessionOutcome'
+import { computeWordFieldsAfterSession } from '../../shared/sessionOutcome'
 import {
   mapRawStatusToVocabStatus,
   normalizeRawVocabDoc,
@@ -102,4 +105,28 @@ export async function applySessionWordOutcome(params: {
     updatedAt: serverTimestamp(),
     status: params.status,
   })
+}
+
+/** Persist swipe + MCQ results for each word in the daily batch (one exposure each). */
+export async function applySessionBatchOutcome(
+  itemsById: Map<string, VocabItem>,
+  outcomes: SessionWordOutcome[],
+) {
+  const uid = requireUserId()
+  const batch = writeBatch(db)
+  for (const o of outcomes) {
+    const item = itemsById.get(o.id)
+    if (!item) continue
+    const f = computeWordFieldsAfterSession(item, o.swipe, o.mcqCorrect)
+    const ref = doc(db, 'users', uid, 'words', o.id)
+    batch.update(ref, {
+      seenCount: increment(1),
+      lastSeenAt: serverTimestamp(),
+      meaningQuizStreak: f.meaningQuizStreak,
+      status: f.status,
+      lastSessionSwipe: f.lastSessionSwipe,
+      updatedAt: serverTimestamp(),
+    })
+  }
+  await batch.commit()
 }

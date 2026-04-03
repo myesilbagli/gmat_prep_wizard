@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
+import { onAuthStateChanged } from 'firebase/auth'
 import { useSearchParams } from 'react-router-dom'
+import { DEFAULT_MAIN_LANGUAGE, normalizeMainLanguageCode } from '../../shared/languages'
+import { getNativeGloss } from '../../shared/vocab'
 import type { VocabItem, VocabStatus } from '../lib/vocab'
 import {
   listVocabItems,
@@ -9,6 +12,7 @@ import {
   deleteVocabItem,
 } from '../lib/vocab'
 import { auth } from '../lib/firebase'
+import { ensureUserProfileDefaults } from '../lib/userProfile'
 import {
   IconChevronLeft,
   IconChevronRight,
@@ -38,6 +42,7 @@ export function LearnPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [flashIndex, setFlashIndex] = useState(0)
   const [showAnswer, setShowAnswer] = useState(false)
+  const [mainLanguage, setMainLanguage] = useState(DEFAULT_MAIN_LANGUAGE)
   const [paraState, setParaState] = useState<
     | { status: 'idle' }
     | { status: 'loading' }
@@ -64,6 +69,29 @@ export function LearnPage() {
     return () => {
       cancelled = true
     }
+  }, [])
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      if (!u) {
+        setMainLanguage(DEFAULT_MAIN_LANGUAGE)
+        return
+      }
+      void ensureUserProfileDefaults()
+        .then((p) => setMainLanguage(normalizeMainLanguageCode(p.mainLanguage)))
+        .catch(() => {})
+    })
+    return () => unsub()
+  }, [])
+
+  useEffect(() => {
+    const reload = () => {
+      void ensureUserProfileDefaults()
+        .then((p) => setMainLanguage(normalizeMainLanguageCode(p.mainLanguage)))
+        .catch(() => {})
+    }
+    window.addEventListener('gmat-vocab-profile-updated', reload)
+    return () => window.removeEventListener('gmat-vocab-profile-updated', reload)
   }, [])
 
   useEffect(() => {
@@ -454,6 +482,7 @@ export function LearnPage() {
               <FlashcardView
                 key={flashItem.id}
                 item={flashItem}
+                mainLanguage={mainLanguage}
                 index={flashIndex}
                 total={filtered.length}
                 showAnswer={showAnswer}
@@ -531,6 +560,7 @@ export function LearnPage() {
             <VocabCard
               key={item.id}
               item={item}
+              mainLanguage={mainLanguage}
               onChangeStatus={handleStatusChange}
               onToggleFlagged={handleToggleFlagged}
             />
@@ -666,11 +696,13 @@ function FilterChip(props: {
 
 function VocabCard(props: {
   item: VocabItem
+  mainLanguage: string
   onChangeStatus: (id: string, status: VocabStatus) => void
   onToggleFlagged: (id: string, flagged: boolean) => void
 }) {
-  const { item } = props
+  const { item, mainLanguage } = props
   const [open, setOpen] = useState(false)
+  const nativeLine = getNativeGloss(item, mainLanguage)
 
   return (
     <div
@@ -759,6 +791,14 @@ function VocabCard(props: {
       <p className="muted" style={{ fontSize: 14, lineHeight: 1.5, margin: 0 }}>
         {item.simpleDefinition || item.definition || 'No definition available yet.'}
       </p>
+      {nativeLine ? (
+        <p
+          className="muted"
+          style={{ fontSize: 13, lineHeight: 1.5, margin: '6px 0 0', fontStyle: 'italic', opacity: 0.92 }}
+        >
+          {nativeLine}
+        </p>
+      ) : null}
 
       <div
         style={{
@@ -766,6 +806,7 @@ function VocabCard(props: {
           flexWrap: 'wrap',
           gap: 8,
           alignItems: 'center',
+          marginTop: 8,
         }}
       >
         <StatusChip
@@ -828,6 +869,7 @@ function flashStatusBtnClass(status: VocabStatus, current: VocabStatus) {
 
 function FlashcardView(props: {
   item: VocabItem
+  mainLanguage: string
   index: number
   total: number
   showAnswer: boolean
@@ -837,7 +879,7 @@ function FlashcardView(props: {
   onChangeStatus: (id: string, status: VocabStatus) => void
   onToggleFlagged: (id: string, flagged: boolean) => void
 }) {
-  const { item } = props
+  const { item, mainLanguage } = props
   const [detailsOpen, setDetailsOpen] = useState(false)
 
   useEffect(() => {
@@ -847,6 +889,7 @@ function FlashcardView(props: {
   const simple = (item.simpleDefinition || '').trim()
   const full = (item.definition || '').trim()
   const primaryDef = simple || full || '—'
+  const nativeLine = getNativeGloss(item, mainLanguage)
   const showFullDefinitionInDetail = Boolean(full && full !== primaryDef)
   const hasExtras =
     Boolean(item.exampleSentence) ||
@@ -909,6 +952,14 @@ function FlashcardView(props: {
                 <div style={{ fontSize: 15, lineHeight: 1.55, color: 'var(--text)' }}>
                   {primaryDef}
                 </div>
+                {nativeLine ? (
+                  <div
+                    className="muted"
+                    style={{ fontSize: 14, lineHeight: 1.5, marginTop: 8, fontStyle: 'italic' }}
+                  >
+                    {nativeLine}
+                  </div>
+                ) : null}
               </div>
 
               {(showFullDefinitionInDetail || hasExtras) && (

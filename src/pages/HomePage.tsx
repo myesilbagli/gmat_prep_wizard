@@ -4,6 +4,11 @@ import { Link } from 'react-router-dom'
 import { auth } from '../lib/firebase'
 import { listVocabItems } from '../lib/vocab'
 import type { GeneratedResult } from '../lib/types'
+import {
+  DEFAULT_MAIN_LANGUAGE,
+  getMainLanguageLabel,
+  normalizeMainLanguageCode,
+} from '../../shared/languages'
 import { saveWord } from '../lib/words'
 import { ensureUserProfileDefaults } from '../lib/userProfile'
 import {
@@ -33,6 +38,25 @@ function emptyResult(): GeneratedResult {
   }
 }
 
+function pickTrimmedString(v: unknown): string | undefined {
+  if (typeof v !== 'string') return undefined
+  const t = v.trim()
+  return t || undefined
+}
+
+/** Merge `/generate` JSON; some models return `translation_simple` instead of `translationSimple`. */
+function normalizeGenerateResultFromApi(raw: unknown): GeneratedResult {
+  const o = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {}
+  const merged = { ...emptyResult(), ...o } as GeneratedResult
+  const gloss =
+    pickTrimmedString(o.translationSimple) ??
+    pickTrimmedString(o.translation_simple) ??
+    pickTrimmedString((o.result as Record<string, unknown> | undefined)?.translationSimple) ??
+    pickTrimmedString((o.result as Record<string, unknown> | undefined)?.translation_simple)
+  if (gloss) merged.translationSimple = gloss
+  return merged
+}
+
 export function HomePage() {
   const [text, setText] = useState('')
   const [state, setState] = useState<GenerateState>({ status: 'idle' })
@@ -49,6 +73,7 @@ export function HomePage() {
   const [profileLoading, setProfileLoading] = useState(false)
   const [streak, setStreak] = useState<number | null>(null)
   const [sessionCount, setSessionCount] = useState<number | null>(null)
+  const [mainLanguage, setMainLanguage] = useState(DEFAULT_MAIN_LANGUAGE)
 
   async function loadDeckStats() {
     if (!auth.currentUser) {
@@ -78,15 +103,27 @@ export function HomePage() {
           .then((p) => {
             setStreak(p.streakCurrent)
             setSessionCount(p.sessionCount)
+            setMainLanguage(normalizeMainLanguageCode(p.mainLanguage))
           })
           .catch(() => {})
           .finally(() => setProfileLoading(false))
       } else {
         setStreak(null)
         setSessionCount(null)
+        setMainLanguage(DEFAULT_MAIN_LANGUAGE)
       }
     })
     return () => unsub()
+  }, [])
+
+  useEffect(() => {
+    const reload = () => {
+      void ensureUserProfileDefaults()
+        .then((p) => setMainLanguage(normalizeMainLanguageCode(p.mainLanguage)))
+        .catch(() => {})
+    }
+    window.addEventListener('gmat-vocab-profile-updated', reload)
+    return () => window.removeEventListener('gmat-vocab-profile-updated', reload)
   }, [])
   const canGenerate = useMemo(() => text.trim().length > 0, [text])
 
@@ -101,13 +138,17 @@ export function HomePage() {
         (import.meta.env.VITE_FUNCTIONS_BASE_URL as string | undefined) ?? ''
       if (!baseUrl) throw new Error('Missing VITE_FUNCTIONS_BASE_URL')
 
+      const profile = await ensureUserProfileDefaults()
+      const lang = normalizeMainLanguageCode(profile.mainLanguage)
+      setMainLanguage(lang)
+
       const res = await fetch(`${baseUrl}/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ text: text.trim() }),
+        body: JSON.stringify({ text: text.trim(), mainLanguage: lang }),
       })
 
       if (!res.ok) {
@@ -115,8 +156,8 @@ export function HomePage() {
         throw new Error(resText || `Request failed (${res.status})`)
       }
 
-      const json = (await res.json()) as GeneratedResult
-      setState({ status: 'ready', result: { ...emptyResult(), ...json } })
+      const raw = await res.json()
+      setState({ status: 'ready', result: normalizeGenerateResultFromApi(raw) })
     } catch (e) {
       setState({
         status: 'error',
@@ -131,7 +172,10 @@ export function HomePage() {
     try {
       const trimmed = text.trim()
       const type = trimmed.includes(' ') ? 'phrase' : 'word'
-      const { id } = await saveWord({ text: trimmed, type, result: state.result })
+      const profile = await ensureUserProfileDefaults()
+      const lang = normalizeMainLanguageCode(profile.mainLanguage)
+      setMainLanguage(lang)
+      const { id } = await saveWord({ text: trimmed, type, result: state.result, mainLanguage: lang })
       setSaved(true)
       setState({
         status: 'ready',
@@ -326,6 +370,7 @@ export function HomePage() {
           <WordAnalysisCard
             word={text.trim()}
             result={state.result}
+            mainLanguage={mainLanguage}
             onSave={save}
             saving={saving}
             saved={saved}
@@ -361,12 +406,14 @@ function LookupLoading({ word }: { word: string }) {
 function WordAnalysisCard({
   word,
   result,
+  mainLanguage,
   onSave,
   saving,
   saved,
 }: {
   word: string
   result: GeneratedResult
+  mainLanguage: string
   onSave: () => void
   saving: boolean
   saved: boolean
@@ -374,6 +421,12 @@ function WordAnalysisCard({
   const typeLabel = word.includes(' ') ? 'PHRASE' : 'WORD'
   const exampleSentence = result.exampleSentence ?? ''
   const wordRegex = new RegExp(`\\b(${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})\\b`, 'gi')
+  const nativeGloss = result.translationSimple?.trim() ?? ''
+  const languageTitle = (() => {
+    const full = getMainLanguageLabel(mainLanguage)
+    const cut = full.indexOf(' (')
+    return cut >= 0 ? full.slice(0, cut) : full
+  })()
 
   return (
     <div style={{ display: 'grid', gap: 20 }}>
@@ -529,6 +582,47 @@ function WordAnalysisCard({
           </div>
         </div>
       )}
+
+      {nativeGloss ? (
+        <div style={{ display: 'flex', gap: 12 }}>
+          <div style={{ color: 'var(--muted)', flexShrink: 0, marginTop: 2 }}>
+            <IconBook />
+          </div>
+          <div>
+            <div
+              style={{
+                fontSize: 16,
+                fontWeight: 800,
+                color: 'var(--text)',
+                letterSpacing: -0.2,
+                marginBottom: 6,
+              }}
+            >
+              {languageTitle}
+            </div>
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 700,
+                color: 'var(--muted)',
+                marginBottom: 6,
+              }}
+            >
+              Meaning
+            </div>
+            <p
+              style={{
+                margin: 0,
+                fontSize: 15,
+                lineHeight: 1.55,
+                color: 'var(--text)',
+              }}
+            >
+              {nativeGloss}
+            </p>
+          </div>
+        </div>
+      ) : null}
 
       {result.nuanceNote && (
         <div style={{ display: 'flex', gap: 12 }}>

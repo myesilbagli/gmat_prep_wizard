@@ -10,6 +10,7 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore'
+import { mergeTranslationsForSave } from '../../shared/vocab'
 import { auth, db } from './firebase'
 import type { GeneratedResult, WordDoc } from './types'
 
@@ -27,6 +28,7 @@ export async function saveWord(params: {
   word?: string
   result: GeneratedResult
   tags?: string[]
+  mainLanguage?: string
 }) {
   const uid = requireUserId()
   const rawText = (params.text ?? params.word ?? '').trim()
@@ -49,6 +51,16 @@ export async function saveWord(params: {
   const existing =
     !existingByText.empty ? existingByText : existingByWord ?? existingByText
 
+  const existingTranslations =
+    !existing.empty
+      ? (existing.docs[0].data() as { translations?: Record<string, string> }).translations
+      : undefined
+  const translations = mergeTranslationsForSave(
+    existingTranslations,
+    params.mainLanguage,
+    params.result,
+  )
+
   const payload: Omit<WordDoc, 'createdAt' | 'updatedAt'> & {
     createdAt?: unknown
     updatedAt: unknown
@@ -69,6 +81,7 @@ export async function saveWord(params: {
     flagged: false,
     source: 'gpt',
     result: params.result,
+    ...(translations ? { translations } : {}),
     tags: params.tags ?? [],
     updatedAt: serverTimestamp(),
   }

@@ -10,6 +10,7 @@ import {
   TextInput,
   View,
 } from 'react-native'
+import { MAIN_LANGUAGE_OPTIONS, normalizeMainLanguageCode } from '@shared/languages'
 import type { ExamPart, ExamTarget } from '@shared/userProfile'
 import { DEFAULT_TIMEZONE } from '@shared/userProfile'
 import { useAuth } from '../context/AuthContext'
@@ -29,6 +30,8 @@ type Props = {
   setColorScheme: (next: 'light' | 'dark') => void
   visible: boolean
   onClose: () => void
+  /** After exam/timezone/main language save succeeds. */
+  onProfileSaved?: () => void
 }
 
 export function ProfileSheet({
@@ -37,6 +40,7 @@ export function ProfileSheet({
   setColorScheme,
   visible,
   onClose,
+  onProfileSaved,
 }: Props) {
   const { user } = useAuth()
   const [loadingProfile, setLoadingProfile] = useState(false)
@@ -47,6 +51,7 @@ export function ProfileSheet({
   const [examYear, setExamYear] = useState(new Date().getFullYear())
   const [examMonth, setExamMonth] = useState(1)
   const [examPart, setExamPart] = useState<ExamPart>('mid')
+  const [mainLanguage, setMainLanguage] = useState('en')
 
   const yearOptions = useMemo(() => {
     const y = new Date().getFullYear()
@@ -62,6 +67,7 @@ export function ProfileSheet({
       .then((p) => {
         if (cancelled) return
         setTimezone(p.timezone || DEFAULT_TIMEZONE)
+        setMainLanguage(normalizeMainLanguageCode(p.mainLanguage))
         if (p.examTarget) {
           setExamYear(p.examTarget.year)
           setExamMonth(p.examTarget.month)
@@ -82,10 +88,14 @@ export function ProfileSheet({
     setSaving(true)
     setSaved(false)
     try {
-      await saveUserProfilePatch({ timezone: timezone.trim() || DEFAULT_TIMEZONE })
+      await saveUserProfilePatch({
+        timezone: timezone.trim() || DEFAULT_TIMEZONE,
+        mainLanguage: normalizeMainLanguageCode(mainLanguage),
+      })
       const target: ExamTarget = { year: examYear, month: examMonth, part: examPart }
       await saveExamTarget(target)
       setSaved(true)
+      onProfileSaved?.()
     } finally {
       setSaving(false)
     }
@@ -176,6 +186,44 @@ export function ProfileSheet({
                 </View>
 
                 <Text style={{ color: theme.muted, fontSize: 11, fontWeight: '700', marginTop: 16 }}>
+                  MAIN LANGUAGE
+                </Text>
+                <Text style={{ color: theme.muted, fontSize: 12, marginTop: 6, lineHeight: 18 }}>
+                  Short gloss on cards is shown in this language; English definitions stay as the study language.
+                </Text>
+                <ScrollView
+                  style={{ marginTop: 10, maxHeight: 200 }}
+                  nestedScrollEnabled
+                  showsVerticalScrollIndicator
+                >
+                  {MAIN_LANGUAGE_OPTIONS.map((opt) => (
+                    <Pressable
+                      key={opt.code}
+                      onPress={() => setMainLanguage(opt.code)}
+                      style={{
+                        paddingVertical: 10,
+                        paddingHorizontal: 12,
+                        borderRadius: 10,
+                        marginBottom: 6,
+                        borderWidth: 1,
+                        borderColor: mainLanguage === opt.code ? theme.text : theme.border,
+                        backgroundColor: mainLanguage === opt.code ? theme.surface2 : 'transparent',
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: mainLanguage === opt.code ? theme.text : theme.muted,
+                          fontSize: 14,
+                          fontWeight: mainLanguage === opt.code ? '700' : '600',
+                        }}
+                      >
+                        {opt.label}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+
+                <Text style={{ color: theme.muted, fontSize: 11, fontWeight: '700', marginTop: 16 }}>
                   EXAM WINDOW
                 </Text>
                 {loadingProfile ? (
@@ -237,7 +285,7 @@ export function ProfileSheet({
                       }}
                     >
                       <Text style={{ color: theme.text, fontWeight: '700' }}>
-                        {saving ? 'Saving…' : 'Save exam + timezone'}
+                        {saving ? 'Saving…' : 'Save profile'}
                       </Text>
                     </Pressable>
                     {saved ? (

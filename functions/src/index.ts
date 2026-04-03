@@ -41,6 +41,8 @@ type GeneratedResult = {
   // keep extra detail too
   definitions?: string[]
   examples?: string[]
+  /** Short gloss in mainLanguage when not English */
+  translationSimple?: string
 }
 
 type QuizMode = 'meaning' | 'gmat'
@@ -146,11 +148,19 @@ export const api = onRequest(
   },
 )
 
+function normalizeMainLanguage(raw: unknown): string {
+  if (typeof raw !== 'string') return 'en'
+  const c = raw.trim()
+  if (!c || c.toLowerCase() === 'en' || c.startsWith('en-')) return 'en'
+  return c.slice(0, 12)
+}
+
 async function handleGenerate(body: any, ipKey: string, res: any) {
   // Back-compat: accept both { text } and { word } from older clients.
   const rawText = body?.text ?? body?.word
   const text = normalizeText(rawText)
   const type = inferType(text)
+  const mainLanguage = normalizeMainLanguage(body?.mainLanguage)
 
   const key = `${ipKey}:${text.toLowerCase()}`
   if (!globalThis.__rate) (globalThis as any).__rate = new Map<string, number[]>()
@@ -170,6 +180,13 @@ async function handleGenerate(body: any, ipKey: string, res: any) {
   const openai = new OpenAI({ apiKey: requireEnv('OPENAI_API_KEY') })
   const model = process.env.OPENAI_MODEL ?? 'gpt-4.1-mini'
 
+  const langLine =
+    mainLanguage === 'en'
+      ? `All definitions and glosses must be in English only. Omit key "translationSimple" or set it to "".`
+      : `All "definition", "simpleDefinition", "exampleSentence", and notes must remain in English (GMAT study language). ` +
+        `Also include "translationSimple": a very short gloss (2-8 words) of the main sense in the learner's language. ` +
+        `Language code for the learner: ${mainLanguage}. Use natural ${mainLanguage} for translationSimple only.`
+
   const prompt = [
     `You are a GMAT verbal tutor.`,
     `Return a JSON object ONLY (no markdown) with keys:`,
@@ -181,6 +198,9 @@ async function handleGenerate(body: any, ipKey: string, res: any) {
     `"gmatUsageNote": string (how it appears in formal GMAT contexts; 1-2 sentences),`,
     `"definitions": string[] (optional: 2-4 concise definitions),`,
     `"examples": string[] (optional: 2-3 extra example sentences),`,
+    mainLanguage === 'en' ? '' : `"translationSimple": string (required when learner language is not English),`,
+    ``,
+    langLine,
     ``,
     `Text: ${text}`,
     `Type: ${type}`,
@@ -210,6 +230,15 @@ async function handleGenerate(body: any, ipKey: string, res: any) {
   if (!parsed) {
     res.status(502).json({ error: 'AI response was not valid JSON' })
     return
+  }
+
+  if (mainLanguage === 'en') {
+    delete (parsed as any).translationSimple
+  } else if (
+    typeof (parsed as any).translationSimple === 'string' &&
+    !(parsed as any).translationSimple.trim()
+  ) {
+    delete (parsed as any).translationSimple
   }
 
   res.status(200).json(parsed)

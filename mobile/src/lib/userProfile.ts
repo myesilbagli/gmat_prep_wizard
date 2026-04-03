@@ -1,5 +1,6 @@
 import { arrayUnion, doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { formatDateKeyInTimezone, getYesterdayKeyInTimezone } from '@shared/dateInTimezone'
+import { DEFAULT_MAIN_LANGUAGE, normalizeMainLanguageCode } from '@shared/languages'
 import type { ExamTarget, UserProfileDoc } from '@shared/userProfile'
 import { DEFAULT_TIMEZONE } from '@shared/userProfile'
 import { auth, db } from './firebase'
@@ -24,7 +25,13 @@ export async function saveUserProfilePatch(
   patch: Partial<
     Pick<
       UserProfileDoc,
-      'timezone' | 'examTarget' | 'streakCurrent' | 'streakLongest' | 'sessionCount' | 'lastActiveDate'
+      | 'timezone'
+      | 'mainLanguage'
+      | 'examTarget'
+      | 'streakCurrent'
+      | 'streakLongest'
+      | 'sessionCount'
+      | 'lastActiveDate'
     >
   >,
 ) {
@@ -48,6 +55,7 @@ export async function ensureUserProfileDefaults(): Promise<UserProfileDoc> {
     const d = snap.data() as Partial<UserProfileDoc>
     return {
       timezone: typeof d.timezone === 'string' && d.timezone ? d.timezone : DEFAULT_TIMEZONE,
+      mainLanguage: normalizeMainLanguageCode(d.mainLanguage),
       examTarget: d.examTarget ?? null,
       streakCurrent: typeof d.streakCurrent === 'number' ? d.streakCurrent : 0,
       streakLongest: typeof d.streakLongest === 'number' ? d.streakLongest : 0,
@@ -57,6 +65,7 @@ export async function ensureUserProfileDefaults(): Promise<UserProfileDoc> {
   }
   const initial: UserProfileDoc = {
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || DEFAULT_TIMEZONE,
+    mainLanguage: DEFAULT_MAIN_LANGUAGE,
     examTarget: null,
     streakCurrent: 0,
     streakLongest: 0,

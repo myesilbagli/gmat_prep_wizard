@@ -11,6 +11,7 @@ import {
   where,
 } from 'firebase/firestore'
 import type { GeneratedResult } from '@shared/types'
+import { mergeTranslationsForSave } from '@shared/vocab'
 import { auth, db } from './firebase'
 
 function requireUserId(): string {
@@ -23,6 +24,7 @@ export async function saveWord(params: {
   text: string
   type?: 'word' | 'phrase'
   result: GeneratedResult
+  mainLanguage?: string
 }) {
   const uid = requireUserId()
   const normalizedText = params.text.trim().replace(/\s+/g, ' ')
@@ -32,6 +34,15 @@ export async function saveWord(params: {
   const wordsCol = collection(db, 'users', uid, 'words')
 
   const existing = await getDocs(query(wordsCol, where('textLower', '==', textLower)))
+  const existingTranslations =
+    !existing.empty
+      ? (existing.docs[0].data() as { translations?: Record<string, string> }).translations
+      : undefined
+  const translations = mergeTranslationsForSave(
+    existingTranslations,
+    params.mainLanguage,
+    params.result,
+  )
   const payload = {
     word: textLower,
     text: normalizedText,
@@ -47,6 +58,7 @@ export async function saveWord(params: {
     flagged: false,
     source: 'gpt',
     result: params.result,
+    ...(translations ? { translations } : {}),
     tags: [],
     updatedAt: serverTimestamp(),
   }

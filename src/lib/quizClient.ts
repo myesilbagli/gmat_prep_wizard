@@ -1,3 +1,4 @@
+import { shuffleQuizQuestions } from '../../shared/quizShuffle'
 import { auth } from './firebase'
 import type { QuizQuestion } from '../../shared/types'
 
@@ -35,21 +36,9 @@ export async function fetchMeaningQuestions(
   return json.questions
 }
 
-/** Load all meaning MCQs for a session up front (parallel batches) — no per-step latency. */
-export async function prefetchSessionMeaningQuestions(params: {
-  reviewIds: string[]
-  newIds: string[]
-  quizIds: string[]
-}): Promise<{
-  review: QuizQuestion[]
-  newWords: QuizQuestion[]
-  quiz: QuizQuestion[]
-}> {
-  const { reviewIds, newIds, quizIds } = params
-  const [review, newWords, quiz] = await Promise.all([
-    reviewIds.length > 0 ? fetchMeaningQuestions(reviewIds, reviewIds.length) : Promise.resolve([] as QuizQuestion[]),
-    newIds.length > 0 ? fetchMeaningQuestions(newIds, newIds.length) : Promise.resolve([] as QuizQuestion[]),
-    quizIds.length > 0 ? fetchMeaningQuestions(quizIds, quizIds.length) : Promise.resolve([] as QuizQuestion[]),
-  ])
-  return { review, newWords, quiz }
+/** One batch of meaning MCQs; client-shuffles options for correct answer position. */
+export async function fetchMeaningQuestionsForBatch(itemIds: string[]): Promise<QuizQuestion[]> {
+  if (itemIds.length === 0) return []
+  const raw = await fetchMeaningQuestions(itemIds, itemIds.length)
+  return shuffleQuizQuestions(raw)
 }

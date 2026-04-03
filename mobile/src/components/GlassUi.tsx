@@ -54,35 +54,6 @@ export function glassScreenShadow(theme: AppTheme) {
   }
 }
 
-export function GlassBackgroundBlobs({ theme }: { theme: AppTheme }) {
-  return (
-    <View pointerEvents="none" style={[StyleSheet.absoluteFill, { overflow: 'hidden' }]}>
-      <View
-        style={{
-          position: 'absolute',
-          top: 48,
-          right: -72,
-          width: 260,
-          height: 260,
-          borderRadius: 130,
-          backgroundColor: theme.learnGlowBlob1,
-        }}
-      />
-      <View
-        style={{
-          position: 'absolute',
-          bottom: 100,
-          left: -56,
-          width: 220,
-          height: 220,
-          borderRadius: 110,
-          backgroundColor: theme.learnGlowBlob2,
-        }}
-      />
-    </View>
-  )
-}
-
 export function GlassScreenRoot({
   theme,
   children,
@@ -90,12 +61,7 @@ export function GlassScreenRoot({
   theme: AppTheme
   children: ReactNode
 }) {
-  return (
-    <View style={{ flex: 1, backgroundColor: theme.learnScreenBg }}>
-      <GlassBackgroundBlobs theme={theme} />
-      {children}
-    </View>
-  )
+  return <View style={{ flex: 1, backgroundColor: theme.learnScreenBg }}>{children}</View>
 }
 
 export function GlassTitleHeader({

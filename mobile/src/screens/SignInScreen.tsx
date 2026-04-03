@@ -1,15 +1,11 @@
+import * as AppleAuthentication from 'expo-apple-authentication'
 import { useEffect, useState } from 'react'
-import { Pressable, Text, View } from 'react-native'
-import * as AuthSession from 'expo-auth-session'
-import * as Google from 'expo-auth-session/providers/google'
-import * as WebBrowser from 'expo-web-browser'
-import Constants from 'expo-constants'
+import { ActivityIndicator, Pressable, Text, View } from 'react-native'
 import { Input, PrimaryButton } from '../components/UI'
-import { signInWithEmail, signInWithGoogleIdToken } from '../lib/auth'
-import { getGoogleOAuthConfig } from '../lib/env'
+import { signInWithAppleIdToken, signInWithEmail, signInWithGoogleIdToken } from '../lib/auth'
+import { getAppleIdTokenNative, isAppleSignInAvailable } from '../lib/appleNativeSignIn'
+import { getGoogleIdTokenNative } from '../lib/googleNativeSignIn'
 import type { AppTheme } from '../theme'
-
-WebBrowser.maybeCompleteAuthSession()
 
 export function SignInScreen({
   theme,
@@ -25,42 +21,52 @@ export function SignInScreen({
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
-  const googleConfig = getGoogleOAuthConfig()
-  const useProxy = Constants.appOwnership === 'expo'
-  const owner = Constants.expoConfig?.owner
-  const slug = Constants.expoConfig?.slug
-  const projectNameForProxy = useProxy && owner && slug ? `@${owner}/${slug}` : undefined
-  const proxyRedirectUri = AuthSession.makeRedirectUri({
-    useProxy,
-    projectNameForProxy,
-    scheme: 'gmatwizard',
-  })
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    ...googleConfig,
-    redirectUri: proxyRedirectUri,
-  })
+  const [appleLoading, setAppleLoading] = useState(false)
+  const [showApple, setShowApple] = useState(false)
 
   useEffect(() => {
-    if (response?.type !== 'success') return
-    const idToken =
-      response.authentication?.idToken ||
-      (typeof response.params?.id_token === 'string' ? response.params.id_token : undefined)
-    if (!idToken) {
-      setError('Google sign-in did not return a valid token.')
-      setGoogleLoading(false)
-      return
-    }
-    void (async () => {
-      setError(null)
-      try {
-        await signInWithGoogleIdToken(idToken)
-      } catch (e) {
-        setError(e instanceof Error ? e.message : 'Failed to sign in with Google')
-      } finally {
-        setGoogleLoading(false)
+    void isAppleSignInAvailable().then(setShowApple)
+  }, [])
+
+  async function handleApple() {
+    setError(null)
+    setAppleLoading(true)
+    try {
+      const result = await getAppleIdTokenNative()
+      if ('error' in result) {
+        setError(result.error)
+        return
       }
-    })()
-  }, [response])
+      if ('cancelled' in result) {
+        return
+      }
+      await signInWithAppleIdToken(result.idToken, result.rawNonce)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to sign in with Apple')
+    } finally {
+      setAppleLoading(false)
+    }
+  }
+
+  async function handleGoogle() {
+    setError(null)
+    setGoogleLoading(true)
+    try {
+      const result = await getGoogleIdTokenNative()
+      if ('error' in result) {
+        setError(result.error)
+        return
+      }
+      if ('cancelled' in result) {
+        return
+      }
+      await signInWithGoogleIdToken(result.idToken)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to sign in with Google')
+    } finally {
+      setGoogleLoading(false)
+    }
+  }
 
   async function handleSignIn() {
     setError(null)
@@ -83,19 +89,39 @@ export function SignInScreen({
       <Text style={{ color: theme.muted }}>
         Continue your GMAT prep with GMAT Lexicon on mobile.
       </Text>
+      {showApple ? (
+        <View style={{ position: 'relative' }}>
+          <AppleAuthentication.AppleAuthenticationButton
+            buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+            buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+            cornerRadius={999}
+            style={{ width: '100%', height: 48, opacity: appleLoading ? 0.55 : 1 }}
+            onPress={() => void handleApple()}
+          />
+          {appleLoading ? (
+            <View
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                top: 0,
+                bottom: 0,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <ActivityIndicator color="#fff" />
+            </View>
+          ) : null}
+        </View>
+      ) : null}
       <PrimaryButton
         theme={theme}
         label="Continue with Google"
-        onPress={() => {
-          setError(null)
-          setGoogleLoading(true)
-          void promptAsync(useProxy ? { useProxy: true, projectNameForProxy } : {}).catch((e: unknown) => {
-            setError(e instanceof Error ? e.message : 'Failed to launch Google sign-in')
-            setGoogleLoading(false)
-          })
-        }}
+        onPress={() => void handleGoogle()}
         loading={googleLoading}
-        disabled={!request || loading}
+        disabled={loading || appleLoading}
       />
       <View style={{ alignItems: 'center', paddingVertical: 2 }}>
         <Text style={{ color: theme.muted, fontSize: 12 }}>or use email</Text>

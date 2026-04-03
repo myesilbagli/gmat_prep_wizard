@@ -1,4 +1,5 @@
 import type { GeneratedResult, QuizMode, QuizQuestion, VocabItem } from '@shared/types'
+import { shuffleQuizQuestions } from '@shared/quizShuffle'
 import { auth } from './firebase'
 import { requireFunctionsBaseUrl } from './env'
 
@@ -11,12 +12,12 @@ async function authHeaders() {
   }
 }
 
-export async function generateWord(text: string): Promise<GeneratedResult> {
+export async function generateWord(text: string, mainLanguage?: string): Promise<GeneratedResult> {
   const baseUrl = requireFunctionsBaseUrl()
   const res = await fetch(`${baseUrl}/generate`, {
     method: 'POST',
     headers: await authHeaders(),
-    body: JSON.stringify({ text: text.trim() }),
+    body: JSON.stringify({ text: text.trim(), mainLanguage: mainLanguage ?? 'en' }),
   })
   if (!res.ok) {
     const err = await res.text().catch(() => '')
@@ -63,21 +64,9 @@ export async function generateQuiz(itemIds: string[], mode: QuizMode, count: num
   return data.questions ?? []
 }
 
-/** Parallel prefetch — all session MCQs before the user advances (no per-step API wait). */
-export async function prefetchSessionMeaningQuestions(params: {
-  reviewIds: string[]
-  newIds: string[]
-  quizIds: string[]
-}): Promise<{
-  review: QuizQuestion[]
-  newWords: QuizQuestion[]
-  quiz: QuizQuestion[]
-}> {
-  const { reviewIds, newIds, quizIds } = params
-  const [review, newWords, quiz] = await Promise.all([
-    reviewIds.length > 0 ? generateQuiz(reviewIds, 'meaning', reviewIds.length) : Promise.resolve([] as QuizQuestion[]),
-    newIds.length > 0 ? generateQuiz(newIds, 'meaning', newIds.length) : Promise.resolve([] as QuizQuestion[]),
-    quizIds.length > 0 ? generateQuiz(quizIds, 'meaning', quizIds.length) : Promise.resolve([] as QuizQuestion[]),
-  ])
-  return { review, newWords, quiz }
+/** One batch of meaning MCQs; client-shuffles options for correct answer position. */
+export async function fetchMeaningQuestionsForBatch(itemIds: string[]): Promise<QuizQuestion[]> {
+  if (itemIds.length === 0) return []
+  const raw = await generateQuiz(itemIds, 'meaning', itemIds.length)
+  return shuffleQuizQuestions(raw)
 }

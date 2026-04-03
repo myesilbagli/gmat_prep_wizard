@@ -9,6 +9,8 @@ export type ExamTarget = {
 
 export type UserProfileDoc = {
   timezone: string
+  /** ISO 639-1 (or regional) code for short native-language glosses on cards; `en` = English only. */
+  mainLanguage?: string
   examTarget: ExamTarget | null
   streakCurrent: number
   streakLongest: number

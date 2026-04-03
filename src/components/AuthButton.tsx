@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { User } from 'firebase/auth'
+import { MAIN_LANGUAGE_OPTIONS, DEFAULT_MAIN_LANGUAGE, normalizeMainLanguageCode } from '../../shared/languages'
 import type { ExamPart, ExamTarget } from '../../shared/userProfile'
 import { DEFAULT_TIMEZONE } from '../../shared/userProfile'
 import { signInWithGoogle, signOutUser, subscribeToAuth } from '../lib/auth'
@@ -23,6 +24,7 @@ export function AuthButton({ theme, setTheme }: AuthButtonProps) {
   const [examYear, setExamYear] = useState(new Date().getFullYear())
   const [examMonth, setExamMonth] = useState(1)
   const [examPart, setExamPart] = useState<ExamPart>('mid')
+  const [mainLanguage, setMainLanguage] = useState(DEFAULT_MAIN_LANGUAGE)
   const boxRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => subscribeToAuth(setUser), [])
@@ -46,6 +48,7 @@ export function AuthButton({ theme, setTheme }: AuthButtonProps) {
       .then((p) => {
         if (cancelled) return
         setTimezone(p.timezone || DEFAULT_TIMEZONE)
+        setMainLanguage(normalizeMainLanguageCode(p.mainLanguage))
         if (p.examTarget) {
           setExamYear(p.examTarget.year)
           setExamMonth(p.examTarget.month)
@@ -69,10 +72,14 @@ export function AuthButton({ theme, setTheme }: AuthButtonProps) {
     setSaving(true)
     setSaved(false)
     try {
-      await saveUserProfilePatch({ timezone: timezone.trim() || DEFAULT_TIMEZONE })
+      await saveUserProfilePatch({
+        timezone: timezone.trim() || DEFAULT_TIMEZONE,
+        mainLanguage: normalizeMainLanguageCode(mainLanguage),
+      })
       const target: ExamTarget = { year: examYear, month: examMonth, part: examPart }
       await saveExamTarget(target)
       setSaved(true)
+      window.dispatchEvent(new Event('gmat-vocab-profile-updated'))
     } finally {
       setSaving(false)
     }
@@ -150,6 +157,25 @@ export function AuthButton({ theme, setTheme }: AuthButtonProps) {
               </div>
 
               <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--muted)', marginTop: 4 }}>
+                MAIN LANGUAGE
+              </div>
+              <p className="muted" style={{ margin: '0 0 8px', fontSize: 12, lineHeight: 1.45 }}>
+                Short gloss on cards in this language; English stays the study language.
+              </p>
+              <select
+                className="input"
+                value={mainLanguage}
+                onChange={(e) => setMainLanguage(e.target.value)}
+                style={{ width: '100%', marginBottom: 4 }}
+              >
+                {MAIN_LANGUAGE_OPTIONS.map((o) => (
+                  <option key={o.code} value={o.code}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--muted)', marginTop: 12 }}>
                 EXAM WINDOW
               </div>
               {loadingProfile ? <div className="muted">Loading profile…</div> : null}
@@ -203,7 +229,7 @@ export function AuthButton({ theme, setTheme }: AuthButtonProps) {
                     onClick={() => void saveProfileSettings()}
                     disabled={saving}
                   >
-                    {saving ? 'Saving…' : 'Save exam + timezone'}
+                    {saving ? 'Saving…' : 'Save profile'}
                   </button>
                   {saved ? <span className="muted" style={{ fontSize: 12 }}>Saved</span> : null}
                 </div>
