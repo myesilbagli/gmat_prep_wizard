@@ -69,12 +69,33 @@ export function GlassTitleHeader({
   title,
   onOpenProfile,
   fontHeadlineSm,
+  showProfileEntry = true,
 }: {
   theme: AppTheme
   title: string
   onOpenProfile?: () => void
   fontHeadlineSm?: string
+  /** When false, title only (e.g. Learn tab — profile lives in the app bar). */
+  showProfileEntry?: boolean
 }) {
+  const titleText = (
+    <Text
+      style={{
+        fontFamily: fontHeadlineSm,
+        fontSize: 17,
+        fontWeight: '800',
+        color: theme.learnHeadline,
+        letterSpacing: -0.3,
+      }}
+    >
+      {title}
+    </Text>
+  )
+
+  if (!showProfileEntry) {
+    return <View style={styles.headerRow}>{titleText}</View>
+  }
+
   return (
     <View style={styles.headerRow}>
       <Pressable
@@ -83,17 +104,7 @@ export function GlassTitleHeader({
         style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}
       >
         <MaterialIcons name="menu" size={22} color={theme.learnHeadline} />
-        <Text
-          style={{
-            fontFamily: fontHeadlineSm,
-            fontSize: 17,
-            fontWeight: '800',
-            color: theme.learnHeadline,
-            letterSpacing: -0.3,
-          }}
-        >
-          {title}
-        </Text>
+        {titleText}
       </Pressable>
       <Pressable
         onPress={onOpenProfile}

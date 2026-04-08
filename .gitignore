@@ -15,6 +15,9 @@ dist-ssr
 .env
 mobile/.env
 
+# Stitch CLI downloads (HTML/screenshots); keep local or CI-only
+.stitch/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

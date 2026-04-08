@@ -21,4 +21,26 @@ config.resolver.extraNodeModules = {
   'react-native': path.resolve(workspaceRoot, 'node_modules/react-native'),
 }
 
+/** Expo Go has no native IAP — use JS mock in development unless disabled. Store builds always use the real native module. */
+function resolveIapUseMock() {
+  if (process.env.NODE_ENV === 'production') return false
+  const v = process.env.EXPO_PUBLIC_IAP_USE_MOCK
+  if (v === '1' || v === 'true') return true
+  if (v === '0' || v === 'false') return false
+  return true
+}
+
+const mockPurchasesPath = path.resolve(projectRoot, 'src/lib/iap/purchasesMock.ts')
+const { resolveRequest: upstreamResolve } = config.resolver
+
+config.resolver.resolveRequest = (context, moduleName, platform) => {
+  if (moduleName === 'react-native-purchases' && resolveIapUseMock()) {
+    return { type: 'sourceFile', filePath: mockPurchasesPath }
+  }
+  if (upstreamResolve) {
+    return upstreamResolve(context, moduleName, platform)
+  }
+  return context.resolveRequest(context, moduleName, platform)
+}
+
 module.exports = config

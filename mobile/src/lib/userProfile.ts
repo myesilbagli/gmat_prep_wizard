@@ -1,7 +1,7 @@
-import { arrayUnion, doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
+import { arrayUnion, doc, getDoc, increment, serverTimestamp, setDoc } from 'firebase/firestore'
 import { formatDateKeyInTimezone, getYesterdayKeyInTimezone } from '@shared/dateInTimezone'
 import { DEFAULT_MAIN_LANGUAGE, normalizeMainLanguageCode } from '@shared/languages'
-import type { ExamTarget, UserProfileDoc } from '@shared/userProfile'
+import type { DailyDoc, ExamTarget, UserProfileDoc } from '@shared/userProfile'
 import { DEFAULT_TIMEZONE } from '@shared/userProfile'
 import { auth, db } from './firebase'
 
@@ -103,6 +103,34 @@ export async function applyStreakAfterSessionComplete(): Promise<UserProfileDoc>
     streakLongest: longest,
     lastActiveDate: today,
   }
+}
+
+/** How many study sessions were started today (for freemium daily cap). */
+export async function getTodaySessionStarts(): Promise<number> {
+  const uid = requireUid()
+  const profile = await ensureUserProfileDefaults()
+  const dateKey = getTodayKey(profile)
+  const dailyRef = doc(db, 'users', uid, 'daily', dateKey)
+  const snap = await getDoc(dailyRef)
+  if (!snap.exists()) return 0
+  const d = snap.data() as DailyDoc
+  return typeof d.sessionStartsCount === 'number' ? d.sessionStartsCount : 0
+}
+
+/** Call once when SessionScreen begins (after initial load). */
+export async function recordSessionStart(): Promise<void> {
+  const uid = requireUid()
+  const profile = await ensureUserProfileDefaults()
+  const dateKey = getTodayKey(profile)
+  const dailyRef = doc(db, 'users', uid, 'daily', dateKey)
+  await setDoc(
+    dailyRef,
+    {
+      sessionStartsCount: increment(1),
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  )
 }
 
 export async function recordDailySessionCompletion(sessionId: string = 'daily_vocab') {

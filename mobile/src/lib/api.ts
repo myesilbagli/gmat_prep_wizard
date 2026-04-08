@@ -67,6 +67,6 @@ export async function generateQuiz(itemIds: string[], mode: QuizMode, count: num
 /** One batch of meaning MCQs; client-shuffles options for correct answer position. */
 export async function fetchMeaningQuestionsForBatch(itemIds: string[]): Promise<QuizQuestion[]> {
   if (itemIds.length === 0) return []
-  const raw = await generateQuiz(itemIds, 'meaning', itemIds.length)
+  const raw = await generateQuiz(itemIds, 'context', itemIds.length)
   return shuffleQuizQuestions(raw)
 }

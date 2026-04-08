@@ -10,13 +10,16 @@ import {
   ScrollView,
   Text,
   TextInput,
-  useWindowDimensions,
   View,
+  useWindowDimensions,
 } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons, MaterialIcons } from '@expo/vector-icons'
+import { FREE_MAX_SAVED_WORDS } from '@shared/freemium'
 import { getMainLanguageLabel } from '@shared/languages'
 import type { GeneratedResult, VocabItem } from '@shared/types'
 import { GlassScreenRoot, isLearnDarkUi, useGlassFonts } from '../components/GlassUi'
+import { useSubscription } from '../context/SubscriptionContext'
 import { generateWord } from '../lib/api'
 import { saveWord } from '../lib/words'
 import { ensureUserProfileDefaults } from '../lib/userProfile'
@@ -46,8 +49,6 @@ export function TodayScreen({
   mainLanguage,
   stats,
   items,
-  onReviewLearning,
-  onReviewFlagged,
   onStartSession,
   onOpenProfile,
   onSavedWord,
@@ -57,15 +58,18 @@ export function TodayScreen({
   stats: { total: number; learning: number; mastered: number; flagged: number }
   /** For Active Deck horizontal list */
   items: VocabItem[]
-  onReviewLearning?: () => void
-  onReviewFlagged?: () => void
   onStartSession: () => void
   onOpenProfile?: () => void
   onSavedWord?: () => void | Promise<void>
 }) {
   const { fontHeadline, fontHeadlineSm, fontBody, fontLabel, fontLabelBold } = useGlassFonts()
+  const { isPro, loading: subLoading, openPaywall } = useSubscription()
   const { height: windowHeight } = useWindowDimensions()
+  const insets = useSafeAreaInsets()
   const learnDark = isLearnDarkUi(theme)
+  /** LEXICON header + bottom tab bar (+ home indicator). Content is already inside SafeAreaView. */
+  const todayChromeOffset = 124 + insets.bottom
+  const scrollMinHeight = Math.max(0, windowHeight - todayChromeOffset)
 
   const [text, setText] = useState('')
   const [state, setState] = useState<GenerateState>({ status: 'idle' })
@@ -111,6 +115,15 @@ export function TodayScreen({
 
   async function onSave() {
     if (state.status !== 'ready') return
+    const trimmed = text.trim()
+    const key = trimmed.toLowerCase()
+    const alreadySaved = items.some(
+      (i) => i.text.trim().toLowerCase() === key || (i.textLower && i.textLower === key),
+    )
+    if (!subLoading && !isPro && !alreadySaved && items.length >= FREE_MAX_SAVED_WORDS) {
+      openPaywall()
+      return
+    }
     setSaving(true)
     try {
       await saveWord({
@@ -131,6 +144,11 @@ export function TodayScreen({
   }
 
   const deckPreview = useMemo(() => items.slice(0, 24), [items])
+  /** Bottom sheet height for generated card: bounded so header + scroll + sticky actions fit on screen */
+  const generateCardSheetHeight = useMemo(
+    () => Math.min(Math.round(windowHeight * 0.9), Math.max(360, windowHeight - insets.top - 16)),
+    [windowHeight, insets.top],
+  )
   const surfaceLow = '#191c22'
   const surfaceContainer = '#1d2026'
   const inputBg = '#0b0e14'
@@ -141,30 +159,46 @@ export function TodayScreen({
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{
-          paddingHorizontal: 24,
-          paddingTop: 8,
-          paddingBottom: 120,
+          flexGrow: 1,
+          minHeight: scrollMinHeight,
+          justifyContent: 'space-between',
+          paddingHorizontal: 20,
+          paddingTop: 4,
+          paddingBottom: 10,
         }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         {/* Quick Capture */}
-        <View style={{ marginBottom: 36 }}>
+        <View style={{ marginBottom: 12 }}>
           <Text
             style={{
               fontFamily: fontHeadline,
-              fontSize: 20,
+              fontSize: 17,
               fontWeight: '700',
               color: theme.learnOnSurface,
-              marginBottom: 20,
+              marginBottom: 8,
             }}
           >
             Quick Capture
           </Text>
+          {!subLoading && !isPro ? (
+            <Text
+              style={{
+                fontFamily: fontBody,
+                fontSize: 12,
+                lineHeight: 16,
+                color: theme.learnOnSurfaceVariant,
+                marginBottom: 8,
+              }}
+            >
+              Free plan: up to {FREE_MAX_SAVED_WORDS} saved words total · {items.length}/{FREE_MAX_SAVED_WORDS} used
+            </Text>
+          ) : null}
           <View
             style={{
-              borderRadius: 16,
-              padding: 22,
+              borderRadius: 14,
+              padding: 14,
               borderWidth: 1,
               borderColor: borderSubtle,
               backgroundColor: learnDark ? 'rgba(189, 194, 255, 0.04)' : theme.learnGlass,
@@ -180,13 +214,13 @@ export function TodayScreen({
               placeholderTextColor={`${theme.learnOutline}99`}
               style={{
                 fontFamily: fontBody,
-                fontSize: 16,
+                fontSize: 15,
                 color: theme.learnOnSurface,
                 backgroundColor: inputBg,
-                borderRadius: 14,
-                paddingHorizontal: 18,
-                paddingVertical: 16,
-                marginBottom: 12,
+                borderRadius: 12,
+                paddingHorizontal: 14,
+                paddingVertical: 11,
+                marginBottom: 8,
               }}
               returnKeyType="done"
               onSubmitEditing={() => {
@@ -200,14 +234,14 @@ export function TodayScreen({
                 flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: 8,
-                paddingVertical: 14,
-                borderRadius: 14,
+                gap: 6,
+                paddingVertical: 10,
+                borderRadius: 12,
                 opacity: !canGenerate || state.status === 'loading' ? 0.45 : pressed ? 0.85 : 1,
               })}
             >
-              <MaterialIcons name="add-circle-outline" size={22} color={theme.learnAccent} />
-              <Text style={{ fontFamily: fontHeadline, fontSize: 16, fontWeight: '700', color: theme.learnAccent }}>
+              <MaterialIcons name="add-circle-outline" size={20} color={theme.learnAccent} />
+              <Text style={{ fontFamily: fontHeadline, fontSize: 15, fontWeight: '700', color: theme.learnAccent }}>
                 Generate Card
               </Text>
             </Pressable>
@@ -215,14 +249,14 @@ export function TodayScreen({
         </View>
 
         {/* Today's Session */}
-        <View style={{ marginBottom: 36 }}>
+        <View style={{ marginBottom: 12 }}>
           <Text
             style={{
               fontFamily: fontHeadline,
-              fontSize: 28,
+              fontSize: 22,
               fontWeight: '800',
               color: theme.learnOnSurface,
-              letterSpacing: -0.5,
+              letterSpacing: -0.4,
             }}
           >
             Today&apos;s Session
@@ -230,32 +264,32 @@ export function TodayScreen({
           <Text
             style={{
               fontFamily: fontBody,
-              fontSize: 16,
-              lineHeight: 24,
+              fontSize: 13,
+              lineHeight: 18,
               color: theme.learnOnSurfaceVariant,
-              marginTop: 8,
-              maxWidth: '92%',
+              marginTop: 4,
             }}
+            numberOfLines={2}
           >
-            Resume your personalized learning path and master new complexities.
+            Resume your daily path — swipe cards below or start a session.
           </Text>
 
           <View
             style={{
-              marginTop: 22,
+              marginTop: 10,
               backgroundColor: surfaceLow,
-              borderRadius: 16,
-              padding: 28,
+              borderRadius: 14,
+              padding: 16,
               overflow: 'hidden',
               borderWidth: 1,
               borderColor: borderSubtle,
             }}
           >
-            <View style={{ position: 'absolute', top: 8, right: 8, opacity: 0.1 }} pointerEvents="none">
-              <MaterialIcons name="import-contacts" size={88} color={theme.learnAccent} />
+            <View style={{ position: 'absolute', top: 4, right: 4, opacity: 0.08 }} pointerEvents="none">
+              <MaterialIcons name="import-contacts" size={64} color={theme.learnAccent} />
             </View>
-            <View style={{ gap: 28, zIndex: 1 }}>
-              <View style={{ flexDirection: 'row', gap: 28 }}>
+            <View style={{ gap: 12, zIndex: 1 }}>
+              <View style={{ flexDirection: 'row', gap: 20 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <View
                     style={{
@@ -268,7 +302,7 @@ export function TodayScreen({
                       shadowRadius: 8,
                     }}
                   />
-                  <Text style={{ fontFamily: fontHeadline, fontSize: 14, fontWeight: '700', color: theme.learnOnSurface }}>
+                  <Text style={{ fontFamily: fontHeadline, fontSize: 13, fontWeight: '700', color: theme.learnOnSurface }}>
                     {profileLoading ? '…' : stats.learning} Learning
                   </Text>
                 </View>
@@ -284,7 +318,7 @@ export function TodayScreen({
                       shadowRadius: 8,
                     }}
                   />
-                  <Text style={{ fontFamily: fontHeadline, fontSize: 14, fontWeight: '700', color: theme.learnOnSurface }}>
+                  <Text style={{ fontFamily: fontHeadline, fontSize: 13, fontWeight: '700', color: theme.learnOnSurface }}>
                     {profileLoading ? '…' : stats.flagged} Flagged
                   </Text>
                 </View>
@@ -294,21 +328,21 @@ export function TodayScreen({
                 style={({ pressed }) => ({
                   backgroundColor: theme.learnAccentStrong,
                   borderRadius: 999,
-                  paddingVertical: 16,
+                  paddingVertical: 12,
                   alignItems: 'center',
                   justifyContent: 'center',
                   opacity: pressed ? 0.92 : 1,
                   shadowColor: '#7c87f3',
-                  shadowOffset: { width: 0, height: 12 },
-                  shadowOpacity: 0.25,
-                  shadowRadius: 20,
-                  elevation: 8,
+                  shadowOffset: { width: 0, height: 8 },
+                  shadowOpacity: 0.22,
+                  shadowRadius: 14,
+                  elevation: 6,
                 })}
               >
                 <Text
                   style={{
                     fontFamily: fontHeadline,
-                    fontSize: 17,
+                    fontSize: 16,
                     fontWeight: '800',
                     color: '#081486',
                   }}
@@ -316,47 +350,35 @@ export function TodayScreen({
                   Start Session
                 </Text>
               </Pressable>
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 20 }}>
-                <Pressable onPress={() => onReviewLearning?.()}>
-                  <Text style={{ fontFamily: fontBody, fontSize: 13, color: theme.learnAccent, fontWeight: '600' }}>
-                    Review learning
-                  </Text>
-                </Pressable>
-                <Pressable onPress={() => onReviewFlagged?.()}>
-                  <Text style={{ fontFamily: fontBody, fontSize: 13, color: theme.learnTertiary, fontWeight: '600' }}>
-                    Review flagged
-                  </Text>
-                </Pressable>
-              </View>
             </View>
           </View>
         </View>
 
         {/* Active Deck */}
-        <View style={{ marginBottom: 8 }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, paddingRight: 4 }}>
-            <Text style={{ fontFamily: fontHeadline, fontSize: 20, fontWeight: '700', color: theme.learnOnSurface }}>
+        <View style={{ marginBottom: 4, flexGrow: 1, justifyContent: 'flex-end', minHeight: 128 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, paddingRight: 4 }}>
+            <Text style={{ fontFamily: fontHeadline, fontSize: 17, fontWeight: '700', color: theme.learnOnSurface }}>
               Active Deck
             </Text>
             <Text
               style={{
                 fontFamily: fontLabel,
-                fontSize: 10,
+                fontSize: 9,
                 fontWeight: '700',
-                letterSpacing: 1.2,
+                letterSpacing: 1,
                 color: theme.learnOutline,
                 textTransform: 'uppercase',
               }}
             >
-              Swipe for more
+              Swipe
             </Text>
           </View>
           {deckPreview.length === 0 ? (
-            <Text style={{ fontFamily: fontBody, fontSize: 14, color: theme.learnOnSurfaceVariant }}>
+            <Text style={{ fontFamily: fontBody, fontSize: 13, color: theme.learnOnSurfaceVariant }} numberOfLines={2}>
               Save words from Quick Capture to fill your deck.
             </Text>
           ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 14, paddingRight: 24 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingRight: 8 }}>
               {deckPreview.map((item) => (
                 <ActiveDeckCard
                   key={item.id}
@@ -393,7 +415,8 @@ export function TodayScreen({
                 borderTopLeftRadius: 20,
                 borderTopRightRadius: 20,
                 maxHeight: '92%',
-                paddingBottom: Platform.OS === 'ios' ? 34 : 20,
+                paddingBottom:
+                  state.status === 'ready' ? 0 : Platform.OS === 'ios' ? Math.max(insets.bottom, 20) : 20,
               }}
             >
               {state.status === 'loading' ? (
@@ -419,16 +442,17 @@ export function TodayScreen({
                 </View>
               ) : null}
               {state.status === 'ready' ? (
-                <ScrollView
-                  keyboardShouldPersistTaps="handled"
-                  showsVerticalScrollIndicator
-                  bounces
-                  style={{ maxHeight: windowHeight * 0.92 }}
-                  contentContainerStyle={{
-                    paddingBottom: Platform.OS === 'ios' ? 28 : 16,
-                  }}
-                >
-                  <View style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <View style={{ height: generateCardSheetHeight }}>
+                  <View
+                    style={{
+                      paddingHorizontal: 20,
+                      paddingTop: 16,
+                      paddingBottom: 8,
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
                     <Text style={{ fontFamily: fontHeadline, fontSize: 18, fontWeight: '800', color: theme.learnOnSurface }}>
                       New card
                     </Text>
@@ -436,7 +460,16 @@ export function TodayScreen({
                       <Ionicons name="close" size={26} color={theme.learnOutline} />
                     </Pressable>
                   </View>
-                  <View style={{ paddingHorizontal: 20, paddingBottom: 8 }}>
+                  <ScrollView
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator
+                    bounces
+                    style={{ flex: 1 }}
+                    contentContainerStyle={{
+                      paddingHorizontal: 20,
+                      paddingBottom: 16,
+                    }}
+                  >
                     <WordAnalysisCard
                       theme={theme}
                       learnDark={learnDark}
@@ -452,14 +485,14 @@ export function TodayScreen({
                       fontLabel={fontLabel}
                       fontLabelBold={fontLabelBold}
                     />
-                  </View>
+                  </ScrollView>
                   <View
                     style={{
                       flexDirection: 'row',
                       gap: 12,
                       paddingHorizontal: 20,
                       paddingTop: 12,
-                      paddingBottom: 4,
+                      paddingBottom: Math.max(insets.bottom, Platform.OS === 'ios' ? 16 : 12),
                       borderTopWidth: 1,
                       borderTopColor: borderSubtle,
                     }}
@@ -494,7 +527,7 @@ export function TodayScreen({
                       </Text>
                     </Pressable>
                   </View>
-                </ScrollView>
+                </View>
               ) : null}
             </Pressable>
           </Pressable>
@@ -525,36 +558,44 @@ function ActiveDeckCard({
   const tagBg = isFlagged ? 'rgba(204, 190, 255, 0.12)' : 'rgba(189, 194, 255, 0.12)'
   const tagColor = isFlagged ? theme.learnTertiary : theme.learnAccent
   const def = (item.simpleDefinition || item.definition || '').trim()
-  const snippet = def.length > 120 ? `${def.slice(0, 117)}…` : def
+  const snippet = def.length > 72 ? `${def.slice(0, 69)}…` : def
 
   return (
     <View
       style={{
-        width: 240,
+        width: 168,
+        minHeight: 118,
         backgroundColor: surfaceContainer,
         borderRadius: 12,
-        padding: 22,
+        padding: 12,
         borderWidth: 1,
         borderColor: borderSubtle,
-        gap: 14,
+        gap: 8,
       }}
     >
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <View
           style={{
-            paddingHorizontal: 10,
-            paddingVertical: 4,
+            paddingHorizontal: 8,
+            paddingVertical: 3,
             borderRadius: 999,
             backgroundColor: tagBg,
           }}
         >
-          <Text style={{ fontSize: 10, fontWeight: '800', color: tagColor, letterSpacing: 0.8 }}>{tag.toUpperCase()}</Text>
+          <Text style={{ fontSize: 9, fontWeight: '800', color: tagColor, letterSpacing: 0.6 }}>{tag.toUpperCase()}</Text>
         </View>
-        <MaterialIcons name="more-vert" size={20} color={theme.learnOutline} />
+        <MaterialIcons name="more-vert" size={18} color={theme.learnOutline} />
       </View>
-      <View style={{ gap: 6 }}>
-        <Text style={{ fontFamily: fontHeadline, fontSize: 20, fontWeight: '800', color: theme.learnOnSurface }}>{item.text}</Text>
-        <Text style={{ fontFamily: fontBody, fontSize: 13, lineHeight: 19, color: theme.learnOnSurfaceVariant }}>{snippet || '—'}</Text>
+      <View style={{ gap: 4, flex: 1 }}>
+        <Text
+          style={{ fontFamily: fontHeadline, fontSize: 16, fontWeight: '800', color: theme.learnOnSurface }}
+          numberOfLines={2}
+        >
+          {item.text}
+        </Text>
+        <Text style={{ fontFamily: fontBody, fontSize: 11, lineHeight: 15, color: theme.learnOnSurfaceVariant }} numberOfLines={3}>
+          {snippet || '—'}
+        </Text>
       </View>
     </View>
   )

@@ -175,13 +175,12 @@ export function HomePage() {
       const profile = await ensureUserProfileDefaults()
       const lang = normalizeMainLanguageCode(profile.mainLanguage)
       setMainLanguage(lang)
-      const { id } = await saveWord({ text: trimmed, type, result: state.result, mainLanguage: lang })
+      await saveWord({ text: trimmed, type, result: state.result, mainLanguage: lang })
       setSaved(true)
       setState({
         status: 'ready',
         result: state.result,
       })
-      window.history.replaceState({}, '', `/words/${id}`)
       void loadDeckStats()
     } catch (e) {
       setState({
@@ -272,22 +271,6 @@ export function HomePage() {
             {deckStats.total} total · {deckStats.learning} learning · {deckStats.mastered}{' '}
             mastered · {deckStats.flagged} flagged
           </span>
-          <div style={{ marginLeft: 'auto', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            <Link
-              to="/learn?filter=learning"
-              className="btn btnPrimary"
-              style={{ fontSize: 12, padding: '8px 14px', textDecoration: 'none' }}
-            >
-              Review learning
-            </Link>
-            <Link
-              to="/learn?filter=flagged"
-              className="btn"
-              style={{ fontSize: 12, padding: '8px 14px', textDecoration: 'none' }}
-            >
-              Review flagged
-            </Link>
-          </div>
         </div>
       ) : null}
 

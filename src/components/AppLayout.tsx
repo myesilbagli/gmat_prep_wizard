@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { APP_HOME } from '../lib/routes'
 import { AuthButton } from './AuthButton'
 
 type Theme = 'dark' | 'light'
@@ -119,10 +120,10 @@ export function AppLayout() {
                   Today
                 </div>
                 <p className="muted" style={{ margin: 0, fontSize: 13 }}>
-                  See your <strong>streak</strong>, set a fuzzy <strong>exam window</strong> and
-                  timezone, and tap <strong>Start session</strong> for the daily review → new →
-                  quiz flow. Below that, <strong>lookup</strong> a word or phrase (e.g.{' '}
-                  <em>obdurate</em>) and tap Generate to add definitions and examples to your deck.
+                  See your <strong>streak</strong> on Today and use <strong>lookup</strong> to add
+                  words. <strong>Start session</strong> runs a guided batch (up to five words:
+                  learn → match → verbal quiz). Set <strong>exam window</strong> and{' '}
+                  <strong>timezone</strong> under <strong>Profile</strong> (top right).
                 </p>
               </section>
               <section>
@@ -130,13 +131,13 @@ export function AppLayout() {
                   Learn
                 </div>
                 <p className="muted" style={{ margin: 0, fontSize: 13 }}>
-                  Filter by All, Learning, Mastered, or Flagged; narrow by Words or Phrases.
-                  Search by text. Mark each word <strong>Learning</strong> or{' '}
-                  <strong>Mastered</strong>. On each card you can change status, flag, delete,
-                  or expand details. Switch to <strong>Flashcards</strong> to study one card at
-                  a time. Switch to <strong>Paragraph</strong> and tap Generate paragraph: the
-                  app picks up to 5 random <strong>Learning</strong> words, builds a short
-                  paragraph, and bolds those words—hover a bold word to see its meaning.
+                  Use <strong>Deck</strong> or <strong>Paragraph</strong>. Filter by All,{' '}
+                  <strong>Do Not Know</strong>, Learning, Mastered, or Flagged; narrow by Words or
+                  Phrases; search by text. On each card you can change status, flag, delete, or
+                  expand details. Tap <strong>Study</strong> to open a focused flashcard flow through
+                  your filtered list. In <strong>Paragraph</strong>, Generate builds a short formal
+                  paragraph from up to five <strong>Learning</strong> items in your current
+                  filter—hover bold targets for meanings.
                 </p>
               </section>
               <section>
@@ -144,8 +145,9 @@ export function AppLayout() {
                   Test
                 </div>
                 <p className="muted" style={{ margin: 0, fontSize: 13 }}>
-                  Choose Meaning or GMAT-style, pick 5 or 10 questions, and run the quiz.
-                  After finishing you get a score and can review the correct answers.
+                  Choose <strong>Meaning in Context</strong> or <strong>GMAT-Style Verbal</strong>,
+                  pick how many questions, and begin a section. After each item you see an
+                  explanation, then your score at the end.
                 </p>
               </section>
             </div>
@@ -153,27 +155,8 @@ export function AppLayout() {
         </div>
       )}
 
-      <header
-        style={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 10,
-          padding: '12px 16px',
-          backdropFilter: 'blur(10px)',
-          background: 'var(--header-bg)',
-          borderBottom: '1px solid var(--border)',
-        }}
-      >
-        <div
-          style={{
-            maxWidth: 980,
-            margin: '0 auto',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 16,
-          }}
-        >
+      <header className="app-header" style={{ position: 'sticky', top: 0, zIndex: 10 }}>
+        <div className="app-header-inner">
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {showBack ? (
               <NavLink
@@ -189,10 +172,10 @@ export function AppLayout() {
               </NavLink>
             ) : null}
             <NavLink
-              to="/"
+              to={APP_HOME}
               style={{ textDecoration: 'none', color: 'inherit' }}
             >
-              <div style={{ fontWeight: 700, letterSpacing: -0.2, fontSize: 17 }}>
+              <div style={{ fontWeight: 800, letterSpacing: '-0.03em', fontSize: 18 }}>
                 GMAT Lexicon
               </div>
             </NavLink>
@@ -200,7 +183,8 @@ export function AppLayout() {
 
           <nav style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <NavLink
-              to="/"
+              to={APP_HOME}
+              end
               style={({ isActive }) => ({
                 textDecoration: 'none',
                 padding: '8px 14px',
@@ -237,6 +221,19 @@ export function AppLayout() {
               })}
             >
               Test
+            </NavLink>
+            <NavLink
+              to="/"
+              style={({ isActive }) => ({
+                textDecoration: 'none',
+                padding: '8px 14px',
+                fontSize: 14,
+                fontWeight: 600,
+                color: isActive ? 'var(--text)' : 'var(--muted)',
+                borderBottom: isActive ? '2px solid var(--text)' : '2px solid transparent',
+              })}
+            >
+              About
             </NavLink>
           </nav>
 

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ScrollView, Text, View } from 'react-native'
+import { Pressable, ScrollView, Text, View } from 'react-native'
 import type { QuizMode, QuizQuestion, VocabItem } from '@shared/types'
 import {
   GlassPanel,
@@ -17,6 +17,7 @@ import { recordWordExposure } from '../lib/vocab'
 import type { AppTheme } from '../theme'
 
 type Phase = 'idle' | 'running' | 'finished'
+type RunSub = 'mcq' | 'feedback'
 
 export function TestScreen({
   theme,
@@ -30,12 +31,14 @@ export function TestScreen({
   const { fontHeadline, fontHeadlineSm, fontBody, fontLabel, fontLabelBold } = useGlassFonts()
   const learnDark = isLearnDarkUi(theme)
 
-  const [mode, setMode] = useState<QuizMode>('meaning')
+  const [mode, setMode] = useState<QuizMode>('context')
   const [count, setCount] = useState(10)
   const [phase, setPhase] = useState<Phase>('idle')
   const [questions, setQuestions] = useState<QuizQuestion[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState<number[]>([])
+  const [runSub, setRunSub] = useState<RunSub>('mcq')
+  const [quizPicked, setQuizPicked] = useState<number | null>(null)
   const [starting, setStarting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -53,6 +56,12 @@ export function TestScreen({
     void recordWordExposure(q.itemId).catch(() => {})
   }, [phase, currentIndex, questions])
 
+  useEffect(() => {
+    if (phase !== 'running') return
+    setRunSub('mcq')
+    setQuizPicked(null)
+  }, [phase, currentIndex])
+
   async function startQuiz() {
     setError(null)
     if (!candidateItems.length) {
@@ -66,9 +75,11 @@ export function TestScreen({
       setQuestions(next)
       setAnswers([])
       setCurrentIndex(0)
+      setRunSub('mcq')
+      setQuizPicked(null)
       setPhase('running')
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to start quiz')
+      setError(e instanceof Error ? e.message : 'Failed to start test')
     } finally {
       setStarting(false)
     }
@@ -80,12 +91,22 @@ export function TestScreen({
       ? questions.reduce((acc, q, idx) => acc + (answers[idx] === q.correctIndex ? 1 : 0), 0)
       : 0
 
-  function onAnswer(optionIndex: number) {
-    const next = [...answers]
-    next[currentIndex] = optionIndex
-    setAnswers(next)
-    if (currentIndex + 1 < questions.length) setCurrentIndex((v) => v + 1)
-    else setPhase('finished')
+  function onPickOption(optionIndex: number) {
+    if (runSub !== 'mcq') return
+    setQuizPicked(optionIndex)
+    setRunSub('feedback')
+  }
+
+  function onContinueAfterFeedback() {
+    if (quizPicked === null || !current) return
+    const nextAnswers = [...answers]
+    nextAnswers[currentIndex] = quizPicked
+    setAnswers(nextAnswers)
+    if (currentIndex + 1 < questions.length) {
+      setCurrentIndex((v) => v + 1)
+    } else {
+      setPhase('finished')
+    }
   }
 
   return (
@@ -100,7 +121,7 @@ export function TestScreen({
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <GlassTitleHeader theme={theme} title="Practice test" onOpenProfile={onOpenProfile} fontHeadlineSm={fontHeadlineSm} />
+        <GlassTitleHeader theme={theme} title="GMAT practice" onOpenProfile={onOpenProfile} fontHeadlineSm={fontHeadlineSm} />
         <Text
           style={{
             fontFamily: fontBody,
@@ -110,27 +131,27 @@ export function TestScreen({
             marginTop: 10,
           }}
         >
-          Multiple choice from your learning and mastered words.
+          Exam-style verbal items built from your deck. Learning items are prioritized; mastered words fill in when needed.
         </Text>
 
         <View style={{ marginTop: 22, gap: 18 }}>
           <GlassPanel theme={theme} learnDark={learnDark} leftAccent={theme.learnAccent}>
             <GlassSectionLabel theme={theme} fontHeadlineSm={fontHeadlineSm}>
-              Test type
+              Section type
             </GlassSectionLabel>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
               <GlassPill
                 theme={theme}
-                label="Meaning"
-                active={mode === 'meaning'}
-                onPress={() => setMode('meaning')}
+                label="Meaning in Context"
+                active={mode === 'context'}
+                onPress={() => setMode('context')}
                 fontLabel={fontLabel}
               />
               <GlassPill
                 theme={theme}
-                label="GMAT-style"
-                active={mode === 'gmat'}
-                onPress={() => setMode('gmat')}
+                label="GMAT-Style Verbal"
+                active={mode === 'verbal'}
+                onPress={() => setMode('verbal')}
                 fontLabel={fontLabel}
               />
             </View>
@@ -154,7 +175,7 @@ export function TestScreen({
             <View style={{ marginTop: 8 }}>
               <GlassPrimaryCta
                 theme={theme}
-                label={starting ? 'Starting…' : 'Start test'}
+                label={starting ? 'Starting…' : 'Begin section'}
                 onPress={() => void startQuiz()}
                 loading={starting}
                 disabled={starting}
@@ -183,27 +204,68 @@ export function TestScreen({
               <Text
                 style={{
                   fontFamily: fontHeadline,
-                  fontSize: 20,
+                  fontSize: 19,
                   fontWeight: '800',
                   color: theme.learnOnSurface,
-                  lineHeight: 28,
+                  lineHeight: 27,
                   marginBottom: 16,
                 }}
               >
                 {current.questionText}
               </Text>
-              <View style={{ gap: 10 }}>
-                {current.options.map((opt, i) => (
-                  <GlassQuizOption
-                    key={i}
-                    theme={theme}
-                    learnDark={learnDark}
-                    label={opt}
-                    onPress={() => onAnswer(i)}
-                    fontBody={fontBody}
-                  />
-                ))}
-              </View>
+              {runSub === 'mcq' ? (
+                <View style={{ gap: 10 }}>
+                  {current.options.map((opt, i) => (
+                    <GlassQuizOption
+                      key={i}
+                      theme={theme}
+                      learnDark={learnDark}
+                      label={opt}
+                      onPress={() => onPickOption(i)}
+                      fontBody={fontBody}
+                    />
+                  ))}
+                </View>
+              ) : (
+                <View style={{ gap: 14 }}>
+                  <Text style={{ fontFamily: fontBody, fontSize: 16, color: theme.learnOnSurface }}>
+                    {quizPicked === current.correctIndex ? (
+                      <Text style={{ fontWeight: '800', color: theme.learnAccent }}>Correct.</Text>
+                    ) : (
+                      <Text>
+                        <Text style={{ fontWeight: '800' }}>Incorrect.</Text>
+                        {'\n'}
+                        Correct:{' '}
+                        <Text style={{ fontWeight: '800' }}>{current.options[current.correctIndex]}</Text>
+                      </Text>
+                    )}
+                  </Text>
+                  <Text
+                    style={{
+                      fontFamily: fontBody,
+                      fontSize: 15,
+                      lineHeight: 22,
+                      color: theme.learnOnSurfaceVariant,
+                    }}
+                  >
+                    {current.explanation}
+                  </Text>
+                  <Pressable
+                    onPress={onContinueAfterFeedback}
+                    style={{
+                      alignSelf: 'flex-start',
+                      backgroundColor: theme.learnPillActiveBg,
+                      paddingVertical: 14,
+                      paddingHorizontal: 24,
+                      borderRadius: 999,
+                    }}
+                  >
+                    <Text style={{ fontFamily: fontLabelBold, color: theme.learnPillActiveText, fontSize: 15, fontWeight: '700' }}>
+                      {currentIndex + 1 < questions.length ? 'Continue' : 'View results'}
+                    </Text>
+                  </Pressable>
+                </View>
+              )}
             </GlassPanel>
           ) : null}
 
@@ -218,12 +280,12 @@ export function TestScreen({
                   marginBottom: 8,
                 }}
               >
-                Test complete
+                Section complete
               </Text>
               <Text style={{ fontFamily: fontBody, fontSize: 16, color: theme.learnOnSurfaceVariant, marginBottom: 18 }}>
                 Score: {correctCount} / {questions.length}
               </Text>
-              <GlassPrimaryCta theme={theme} label="New test" onPress={() => setPhase('idle')} fontLabelBold={fontLabelBold} />
+              <GlassPrimaryCta theme={theme} label="New section" onPress={() => setPhase('idle')} fontLabelBold={fontLabelBold} />
             </GlassPanel>
           ) : null}
         </View>

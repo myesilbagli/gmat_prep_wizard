@@ -13,6 +13,8 @@ import {
   isLearnDarkUi,
   useGlassFonts,
 } from '../components/GlassUi'
+import { LearnFlashcardModal } from '../components/LearnFlashcardModal'
+import { WordStacksSection } from '../components/WordStacksSection'
 import { generateParagraph } from '../lib/api'
 import {
   deleteVocabItem,
@@ -22,12 +24,13 @@ import {
 } from '../lib/vocab'
 import type { AppTheme } from '../theme'
 
-/** Preset applied when navigating from Today (not shown as a pill). */
-export type LearnTabPreset = 'learning' | 'flagged'
-
-type UiListFilter = 'all' | 'fresh' | 'learning' | 'mastered' | 'flagged' | 'learning_any'
+type UiListFilter = 'all' | 'fresh' | 'learning' | 'mastered' | 'flagged'
 type KindFilter = 'all' | 'word' | 'phrase'
-type ViewMode = 'list' | 'flashcards' | 'paragraph'
+type TopLearnMode = 'deck' | 'paragraph'
+
+type ParagraphPart =
+  | { kind: 'text'; value: string }
+  | { kind: 'target'; text: string }
 
 const FILTER_PILLS: { key: UiListFilter; label: string }[] = [
   { key: 'all', label: 'All' },
@@ -57,17 +60,11 @@ export function LearnScreen({
   mainLanguage,
   items,
   onReload,
-  learnPreset,
-  onConsumedLearnPreset,
-  onOpenProfile,
 }: {
   theme: AppTheme
   mainLanguage: string
   items: VocabItem[]
   onReload: () => Promise<void>
-  learnPreset?: LearnTabPreset | null
-  onConsumedLearnPreset?: () => void
-  onOpenProfile?: () => void
 }) {
   const { fontHeadline, fontHeadlineSm, fontBody, fontLabel, fontLabelBold } = useGlassFonts()
 
@@ -76,24 +73,16 @@ export function LearnScreen({
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<UiListFilter>('all')
   const [kindFilter, setKindFilter] = useState<KindFilter>('all')
-  const [mode, setMode] = useState<ViewMode>('list')
-  const [flashIndex, setFlashIndex] = useState(0)
-  const [showAnswer, setShowAnswer] = useState(false)
-  const [para, setPara] = useState<string>('')
+  const [topMode, setTopMode] = useState<TopLearnMode>('deck')
+  const [flashOpen, setFlashOpen] = useState(false)
+  const [flashStartIndex, setFlashStartIndex] = useState(0)
+  const [paraParts, setParaParts] = useState<ParagraphPart[] | null>(null)
   const [paraLoading, setParaLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!learnPreset) return
-    if (learnPreset === 'learning') setFilter('learning_any')
-    if (learnPreset === 'flagged') setFilter('flagged')
-    onConsumedLearnPreset?.()
-  }, [learnPreset, onConsumedLearnPreset])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     return items.filter((item) => {
-      if (filter === 'learning_any' && item.status !== 'learning') return false
       if (filter === 'fresh') {
         if (item.status !== 'learning') return false
         if ((item.seenCount ?? 0) > 0) return false
@@ -111,29 +100,9 @@ export function LearnScreen({
     })
   }, [items, filter, kindFilter, query])
 
-  const flashItem = filtered[flashIndex] ?? null
-  const flashNativeGloss = useMemo(
-    () => (flashItem ? getNativeGloss(flashItem, mainLanguage) : undefined),
-    [flashItem, mainLanguage],
-  )
-
   useEffect(() => {
-    setFlashIndex(0)
-    setShowAnswer(false)
-  }, [filter, kindFilter, query, mode])
-
-  useEffect(() => {
-    if (filtered.length === 0) {
-      setFlashIndex(0)
-      return
-    }
-    if (flashIndex >= filtered.length) setFlashIndex(0)
-  }, [filtered.length, flashIndex])
-
-  useEffect(() => {
-    if (mode !== 'flashcards' || !flashItem) return
-    void recordWordExposure(flashItem.id).catch(() => {})
-  }, [mode, flashItem])
+    setParaParts(null)
+  }, [filter, kindFilter, query])
 
   async function updateStatus(id: string, status: VocabStatus) {
     await updateVocabStatus({ id, status })
@@ -170,24 +139,24 @@ export function LearnScreen({
     }
   }
 
+  function openFlashAt(index: number) {
+    if (filtered.length === 0) return
+    setFlashStartIndex(Math.max(0, Math.min(index, filtered.length - 1)))
+    setFlashOpen(true)
+  }
+
   async function onGenerateParagraph() {
     setParaLoading(true)
     setError(null)
     try {
-      const pool = items.filter((i) => i.status === 'learning')
-      if (!pool.length) throw new Error('No Learning items yet. Add words or mark items as Learning.')
-      const copy = [...pool]
-      for (let i = copy.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1))
-        ;[copy[i], copy[j]] = [copy[j], copy[i]]
+      const learningInFilter = filtered.filter((i) => i.status === 'learning')
+      const picked = learningInFilter.slice(0, Math.min(5, learningInFilter.length))
+      if (!picked.length) {
+        throw new Error('No Learning items in this filter. Adjust filters or mark words as Learning.')
       }
-      const picked = copy.slice(0, Math.min(5, copy.length))
       const resp = await generateParagraph(picked)
-      const text = resp.parts
-        .map((p) => (p.kind === 'text' ? p.value : p.text))
-        .join('')
-        .trim()
-      setPara(text)
+      if (!resp.parts?.length) throw new Error('Empty paragraph response.')
+      setParaParts(resp.parts)
       for (const p of picked) {
         void recordWordExposure(p.id).catch(() => {})
       }
@@ -199,6 +168,8 @@ export function LearnScreen({
   }
 
   const searchPh = items.length >= 100 ? `Search ${items.length}+ words...` : `Search ${items.length} words...`
+
+  const targetHighlightBg = learnDark ? 'rgba(189, 194, 255, 0.22)' : 'rgba(99, 102, 241, 0.18)'
 
   return (
     <GlassScreenRoot theme={theme}>
@@ -212,14 +183,65 @@ export function LearnScreen({
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <GlassTitleHeader
-          theme={theme}
-          title="My Learning Path"
-          onOpenProfile={onOpenProfile}
-          fontHeadlineSm={fontHeadlineSm}
-        />
+        <GlassTitleHeader theme={theme} title="Study library" fontHeadlineSm={fontHeadlineSm} showProfileEntry={false} />
+        <Text
+          style={{
+            fontFamily: fontBody,
+            fontSize: 14,
+            lineHeight: 20,
+            color: theme.learnOnSurfaceVariant,
+            marginTop: 8,
+          }}
+        >
+          {topMode === 'deck'
+            ? 'Browse and manage saved vocabulary. Tap a card to study it in focus mode.'
+            : 'Read a formal paragraph that weaves in your Learning items—targets are highlighted.'}
+        </Text>
 
-        <View style={{ marginTop: 20, marginBottom: 28 }}>
+        <WordStacksSection theme={theme} />
+
+        <View
+          style={{
+            flexDirection: 'row',
+            marginTop: 20,
+            marginBottom: 20,
+            backgroundColor: theme.learnViewToggleBg,
+            borderRadius: 14,
+            padding: 4,
+            gap: 4,
+          }}
+        >
+          {(['deck', 'paragraph'] as const).map((m) => {
+            const active = topMode === m
+            const label = m === 'deck' ? 'Deck' : 'Paragraph'
+            return (
+              <Pressable
+                key={m}
+                onPress={() => setTopMode(m)}
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  borderRadius: 10,
+                  backgroundColor: active ? theme.learnPillActiveBg : 'transparent',
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: fontLabelBold,
+                    fontSize: 14,
+                    fontWeight: '700',
+                    textAlign: 'center',
+                    color: active ? theme.learnPillActiveText : theme.learnOnSurfaceVariant,
+                  }}
+                >
+                  {label}
+                </Text>
+              </Pressable>
+            )
+          })}
+        </View>
+
+        <View style={{ marginBottom: 22 }}>
           <GlassSearchField
             theme={theme}
             value={query}
@@ -230,63 +252,20 @@ export function LearnScreen({
           />
         </View>
 
-        <View style={{ marginBottom: 28 }}>
-          <View
+        <View style={{ marginBottom: 24 }}>
+          <Text
             style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: 14,
+              fontFamily: fontHeadlineSm,
+              fontSize: 10,
+              fontWeight: '800',
+              letterSpacing: 2,
+              color: theme.learnOutline,
+              textTransform: 'uppercase',
+              marginBottom: 12,
             }}
           >
-            <Text
-              style={{
-                fontFamily: fontHeadlineSm,
-                fontSize: 10,
-                fontWeight: '800',
-                letterSpacing: 2,
-                color: theme.learnOutline,
-                textTransform: 'uppercase',
-              }}
-            >
-              Filter knowledge
-            </Text>
-            <View
-              style={{
-                flexDirection: 'row',
-                gap: 2,
-                backgroundColor: theme.learnViewToggleBg,
-                borderRadius: 12,
-                padding: 4,
-              }}
-            >
-              {(
-                [
-                  { m: 'list' as const, icon: 'view-list' as const },
-                  { m: 'flashcards' as const, icon: 'view-carousel' as const },
-                  { m: 'paragraph' as const, icon: 'description' as const },
-                ] as const
-              ).map(({ m, icon }) => (
-                <Pressable
-                  key={m}
-                  onPress={() => setMode(m)}
-                  style={{
-                    paddingHorizontal: 10,
-                    paddingVertical: 8,
-                    borderRadius: 8,
-                    backgroundColor: mode === m ? theme.learnPillIdle : 'transparent',
-                  }}
-                >
-                  <MaterialIcons
-                    name={icon}
-                    size={18}
-                    color={mode === m ? theme.learnAccent : theme.learnOutline}
-                  />
-                </Pressable>
-              ))}
-            </View>
-          </View>
-
+            Filter
+          </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingRight: 8 }}>
             {FILTER_PILLS.map(({ key, label }) => {
               const active = filter === key
@@ -316,21 +295,7 @@ export function LearnScreen({
             })}
           </ScrollView>
 
-          {filter === 'learning_any' ? (
-            <Text
-              style={{
-                fontFamily: fontBody,
-                fontSize: 12,
-                color: theme.learnOnSurfaceVariant,
-                marginTop: 10,
-                opacity: 0.9,
-              }}
-            >
-              Showing every word still marked Learning (including new).
-            </Text>
-          ) : null}
-
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 18, gap: 8 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 16, gap: 8 }}>
             <Text
               style={{
                 fontFamily: fontLabel,
@@ -374,14 +339,14 @@ export function LearnScreen({
           </View>
         </View>
 
-        {mode === 'list' ? (
+        {topMode === 'deck' ? (
           <View style={{ gap: 18 }}>
             {filtered.length === 0 ? (
               <Text style={{ fontFamily: fontBody, color: theme.learnOnSurfaceVariant, fontSize: 15 }}>
                 No words match these filters.
               </Text>
             ) : (
-              filtered.map((item) => (
+              filtered.map((item, index) => (
                 <WordGlassCard
                   key={item.id}
                   theme={theme}
@@ -393,6 +358,7 @@ export function LearnScreen({
                   fontLabel={fontLabel}
                   leftAccent={cardLeftAccent(theme, item)}
                   footer={statusFooter(theme, item)}
+                  onPressStudy={() => openFlashAt(index)}
                   onToggleFlag={() => void toggleFlag(item.id, !item.flagged)}
                   onSync={() => void onSyncExposure(item.id)}
                   onDelete={() => confirmDelete(item)}
@@ -402,98 +368,19 @@ export function LearnScreen({
               ))
             )}
           </View>
-        ) : null}
-
-        {mode === 'flashcards' ? (
-          <GlassPanel theme={theme} learnDark={learnDark} leftAccent={theme.learnAccent}>
-            {!flashItem ? (
-              <Text style={{ fontFamily: fontBody, color: theme.learnOnSurfaceVariant, fontSize: 15 }}>
-                No words to review for this filter.
-              </Text>
-            ) : (
-              <>
-                <Text
-                  style={{
-                    fontFamily: fontHeadline,
-                    fontSize: 28,
-                    fontWeight: '800',
-                    color: theme.learnOnSurface,
-                    marginBottom: 12,
-                  }}
-                >
-                  {flashItem.text}
-                </Text>
-                <View style={{ gap: 8 }}>
-                  <Text style={{ fontFamily: fontBody, fontSize: 15, lineHeight: 22, color: theme.learnOnSurfaceVariant }}>
-                    {showAnswer
-                      ? flashItem.simpleDefinition || flashItem.definition
-                      : 'Tap reveal to see the definition.'}
-                  </Text>
-                  {showAnswer && flashNativeGloss ? (
-                    <Text
-                      style={{
-                        fontFamily: fontBody,
-                        fontSize: 14,
-                        lineHeight: 20,
-                        color: theme.learnOutline,
-                        fontStyle: 'italic',
-                      }}
-                    >
-                      {flashNativeGloss}
-                    </Text>
-                  ) : null}
-                </View>
-                <Pressable
-                  onPress={() => setShowAnswer((v) => !v)}
-                  style={{
-                    marginTop: 20,
-                    alignSelf: 'flex-start',
-                    backgroundColor: theme.learnPillActiveBg,
-                    paddingVertical: 12,
-                    paddingHorizontal: 22,
-                    borderRadius: 999,
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontFamily: fontLabelBold,
-                      color: theme.learnPillActiveText,
-                      fontSize: 14,
-                      fontWeight: '700',
-                    }}
-                  >
-                    {showAnswer ? 'Hide' : 'Reveal'}
-                  </Text>
-                </Pressable>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 24 }}>
-                  <Pressable
-                    onPress={() => {
-                      setFlashIndex((v) => (v <= 0 ? filtered.length - 1 : v - 1))
-                      setShowAnswer(false)
-                    }}
-                  >
-                    <Text style={{ fontFamily: fontLabelBold, color: theme.learnAccent, fontSize: 14 }}>
-                      Previous
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    onPress={() => {
-                      setFlashIndex((v) => (v + 1 >= filtered.length ? 0 : v + 1))
-                      setShowAnswer(false)
-                    }}
-                  >
-                    <Text style={{ fontFamily: fontLabelBold, color: theme.learnAccent, fontSize: 14 }}>
-                      Next
-                    </Text>
-                  </Pressable>
-                </View>
-              </>
-            )}
-          </GlassPanel>
-        ) : null}
-
-        {mode === 'paragraph' ? (
+        ) : (
           <GlassPanel theme={theme} learnDark={learnDark} leftAccent={theme.learnTertiary}>
+            <Text
+              style={{
+                fontFamily: fontBody,
+                fontSize: 14,
+                lineHeight: 21,
+                color: theme.learnOnSurfaceVariant,
+                marginBottom: 16,
+              }}
+            >
+              Uses up to five Learning items from your current filter, in list order.
+            </Text>
             <Pressable
               onPress={() => void onGenerateParagraph()}
               disabled={paraLoading}
@@ -520,21 +407,58 @@ export function LearnScreen({
             {error ? (
               <Text style={{ fontFamily: fontBody, color: theme.danger, marginTop: 12, fontSize: 14 }}>{error}</Text>
             ) : null}
-            <Text
-              style={{
-                fontFamily: fontBody,
-                fontSize: 15,
-                lineHeight: 22,
-                color: theme.learnOnSurfaceVariant,
-                marginTop: 16,
-              }}
-            >
-              {para ||
-                'Generate a short paragraph using up to five words you marked as Learning.'}
-            </Text>
+            {paraParts && paraParts.length > 0 ? (
+              <Text
+                style={{
+                  fontFamily: fontBody,
+                  fontSize: 17,
+                  lineHeight: 28,
+                  color: theme.learnOnSurface,
+                  marginTop: 20,
+                }}
+              >
+                {paraParts.map((p, i) =>
+                  p.kind === 'text' ? (
+                    <Text key={i}>{p.value}</Text>
+                  ) : (
+                    <Text
+                      key={i}
+                      style={{
+                        backgroundColor: targetHighlightBg,
+                        fontWeight: '800',
+                        color: theme.learnOnSurface,
+                      }}
+                    >
+                      {p.text}
+                    </Text>
+                  ),
+                )}
+              </Text>
+            ) : !error && !paraLoading ? (
+              <Text
+                style={{
+                  fontFamily: fontBody,
+                  fontSize: 15,
+                  lineHeight: 22,
+                  color: theme.learnOnSurfaceVariant,
+                  marginTop: 16,
+                }}
+              >
+                Generate a paragraph to practice reading your vocabulary in context.
+              </Text>
+            ) : null}
           </GlassPanel>
-        ) : null}
+        )}
       </ScrollView>
+
+      <LearnFlashcardModal
+        visible={flashOpen}
+        onClose={() => setFlashOpen(false)}
+        items={filtered}
+        initialIndex={flashStartIndex}
+        mainLanguage={mainLanguage}
+        theme={theme}
+      />
     </GlassScreenRoot>
   )
 }
@@ -549,6 +473,7 @@ function WordGlassCard({
   fontLabel,
   leftAccent,
   footer,
+  onPressStudy,
   onToggleFlag,
   onSync,
   onDelete,
@@ -564,6 +489,7 @@ function WordGlassCard({
   fontLabel?: string
   leftAccent: string
   footer: { dot: string; label: string }
+  onPressStudy: () => void
   onToggleFlag: () => void
   onSync: () => void
   onDelete: () => void
@@ -595,7 +521,7 @@ function WordGlassCard({
         }}
       >
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <View style={{ flex: 1, paddingRight: 12 }}>
+          <Pressable onPress={onPressStudy} style={{ flex: 1, paddingRight: 12 }} accessibilityRole="button" accessibilityLabel="Open study card">
             <Text
               style={{
                 fontFamily: fontLabel,
@@ -621,7 +547,44 @@ function WordGlassCard({
             >
               {item.text}
             </Text>
-          </View>
+            <View style={{ marginTop: 12 }}>
+              <Text
+                style={{
+                  fontFamily: fontBody,
+                  fontSize: 14,
+                  lineHeight: 21,
+                  color: theme.learnOnSurfaceVariant,
+                }}
+              >
+                {item.simpleDefinition || item.definition}
+              </Text>
+              {nativeLine ? (
+                <Text
+                  style={{
+                    fontFamily: fontBody,
+                    fontSize: 13,
+                    lineHeight: 19,
+                    color: theme.learnOutline,
+                    fontStyle: 'italic',
+                    marginTop: 8,
+                  }}
+                >
+                  {nativeLine}
+                </Text>
+              ) : null}
+            </View>
+            <Text
+              style={{
+                fontFamily: fontLabel,
+                fontSize: 11,
+                fontWeight: '700',
+                color: theme.learnAccent,
+                marginTop: 10,
+              }}
+            >
+              Tap to study
+            </Text>
+          </Pressable>
           <View style={{ flexDirection: 'row', gap: 4 }}>
             <Pressable onPress={onToggleFlag} hitSlop={8} style={{ padding: 6 }}>
               <Ionicons
@@ -636,34 +599,7 @@ function WordGlassCard({
           </View>
         </View>
 
-        <View style={{ marginTop: 12, marginBottom: 18 }}>
-          <Text
-            style={{
-              fontFamily: fontBody,
-              fontSize: 14,
-              lineHeight: 21,
-              color: theme.learnOnSurfaceVariant,
-            }}
-          >
-            {item.simpleDefinition || item.definition}
-          </Text>
-          {nativeLine ? (
-            <Text
-              style={{
-                fontFamily: fontBody,
-                fontSize: 13,
-                lineHeight: 19,
-                color: theme.learnOutline,
-                fontStyle: 'italic',
-                marginTop: 8,
-              }}
-            >
-              {nativeLine}
-            </Text>
-          ) : null}
-        </View>
-
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 16, marginBottom: 16 }}>
           <MiniStatusChip
             theme={theme}
             learnDark={learnDark}
@@ -687,9 +623,7 @@ function WordGlassCard({
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
-            paddingTop: 14,
-            borderTopWidth: 1,
-            borderTopColor: theme.learnGlassBorder,
+            paddingTop: 16,
           }}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -762,4 +696,3 @@ function MiniStatusChip({
     </Pressable>
   )
 }
-

@@ -23,6 +23,8 @@ export type UserProfileDoc = {
 
 export type DailyDoc = {
   sessionsCompleted: string[]
+  /** Study sessions started today (freemium daily cap). Incremented when SessionScreen begins. */
+  sessionStartsCount?: number
   updatedAt?: unknown
 }
 

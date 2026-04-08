@@ -45,7 +45,7 @@ type GeneratedResult = {
   translationSimple?: string
 }
 
-type QuizMode = 'meaning' | 'gmat'
+type QuizMode = 'context' | 'verbal'
 
 type QuizQuestion = {
   itemId: string
@@ -377,9 +377,15 @@ async function handleGenerateParagraph(body: any, uid: string, res: any) {
   res.status(502).json({ error: 'AI could not generate a valid paragraph structure' })
 }
 
+function normalizeQuizMode(raw: unknown): QuizMode {
+  const m = typeof raw === 'string' ? raw.toLowerCase().trim() : ''
+  if (m === 'verbal' || m === 'gmat') return 'verbal'
+  if (m === 'context' || m === 'meaning') return 'context'
+  return 'context'
+}
+
 async function handleGenerateQuiz(body: any, uid: string, res: any) {
-  const rawMode = body?.mode
-  const mode: QuizMode = rawMode === 'gmat' ? 'gmat' : 'meaning'
+  const mode: QuizMode = normalizeQuizMode(body?.mode)
 
   const rawIds = Array.isArray(body?.itemIds) ? body.itemIds : []
   const itemIds = rawIds.map((x: unknown) => String(x)).filter(Boolean)
@@ -444,39 +450,52 @@ async function handleGenerateQuiz(body: any, uid: string, res: any) {
   const openai = new OpenAI({ apiKey: requireEnv('OPENAI_API_KEY') })
   const model = process.env.OPENAI_MODEL ?? 'gpt-4.1-mini'
 
-  const modeDescription =
-    mode === 'meaning'
-      ? 'meaning questions that ask for the correct definition of the word or phrase'
-      : 'GMAT-style questions (sentence completion or meaning-in-context) that use the word or phrase in a short sentence'
+  const modeBlock =
+    mode === 'context'
+      ? [
+          'MODE: context (Meaning in Context).',
+          'For each item, write a stem that feels like GMAT Verbal: one or more formal sentences (longer stems are encouraged when they improve realism).',
+          'The item text may appear in the stem or be the focus of the question. Prefer sentence completion (blank) OR "which choice best captures how X is used" / meaning-in-context in an analytical passage.',
+          'Avoid bare dictionary prompts ("What does X mean?") unless the stem still reads as a serious verbal item.',
+        ].join('\n')
+      : [
+          'MODE: verbal (GMAT-Style Verbal).',
+          'For each item, emphasize sentence completion, critical-reasoning-adjacent vocabulary, and analytical register.',
+          'Stems may be multi-sentence when that improves realism. The item must be tested in a way that mirrors official GMAT verbal difficulty.',
+        ].join('\n')
 
   const prompt = [
-    'You are a GMAT verbal tutor.',
-    'You will receive a list of vocabulary items and must create multiple-choice quiz questions.',
-    'Return JSON ONLY with the shape: { "questions": QuizQuestion[] } where QuizQuestion = { itemId: string, questionText: string, options: string[4], correctIndex: number, explanation: string }.',
-    'Do NOT include any markdown, comments, or extra keys.',
+    'You are an expert GMAT Verbal content author. Generate multiple-choice questions for graduate-level vocabulary practice.',
     '',
-    `Quiz mode: ${mode}`,
-    `Mode description: ${modeDescription}.`,
+    'OUTPUT: Return JSON ONLY. No markdown, no code fences, no commentary before or after the JSON.',
+    'Shape: {"questions":[{"itemId":"string","questionText":"string","options":["a","b","c","d"],"correctIndex":0,"explanation":"string"}]}',
+    'Each question object MUST have: itemId, questionText, options (exactly 4 strings), correctIndex (0-3), explanation.',
     '',
-    'Items:',
+    'GLOBAL RULES:',
+    '- Tone: serious, academic, exam-oriented. No casual or playful wording.',
+    '- One question per vocabulary item, in the SAME ORDER as the numbered items below.',
+    '- Each itemId in your output must match the id given for that position.',
+    '- Exactly four options per question; exactly one is unambiguously correct.',
+    '- Wrong answers must be plausible: subtle distinctions, parallel grammar, and similar register—not silly, jokey, or obviously wrong.',
+    '- questionText may be long when useful; avoid artificial verbosity.',
+    '- Vary stem structure across the batch (do not reuse the same template for every question).',
+    '- explanation: plain text, no markdown. State why the correct option fits and briefly why the others are weaker (formal tone).',
+    '- Do not include the words "Option A/B/C/D" in questionText; embed choices only in the options array.',
+    '',
+    modeBlock,
+    '',
+    'ITEMS (use definition as reference for the intended sense; do not copy it verbatim as the stem):',
     ...limitedItems.map(
       (it, idx) =>
         `${idx + 1}. id=${it.id}; text=${it.text}; definition=${it.definition || 'N/A'}`,
     ),
-    '',
-    'Rules:',
-    '- Create exactly one question per item in the same order.',
-    '- For "meaning" mode, ask directly for the best definition.',
-    '- For "gmat" mode, write a short, realistic GMAT-style sentence or sentence-completion using the item.',
-    '- Each options array must have exactly 4 short, believable options.',
-    '- correctIndex must be 0, 1, 2, or 3 and point to the only correct option.',
   ].join('\n')
 
   const completion = await openai.responses.create({
     model,
     input: prompt,
-    temperature: 0.5,
-    max_output_tokens: 800,
+    temperature: 0.55,
+    max_output_tokens: 2200,
   })
 
   const text = completion.output_text?.trim() ?? ''

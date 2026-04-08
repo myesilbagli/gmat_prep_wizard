@@ -77,7 +77,14 @@ npm run eas:submit:ios
 3. **Internal testing**: add users with App Store Connect access — available soon after processing.
 4. **External testing**: create a group, add testers’ emails, submit for **Beta App Review** the first time.
 
-## 7. Common issues
+## 7. Subscriptions (RevenueCat) and App Privacy
+
+1. Configure **App Store Connect** subscription products and **RevenueCat** as described in [`mobile/docs/SUBSCRIPTIONS.md`](docs/SUBSCRIPTIONS.md).
+2. Add **`EXPO_PUBLIC_REVENUECAT_API_KEY`** to EAS **production** (and preview if you test IAP there). Do not set `EXPO_PUBLIC_IAP_USE_MOCK=1` on store builds.
+3. **Expo Go** uses a Metro **mock** for `react-native-purchases` in development; use a **development build** or **TestFlight** for real StoreKit + sandbox purchases.
+4. After shipping IAP, update **App Store Connect → App Privacy** for purchase/subscription data and third parties (e.g. RevenueCat) so it matches your hosted Privacy Policy.
+
+## 8. Common issues
 
 | Issue | What to do |
 |--------|------------|
@@ -85,6 +92,7 @@ npm run eas:submit:ios
 | Submit fails | Create an [App Store Connect API key](https://appstoreconnect.apple.com/access/api) (App Manager) and run `eas credentials` / configure submit with the key. |
 | Missing env in release build | Add `EXPO_PUBLIC_*` (and any secrets) in EAS environment variables for production. |
 | Google Sign-In broken on device | iOS needs the correct OAuth client IDs and URL scheme; confirm [Expo + Google auth](https://docs.expo.dev/guides/google-authentication/) for your bundle ID. |
+| IAP / paywall empty on device | Confirm RevenueCat offering **`default`** with **monthly** + **annual** packages and product IDs match `lexicon_pro_monthly` / `lexicon_pro_yearly`. |
 
 ## Quick reference
 

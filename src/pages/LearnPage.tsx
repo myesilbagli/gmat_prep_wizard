@@ -21,9 +21,9 @@ import {
   IconTrash,
 } from '../components/Icons'
 
-type Filter = 'all' | 'learning' | 'mastered' | 'flagged'
+type Filter = 'all' | 'fresh' | 'learning' | 'mastered' | 'flagged'
 type KindFilter = 'all' | 'word' | 'phrase'
-type ViewMode = 'list' | 'flashcards' | 'paragraph'
+type TopLearnMode = 'deck' | 'paragraph'
 
 type ParagraphPart =
   | { kind: 'text'; value: string }
@@ -39,9 +39,10 @@ export function LearnPage() {
   const [filter, setFilter] = useState<Filter>('all')
   const [kindFilter, setKindFilter] = useState<KindFilter>('all')
   const [query, setQuery] = useState('')
-  const [viewMode, setViewMode] = useState<ViewMode>('list')
-  const [flashIndex, setFlashIndex] = useState(0)
-  const [showAnswer, setShowAnswer] = useState(false)
+  const [topMode, setTopMode] = useState<TopLearnMode>('deck')
+  const [studyOpen, setStudyOpen] = useState(false)
+  const [studyIndex, setStudyIndex] = useState(0)
+  const [studyShowAnswer, setStudyShowAnswer] = useState(false)
   const [mainLanguage, setMainLanguage] = useState(DEFAULT_MAIN_LANGUAGE)
   const [paraState, setParaState] = useState<
     | { status: 'idle' }
@@ -96,7 +97,7 @@ export function LearnPage() {
 
   useEffect(() => {
     const f = searchParams.get('filter')
-    if (f === 'learning' || f === 'mastered' || f === 'flagged') {
+    if (f === 'learning' || f === 'mastered' || f === 'flagged' || f === 'fresh') {
       setFilter(f)
     }
   }, [searchParams])
@@ -104,7 +105,14 @@ export function LearnPage() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     return items.filter((item) => {
-      if (filter === 'learning' && item.status !== 'learning') return false
+      if (filter === 'fresh') {
+        if (item.status !== 'learning') return false
+        if ((item.seenCount ?? 0) > 0) return false
+      }
+      if (filter === 'learning') {
+        if (item.status !== 'learning') return false
+        if ((item.seenCount ?? 0) === 0) return false
+      }
       if (filter === 'mastered' && item.status !== 'mastered') return false
       if (filter === 'flagged' && !item.flagged) return false
       if (kindFilter === 'word' && item.type !== 'word') return false
@@ -117,48 +125,55 @@ export function LearnPage() {
   // Count based on the filter toggle only (independent from search query).
   const wordsInFilterCount = useMemo(() => {
     return items.filter((item) => {
-      if (filter === 'learning') return item.status === 'learning'
+      if (filter === 'fresh')
+        return item.status === 'learning' && (item.seenCount ?? 0) === 0
+      if (filter === 'learning')
+        return item.status === 'learning' && (item.seenCount ?? 0) > 0
       if (filter === 'mastered') return item.status === 'mastered'
       if (filter === 'flagged') return item.flagged
       return true
     }).length
   }, [items, filter])
 
-  const flashItem =
-    viewMode === 'flashcards' &&
-    filtered.length > 0 &&
-    flashIndex >= 0 &&
-    flashIndex < filtered.length
-      ? filtered[flashIndex]
+  const studyItem =
+    studyOpen && filtered.length > 0 && studyIndex >= 0 && studyIndex < filtered.length
+      ? filtered[studyIndex]
       : null
 
   useEffect(() => {
-    if (viewMode !== 'flashcards' || filtered.length === 0) return
+    if (!studyOpen || filtered.length === 0) return
     const n = filtered.length
     function onKeyDown(e: KeyboardEvent) {
       const el = e.target as HTMLElement | null
       if (el?.closest('input, textarea, [contenteditable="true"]')) return
       if (e.key === 'ArrowLeft') {
         e.preventDefault()
-        setFlashIndex((i) => (i === 0 ? n - 1 : i - 1))
-        setShowAnswer(false)
+        setStudyIndex((i) => (i === 0 ? n - 1 : i - 1))
+        setStudyShowAnswer(false)
       } else if (e.key === 'ArrowRight') {
         e.preventDefault()
-        setFlashIndex((i) => (i + 1) % n)
-        setShowAnswer(false)
+        setStudyIndex((i) => (i + 1) % n)
+        setStudyShowAnswer(false)
       } else if (e.key === ' ' || e.key === 'Enter') {
         e.preventDefault()
-        setShowAnswer((v) => !v)
+        setStudyShowAnswer((v) => !v)
+      } else if (e.key === 'Escape') {
+        e.preventDefault()
+        setStudyOpen(false)
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [viewMode, filtered.length])
+  }, [studyOpen, filtered.length])
 
   useEffect(() => {
-    if (viewMode !== 'flashcards' || !flashItem) return
-    void recordWordExposure(flashItem.id).catch(() => {})
-  }, [viewMode, flashItem?.id])
+    if (!studyOpen || !studyItem) return
+    void recordWordExposure(studyItem.id).catch(() => {})
+  }, [studyOpen, studyItem?.id])
+
+  useEffect(() => {
+    setParaState({ status: 'idle' })
+  }, [filter, kindFilter, query])
 
   async function handleStatusChange(id: string, status: VocabStatus) {
     setItems((prev) =>
@@ -185,26 +200,16 @@ export function LearnPage() {
     }
   }
 
-  function pickLearningItems(): VocabItem[] {
-    const pool = items.filter((it) => it.status === 'learning')
-    if (pool.length <= 5) return pool
-    const copy = [...pool]
-    // Fisher–Yates shuffle
-    for (let i = copy.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1))
-      ;[copy[i], copy[j]] = [copy[j], copy[i]]
-    }
-    return copy.slice(0, 5)
-  }
-
   async function generateParagraph() {
     setParaState({ status: 'loading' })
     try {
-      const picked = pickLearningItems()
+      const learningInFilter = filtered.filter((it) => it.status === 'learning')
+      const picked = learningInFilter.slice(0, Math.min(5, learningInFilter.length))
       if (!picked.length) {
         setParaState({
           status: 'error',
-          message: 'No Learning items found yet. Mark words as Learning or add new words from Lookup.',
+          message:
+            'No Learning items in this filter. Adjust filters or mark words as Learning.',
         })
         return
       }
@@ -291,11 +296,60 @@ export function LearnPage() {
       `}</style>
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, letterSpacing: -0.3 }}>
-          My Learning Path
+          Study library
         </h1>
         <p className="muted" style={{ margin: '8px 0 0', fontSize: 15 }}>
-          Refine your GMAT vocabulary with targeted study sessions.
+          {topMode === 'deck'
+            ? 'Browse and manage saved vocabulary. Open Study on a card for a focused flashcard flow.'
+            : 'Read a formal paragraph with your Learning items highlighted.'}
         </p>
+      </div>
+
+      <div
+        style={{
+          display: 'flex',
+          gap: 6,
+          marginBottom: 16,
+          padding: 4,
+          borderRadius: 14,
+          border: '1px solid var(--border)',
+          background: 'rgba(255,255,255,0.04)',
+        }}
+      >
+        <button
+          type="button"
+          className="btn"
+          onClick={() => setTopMode('deck')}
+          style={{
+            flex: 1,
+            padding: '12px 16px',
+            borderRadius: 10,
+            border: 'none',
+            fontWeight: 700,
+            fontSize: 14,
+            background: topMode === 'deck' ? 'rgba(99, 102, 241, 0.22)' : 'transparent',
+            color: topMode === 'deck' ? 'var(--text)' : 'var(--muted)',
+          }}
+        >
+          Deck
+        </button>
+        <button
+          type="button"
+          className="btn"
+          onClick={() => setTopMode('paragraph')}
+          style={{
+            flex: 1,
+            padding: '12px 16px',
+            borderRadius: 10,
+            border: 'none',
+            fontWeight: 700,
+            fontSize: 14,
+            background: topMode === 'paragraph' ? 'rgba(99, 102, 241, 0.22)' : 'transparent',
+            color: topMode === 'paragraph' ? 'var(--text)' : 'var(--muted)',
+          }}
+        >
+          Paragraph
+        </button>
       </div>
 
       <div
@@ -347,6 +401,11 @@ export function LearnPage() {
               onClick={() => setFilter('all')}
             />
             <FilterChip
+              label="Do Not Know"
+              active={filter === 'fresh'}
+              onClick={() => setFilter('fresh')}
+            />
+            <FilterChip
               label="Learning"
               active={filter === 'learning'}
               onClick={() => setFilter('learning')}
@@ -388,130 +447,21 @@ export function LearnPage() {
               onClick={() => setKindFilter('phrase')}
             />
           </div>
-          <div
-            style={{
-              marginLeft: 'auto',
-              display: 'flex',
-              gap: 6,
-              alignItems: 'center',
-            }}
-          >
-            <button
-              type="button"
-              className="btn"
-              onClick={() => {
-                setViewMode('list')
-                setShowAnswer(false)
-              }}
-              style={{
-                padding: '6px 12px',
-                borderRadius: 999,
-                border: viewMode === 'list'
-                  ? '1px solid var(--accent-gradient-end)'
-                  : '1px solid var(--border)',
-                background: viewMode === 'list'
-                  ? 'rgba(99, 102, 241, 0.18)'
-                  : 'rgba(255,255,255,0.04)',
-                fontSize: 12,
-              }}
-            >
-              List view
-            </button>
-            <button
-              type="button"
-              className="btn"
-              onClick={() => {
-                setViewMode('flashcards')
-                setFlashIndex(0)
-                setShowAnswer(false)
-              }}
-              style={{
-                padding: '6px 12px',
-                borderRadius: 999,
-                border: viewMode === 'flashcards'
-                  ? '1px solid var(--accent-gradient-end)'
-                  : '1px solid var(--border)',
-                background: viewMode === 'flashcards'
-                  ? 'rgba(99, 102, 241, 0.18)'
-                  : 'rgba(255,255,255,0.04)',
-                fontSize: 12,
-              }}
-            >
-              Flashcards
-            </button>
-            <button
-              type="button"
-              className="btn"
-              onClick={() => {
-                setViewMode('paragraph')
-                setShowAnswer(false)
-                setParaState({ status: 'idle' })
-              }}
-              style={{
-                padding: '6px 12px',
-                borderRadius: 999,
-                border: viewMode === 'paragraph'
-                  ? '1px solid var(--accent-gradient-end)'
-                  : '1px solid var(--border)',
-                background: viewMode === 'paragraph'
-                  ? 'rgba(99, 102, 241, 0.18)'
-                  : 'rgba(255,255,255,0.04)',
-                fontSize: 12,
-              }}
-            >
-              Paragraph
-            </button>
-          </div>
         </div>
       </div>
 
       {loading && <div className="muted">Loading items…</div>}
       {error && <div style={{ color: 'var(--danger)' }}>{error}</div>}
 
-      {viewMode === 'flashcards' ? (
-        <div style={{ marginTop: 8 }}>
-          {filtered.length === 0 ? (
-            <div className="muted" style={{ fontSize: 13 }}>
-              No items match this filter for flashcards.
-            </div>
-          ) : flashItem ? (
-            <>
-              <p className="muted" style={{ fontSize: 12, marginBottom: 14, opacity: 0.85 }}>
-                Tip: ← → to move · Space or Enter to reveal
-              </p>
-              <FlashcardView
-                key={flashItem.id}
-                item={flashItem}
-                mainLanguage={mainLanguage}
-                index={flashIndex}
-                total={filtered.length}
-                showAnswer={showAnswer}
-                onToggleAnswer={() => setShowAnswer((v) => !v)}
-                onNext={() => {
-                  setFlashIndex((i) => (i + 1) % filtered.length)
-                  setShowAnswer(false)
-                }}
-                onPrev={() => {
-                  setFlashIndex((i) =>
-                    i === 0 ? (filtered.length > 0 ? filtered.length - 1 : 0) : i - 1,
-                  )
-                  setShowAnswer(false)
-                }}
-                onChangeStatus={handleStatusChange}
-                onToggleFlagged={handleToggleFlagged}
-              />
-            </>
-          ) : null}
-        </div>
-      ) : viewMode === 'paragraph' ? (
+      {topMode === 'paragraph' ? (
         <div
           className="card"
           style={{ padding: 18, marginTop: 8, overflow: 'visible' }}
         >
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <div style={{ fontWeight: 800, fontSize: 16 }}>Paragraph practice</div>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ fontWeight: 800, fontSize: 16 }}>Immersion reading</div>
             <span className="muted" style={{ fontSize: 12 }}>
-              Uses up to 5 random items marked Learning
+              Up to 5 Learning items from your current filter, in list order
             </span>
           </div>
 
@@ -549,20 +499,25 @@ export function LearnPage() {
 
           {paraState.status === 'idle' && (
             <div className="muted" style={{ marginTop: 10, fontSize: 13 }}>
-              Click “Generate paragraph” to create a GMAT-style paragraph using words you’re learning.
-              Hover the <strong>bold</strong> words to see meanings.
+              Generate a GMAT-style paragraph from your filtered Learning set. Hover bold targets for
+              meanings.
             </div>
           )}
         </div>
       ) : (
         <div style={{ display: 'grid', gap: 10 }}>
-          {filtered.map((item) => (
+          {filtered.map((item, index) => (
             <VocabCard
               key={item.id}
               item={item}
               mainLanguage={mainLanguage}
               onChangeStatus={handleStatusChange}
               onToggleFlagged={handleToggleFlagged}
+              onStudy={() => {
+                setStudyIndex(index)
+                setStudyShowAnswer(false)
+                setStudyOpen(true)
+              }}
             />
           ))}
           {!loading && !error && filtered.length === 0 && (
@@ -572,6 +527,68 @@ export function LearnPage() {
           )}
         </div>
       )}
+
+      {studyOpen && studyItem ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Study card"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 200,
+            background: 'rgba(0,0,0,0.72)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+            overflow: 'auto',
+          }}
+        >
+          <div style={{ position: 'relative', width: '100%', maxWidth: 520 }}>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => setStudyOpen(false)}
+              style={{
+                position: 'absolute',
+                right: 0,
+                top: -8,
+                zIndex: 2,
+                padding: '8px 14px',
+                fontWeight: 700,
+              }}
+            >
+              Close
+            </button>
+            <p className="muted" style={{ fontSize: 12, marginBottom: 8, opacity: 0.9 }}>
+              ← → to move · Space to reveal · Esc to close
+            </p>
+            <FlashcardView
+              key={studyItem.id}
+              item={studyItem}
+              mainLanguage={mainLanguage}
+              index={studyIndex}
+              total={filtered.length}
+              showAnswer={studyShowAnswer}
+              onToggleAnswer={() => setStudyShowAnswer((v) => !v)}
+              onNext={() => {
+                setStudyIndex((i) => (i + 1) % filtered.length)
+                setStudyShowAnswer(false)
+              }}
+              onPrev={() => {
+                setStudyIndex((i) =>
+                  i === 0 ? (filtered.length > 0 ? filtered.length - 1 : 0) : i - 1,
+                )
+                setStudyShowAnswer(false)
+              }}
+              onChangeStatus={handleStatusChange}
+              onToggleFlagged={handleToggleFlagged}
+            />
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -699,6 +716,7 @@ function VocabCard(props: {
   mainLanguage: string
   onChangeStatus: (id: string, status: VocabStatus) => void
   onToggleFlagged: (id: string, flagged: boolean) => void
+  onStudy?: () => void
 }) {
   const { item, mainLanguage } = props
   const [open, setOpen] = useState(false)
@@ -819,6 +837,16 @@ function VocabCard(props: {
           active={item.status === 'mastered'}
           onClick={() => props.onChangeStatus(item.id, 'mastered')}
         />
+        {props.onStudy ? (
+          <button
+            type="button"
+            className="btn btnPrimary"
+            onClick={props.onStudy}
+            style={{ fontSize: 12, padding: '6px 12px' }}
+          >
+            Study
+          </button>
+        ) : null}
         <button
           type="button"
           className="btn"

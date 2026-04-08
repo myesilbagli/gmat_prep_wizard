@@ -23,7 +23,7 @@ export async function fetchMeaningQuestions(
     },
     body: JSON.stringify({
       itemIds,
-      mode: 'meaning' as const,
+      mode: 'context' as const,
       count: count ?? itemIds.length,
     }),
   })

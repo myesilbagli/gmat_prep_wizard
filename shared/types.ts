@@ -41,7 +41,8 @@ export type VocabItem = {
   updatedAt?: unknown
 }
 
-export type QuizMode = 'meaning' | 'gmat'
+/** Wire values for /generateQuiz; legacy `meaning`/`gmat` still accepted server-side. */
+export type QuizMode = 'context' | 'verbal'
 
 export type QuizQuestion = {
   itemId: string

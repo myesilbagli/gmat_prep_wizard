@@ -7,6 +7,7 @@ import { orderQuestionsBySwipeWeakFirst, type SwipeSignal } from '../../shared/s
 import { getMatchGloss, shuffledCopy } from '../../shared/matchPhase'
 import type { SessionWordOutcome } from '../../shared/sessionOutcome'
 import { auth } from '../lib/firebase'
+import { APP_HOME } from '../lib/routes'
 import { fetchMeaningQuestionsForBatch } from '../lib/quizClient'
 import { applySessionBatchOutcome, listVocabItems } from '../lib/vocab'
 import { DEFAULT_MAIN_LANGUAGE, getMainLanguageLabel, normalizeMainLanguageCode } from '../../shared/languages'
@@ -247,11 +248,11 @@ export function SessionPage() {
 
   function confirmLeave() {
     if (!sessionInProgress) {
-      navigate('/')
+      navigate(APP_HOME)
       return
     }
     if (window.confirm('Leave session? Progress in this run will not count toward your streak.')) {
-      navigate('/')
+      navigate(APP_HOME)
     }
   }
 
@@ -290,7 +291,7 @@ export function SessionPage() {
     return (
       <div className="container" style={{ padding: 24 }}>
         <p style={{ color: 'var(--danger)' }}>{initError}</p>
-        <Link to="/" className="btn btnPrimary" style={{ marginTop: 16, display: 'inline-block' }}>
+        <Link to={APP_HOME} className="btn btnPrimary" style={{ marginTop: 16, display: 'inline-block' }}>
           Back to Today
         </Link>
       </div>
@@ -304,7 +305,7 @@ export function SessionPage() {
         <p className="muted" style={{ marginTop: 8 }}>
           Add a few learning words or save new items, then come back for a full session.
         </p>
-        <Link to="/" className="btn btnPrimary" style={{ marginTop: 20, display: 'inline-block' }}>
+        <Link to={APP_HOME} className="btn btnPrimary" style={{ marginTop: 20, display: 'inline-block' }}>
           Back to Today
         </Link>
       </div>
@@ -530,7 +531,7 @@ export function SessionPage() {
               type="button"
               className="btn btnPrimary"
               style={{ justifySelf: 'start', padding: '12px 20px', fontSize: 16 }}
-              onClick={() => navigate('/')}
+              onClick={() => navigate(APP_HOME)}
             >
               End session
             </button>

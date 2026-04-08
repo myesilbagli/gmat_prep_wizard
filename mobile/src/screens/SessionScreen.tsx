@@ -11,10 +11,10 @@ import {
   View,
 } from 'react-native'
 import { MaterialIcons } from '@expo/vector-icons'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { VocabWordCardContent, VocabWordCardSwipeFooter } from '../components/VocabWordCardContent'
 import * as Haptics from 'expo-haptics'
-import { getMainLanguageLabel } from '@shared/languages'
 import type { QuizQuestion, VocabItem } from '@shared/types'
-import { getNativeGloss } from '@shared/vocab'
 import { pickSessionBatchFive } from '@shared/sessionPlanner'
 import { orderQuestionsBySwipeWeakFirst, type SwipeSignal } from '@shared/sessionQuiz'
 import { getMatchGloss, shuffledCopy } from '@shared/matchPhase'
@@ -40,6 +40,7 @@ export function SessionScreen({
   onClose: () => void
   onCompleted: () => void
 }) {
+  const insets = useSafeAreaInsets()
   const [initError, setInitError] = useState<string | null>(null)
   const [vocabLoading, setVocabLoading] = useState(true)
   const [batch, setBatch] = useState<VocabItem[]>([])
@@ -275,7 +276,7 @@ export function SessionScreen({
 
   if (vocabLoading) {
     return (
-      <View style={{ flex: 1, backgroundColor: theme.bg, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <View style={{ flex: 1, backgroundColor: theme.learnScreenBg, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
         <ActivityIndicator color={theme.primary} />
         <Text style={{ color: theme.muted, marginTop: 12, textAlign: 'center' }}>Preparing your session…</Text>
         <View style={{ width: '100%', marginTop: 16, gap: 8 }}>
@@ -288,7 +289,7 @@ export function SessionScreen({
 
   if (initError && phase === 'loading') {
     return (
-      <View style={{ flex: 1, backgroundColor: theme.bg, padding: 16 }}>
+      <View style={{ flex: 1, backgroundColor: theme.learnScreenBg, padding: 16 }}>
         <Text style={{ color: theme.danger }}>{initError}</Text>
         <View style={{ marginTop: 16 }}>
           <PrimaryButton theme={theme} label="Close" onPress={onClose} />
@@ -299,7 +300,7 @@ export function SessionScreen({
 
   if (phase === 'empty') {
     return (
-      <View style={{ flex: 1, backgroundColor: theme.bg, padding: 16 }}>
+      <View style={{ flex: 1, backgroundColor: theme.learnScreenBg, padding: 16 }}>
         <Text style={{ color: theme.text, fontSize: 22, fontWeight: '800' }}>Not enough words</Text>
         <Text style={{ color: theme.muted, marginTop: 8 }}>Save a few learning words first.</Text>
         <View style={{ marginTop: 20 }}>
@@ -313,29 +314,35 @@ export function SessionScreen({
     phase === 'learn' ? 'Learn' : phase === 'match' ? 'Match' : phase === 'mcq' ? 'Quiz' : phase === 'summary' ? 'Done' : ''
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.bg }}>
+    <View style={{ flex: 1, backgroundColor: theme.learnScreenBg }}>
       <View
         style={{
-          paddingHorizontal: 16,
-          paddingVertical: 12,
-          borderBottomWidth: 1,
-          borderBottomColor: theme.border,
+          paddingHorizontal: 14,
+          paddingTop: Math.max(insets.top, 10),
+          paddingBottom: 10,
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
         }}
       >
-        <Pressable onPress={onClose}>
-          <Text style={{ color: theme.primary, fontWeight: '700' }}>← Exit</Text>
+        <Pressable
+          onPress={onClose}
+          hitSlop={10}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
+          accessibilityRole="button"
+          accessibilityLabel="Exit session"
+        >
+          <MaterialIcons name="close" size={20} color={theme.primary} />
+          <Text style={{ color: theme.primary, fontWeight: '800', fontSize: 15 }}>Exit</Text>
         </Pressable>
-        <Text style={{ color: theme.muted, fontWeight: '700' }}>
+        <Text style={{ color: theme.muted, fontWeight: '800', fontSize: 13 }}>
           {phase === 'summary' ? 'Done' : phase === 'learn' ? `${learnIndex + 1} / ${totalLearnSteps}` : phaseLabel}
         </Text>
-        <View style={{ width: 48 }} />
+        <View style={{ width: 56 }} />
       </View>
 
       {phase === 'learn' && currentLearnWord ? (
-        <View style={{ flex: 1, paddingHorizontal: 16, paddingBottom: 16 }}>
+        <View style={{ flex: 1, paddingHorizontal: 12, paddingBottom: 12 }}>
           {initError ? <Text style={{ color: theme.danger, marginBottom: 8 }}>{initError}</Text> : null}
           <Animated.View
             style={{
@@ -344,9 +351,8 @@ export function SessionScreen({
               transform: [{ translateY: stepAnim.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }],
             }}
           >
-            <Text style={{ color: theme.muted, fontSize: 12, fontWeight: '700', marginBottom: 8 }}>SWIPE</Text>
-            <Text style={{ color: theme.muted, fontSize: 13, marginBottom: 12 }}>
-              Right = I know this · Left = I don&apos;t know
+            <Text style={{ color: theme.muted, fontSize: 12, fontWeight: '600', marginBottom: 8, paddingHorizontal: 2 }}>
+              Swipe right if you know this · left if you don&apos;t
             </Text>
             <SwipeLearnCard
               key={currentLearnWord.id}
@@ -569,20 +575,7 @@ function SwipeLearnCard({
   onCommitted: (signal: SwipeSignal) => void
 }) {
   const { height: windowHeight } = useWindowDimensions()
-  const cardBodyMaxH = Math.max(280, windowHeight * 0.58)
-  const example = word.exampleSentence?.trim()
-  const nativeGloss = getNativeGloss(word, mainLanguage)
-  const languageTitle = useMemo(() => {
-    const full = getMainLanguageLabel(mainLanguage)
-    const cut = full.indexOf(' (')
-    return cut >= 0 ? full.slice(0, cut) : full
-  }, [mainLanguage])
-  const typeLabel = word.type === 'phrase' ? 'PHRASE' : 'WORD'
-  const simpleLine = (word.simpleDefinition || word.definition || '').trim()
-  const longDef =
-    word.definition && word.simpleDefinition && word.definition.trim() !== word.simpleDefinition.trim()
-      ? word.definition.trim()
-      : null
+  const cardBodyMaxH = Math.min(420, Math.max(240, windowHeight * 0.46))
 
   const translateX = useRef(new Animated.Value(0)).current
   const rotate = translateX.interpolate({
@@ -621,152 +614,44 @@ function SwipeLearnCard({
   )
 
   return (
-    <View style={{ flex: 1, minHeight: 240 }}>
+    <View style={{ flex: 1, minHeight: 200 }}>
       <Animated.View
         collapsable={false}
         {...panResponder.panHandlers}
         style={[
           {
             flex: 1,
-            borderRadius: 18,
+            borderRadius: 16,
             borderWidth: 1,
             borderColor: theme.border,
             backgroundColor: theme.surface,
             overflow: 'hidden',
             shadowColor: '#000',
-            shadowOpacity: 0.1,
-            shadowRadius: 14,
-            shadowOffset: { width: 0, height: 8 },
-            elevation: 5,
+            shadowOpacity: 0.08,
+            shadowRadius: 10,
+            shadowOffset: { width: 0, height: 4 },
+            elevation: 4,
           },
           { transform: [{ translateX }, { rotate }] },
         ]}
       >
         <ScrollView
           style={{ maxHeight: cardBodyMaxH }}
-          contentContainerStyle={{ padding: 20, paddingBottom: 18 }}
+          contentContainerStyle={{ paddingBottom: 8 }}
           showsVerticalScrollIndicator
           bounces={false}
           keyboardShouldPersistTaps="handled"
           nestedScrollEnabled
         >
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <Text
-              style={{
-                fontSize: 10,
-                fontWeight: '800',
-                letterSpacing: 1.1,
-                color: theme.muted,
-              }}
-            >
-              {typeLabel}
-            </Text>
-            <Text style={{ fontSize: 10, fontWeight: '800', letterSpacing: 1, color: theme.muted }}>SWIPE</Text>
-          </View>
-
-          <Text style={{ color: theme.text, fontSize: 28, fontWeight: '800', letterSpacing: -0.4 }}>{word.text}</Text>
-
-          <View style={{ height: 1, backgroundColor: theme.border, marginVertical: 16, opacity: 0.85 }} />
-
-          {simpleLine ? (
-            <View style={{ gap: 6, marginBottom: 12 }}>
-              <Text style={{ fontSize: 11, fontWeight: '700', color: theme.muted, letterSpacing: 0.6 }}>MEANING</Text>
-              <Text style={{ color: theme.text, fontSize: 16, lineHeight: 24 }}>{simpleLine}</Text>
-            </View>
-          ) : null}
-
-          {longDef ? (
-            <View style={{ gap: 6, marginBottom: 12 }}>
-              <Text style={{ fontSize: 11, fontWeight: '700', color: theme.muted, letterSpacing: 0.6 }}>FULL DEFINITION</Text>
-              <Text style={{ color: theme.text, fontSize: 15, lineHeight: 22 }}>{longDef}</Text>
-            </View>
-          ) : null}
-
-          {nativeGloss ? (
-            <View style={{ gap: 6, marginBottom: 12 }}>
-              <Text style={{ fontSize: 11, fontWeight: '700', color: theme.muted, letterSpacing: 0.6 }}>{languageTitle}</Text>
-              <Text style={{ color: theme.muted, fontSize: 15, lineHeight: 22, fontStyle: 'italic' }}>{nativeGloss}</Text>
-            </View>
-          ) : null}
-
-          {example ? (
-            <View
-              style={{
-                marginTop: 4,
-                paddingVertical: 10,
-                paddingHorizontal: 12,
-                borderLeftWidth: 3,
-                borderLeftColor: theme.primary,
-                borderRadius: 10,
-                backgroundColor: theme.surface2,
-                marginBottom: 8,
-              }}
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                <MaterialIcons name="format-quote" size={18} color={theme.muted} />
-                <Text style={{ fontSize: 11, fontWeight: '700', color: theme.muted, letterSpacing: 0.6 }}>EXAMPLE</Text>
-              </View>
-              <Text style={{ color: theme.muted, fontSize: 14, lineHeight: 21, fontStyle: 'italic' }}>&quot;{example}&quot;</Text>
-            </View>
-          ) : null}
-
-          {(word.synonyms?.length ?? 0) > 0 ? (
-            <View style={{ gap: 8, marginBottom: 8 }}>
-              <Text style={{ fontSize: 11, fontWeight: '700', color: theme.muted, letterSpacing: 0.6 }}>SYNONYMS</Text>
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                {(word.synonyms ?? []).map((syn, idx) => (
-                  <View
-                    key={`${syn}-${idx}`}
-                    style={{
-                      borderRadius: 999,
-                      borderWidth: 1,
-                      borderColor: theme.border,
-                      backgroundColor: theme.surface2,
-                      paddingHorizontal: 10,
-                      paddingVertical: 5,
-                    }}
-                  >
-                    <Text style={{ color: theme.text, fontSize: 13 }}>{syn}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          ) : null}
-
-          {word.nuanceNote ? (
-            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 8 }}>
-              <MaterialIcons name="lightbulb-outline" size={20} color={theme.muted} style={{ marginTop: 2 }} />
-              <View style={{ flex: 1, gap: 4 }}>
-                <Text style={{ fontSize: 11, fontWeight: '700', color: theme.muted }}>NUANCE</Text>
-                <Text style={{ color: theme.text, fontSize: 14, lineHeight: 21 }}>{word.nuanceNote}</Text>
-              </View>
-            </View>
-          ) : null}
-
-          {word.gmatUsageNote ? (
-            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 4 }}>
-              <MaterialIcons name="star-border" size={20} color={theme.muted} style={{ marginTop: 2 }} />
-              <View style={{ flex: 1, gap: 4 }}>
-                <Text style={{ fontSize: 11, fontWeight: '700', color: theme.muted }}>GMAT USAGE</Text>
-                <Text style={{ color: theme.text, fontSize: 14, lineHeight: 21 }}>{word.gmatUsageNote}</Text>
-              </View>
-            </View>
-          ) : null}
-
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginTop: 16,
-              paddingTop: 14,
-              borderTopWidth: 1,
-              borderTopColor: theme.border,
-            }}
-          >
-            <Text style={{ color: theme.danger, fontSize: 12, fontWeight: '700' }}>← Don&apos;t know</Text>
-            <Text style={{ color: theme.success, fontSize: 12, fontWeight: '700' }}>Know →</Text>
-          </View>
+          <VocabWordCardContent
+            theme={theme}
+            mainLanguage={mainLanguage}
+            word={word}
+            variant="session"
+            topRightBadge="SWIPE"
+            compact
+            footer={<VocabWordCardSwipeFooter theme={theme} variant="session" compact />}
+          />
         </ScrollView>
       </Animated.View>
     </View>

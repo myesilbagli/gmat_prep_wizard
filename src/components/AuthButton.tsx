@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import type { User } from 'firebase/auth'
+import { Link } from 'react-router-dom'
 import { MAIN_LANGUAGE_OPTIONS, DEFAULT_MAIN_LANGUAGE, normalizeMainLanguageCode } from '../../shared/languages'
 import type { ExamPart, ExamTarget } from '../../shared/userProfile'
 import { DEFAULT_TIMEZONE } from '../../shared/userProfile'
-import { signInWithGoogle, signOutUser, subscribeToAuth } from '../lib/auth'
+import { signOutUser, subscribeToAuth } from '../lib/auth'
 import { ensureUserProfileDefaults, saveExamTarget, saveUserProfilePatch } from '../lib/userProfile'
 
 type Theme = 'dark' | 'light'
@@ -111,21 +112,14 @@ export function AuthButton({ theme, setTheme }: AuthButtonProps) {
           }}
         >
           {!user ? (
-            <button
+            <Link
+              to="/sign-in"
               className="btn btnPrimary"
-              disabled={busy}
-              onClick={async () => {
-                setBusy(true)
-                try {
-                  await signInWithGoogle()
-                  setOpen(false)
-                } finally {
-                  setBusy(false)
-                }
-              }}
+              style={{ textAlign: 'center', textDecoration: 'none', display: 'block' }}
+              onClick={() => setOpen(false)}
             >
-              {busy ? 'Signing in…' : 'Sign in with Google'}
-            </button>
+              Sign in
+            </Link>
           ) : (
             <>
               <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--muted)' }}>SETTINGS</div>

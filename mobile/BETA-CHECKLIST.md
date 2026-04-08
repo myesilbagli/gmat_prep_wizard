@@ -24,6 +24,13 @@
 - [ ] Small-screen layout validated (e.g., iPhone SE / small Android)
 - [ ] Keyboard and submit behavior validated for auth + lookup
 
+## Subscriptions (Lexicon Pro)
+
+- [ ] **Expo Go**: Quick Capture + Start Session work with mock IAP (default: entitled); set `EXPO_PUBLIC_IAP_MOCK_ENTITLED=0` in `.env` to verify paywall opens when gated
+- [ ] **Dev client / TestFlight**: `EXPO_PUBLIC_REVENUECAT_API_KEY` set on EAS; App Store + RevenueCat configured per [`docs/SUBSCRIPTIONS.md`](docs/SUBSCRIPTIONS.md)
+- [ ] Sandbox purchase monthly/yearly, **Restore purchases**, and **Manage in App Store** from Profile
+- [ ] App Store Connect **App Privacy** updated for purchases + RevenueCat (manual)
+
 ## Internal distribution prep
 
 - [ ] `eas login` completed

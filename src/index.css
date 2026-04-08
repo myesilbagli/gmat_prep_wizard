@@ -1,11 +1,14 @@
 :root {
-  /* Default theme = dark */
-  --bg: #0b0e14;
-  --surface: #11131a;
-  --surface-2: #171a24;
-  --text: #e9eaf0;
-  --muted: #a6adbb;
-  --border: rgba(255, 255, 255, 0.10);
+  /* Default theme = dark — aligned with marketing landing (#/landing) */
+  --content-max: 1280px;
+  --content-pad-x: 24px;
+
+  --bg: #0b1326;
+  --surface: #131b2e;
+  --surface-2: #171f33;
+  --text: #dae2fd;
+  --muted: #c7c4d7;
+  --border: rgba(255, 255, 255, 0.1);
   --accent: #7c3aed;
   --accent-gradient-start: #7b81f5;
   --accent-gradient-end: #6366f1;
@@ -16,9 +19,9 @@
   --radius-pill: 999px;
   --shadow: rgba(0, 0, 0, 0.35) 0 14px 40px -20px;
   --shadow-glow: 0 0 24px rgba(99, 102, 241, 0.25);
-  --header-bg: rgba(11, 14, 20, 0.85);
+  --header-bg: rgba(45, 52, 73, 0.6);
 
-  --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica,
+  --sans: Manrope, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica,
     Arial, "Apple Color Emoji", "Segoe UI Emoji";
   --font-academic: "Crimson Pro", Georgia, "Times New Roman", serif;
   --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
@@ -28,8 +31,9 @@
   letter-spacing: 0.1px;
   color-scheme: dark;
   color: var(--text);
-  background: radial-gradient(1200px 700px at 20% -10%, rgba(124, 58, 237, 0.22), transparent 55%),
-    radial-gradient(900px 600px at 90% 0%, rgba(34, 197, 94, 0.16), transparent 55%),
+  background: radial-gradient(1200px 700px at 20% -10%, rgba(124, 58, 237, 0.2), transparent 55%),
+    radial-gradient(900px 600px at 90% 0%, rgba(79, 219, 200, 0.1), transparent 50%),
+    radial-gradient(80vw 80vw at 50% 20%, rgba(30, 27, 75, 0.35), transparent 65%),
     var(--bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -38,6 +42,9 @@
 }
 
 :root[data-theme='light'] {
+  --content-max: 1280px;
+  --content-pad-x: 24px;
+
   --bg: #f5f5fb;
   --surface: #ffffff;
   --surface-2: #f3f4ff;
@@ -46,7 +53,7 @@
   --border: rgba(11, 18, 32, 0.12);
   --shadow: rgba(0, 0, 0, 0.12) 0 14px 40px -20px;
   --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.18);
-  --header-bg: rgba(245, 245, 251, 0.82);
+  --header-bg: rgba(245, 245, 251, 0.88);
   color-scheme: light;
   background: radial-gradient(1200px 700px at 20% -10%, rgba(124, 58, 237, 0.10), transparent 55%),
     radial-gradient(900px 600px at 90% 0%, rgba(99, 102, 241, 0.08), transparent 55%),
@@ -76,9 +83,28 @@ textarea {
 }
 
 .container {
-  width: min(980px, 100%);
+  width: min(var(--content-max), 100%);
   margin: 0 auto;
-  padding: 16px;
+  padding: 20px var(--content-pad-x);
+}
+
+/* Main app shell — same horizontal rhythm as marketing landing */
+.app-header {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--border);
+  padding: 14px var(--content-pad-x);
+}
+
+.app-header-inner {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .card {
@@ -128,6 +154,84 @@ textarea {
 
 .muted {
   color: var(--muted);
+}
+
+/* Marketing landing (#/landing) — Stitch export palette */
+.landing-page {
+  font-family: Manrope, var(--sans);
+  background: #0b1326;
+  color: #dae2fd;
+  min-height: 100svh;
+  position: relative;
+  overflow-x: hidden;
+}
+.landing-page a.landing-link {
+  text-decoration: none;
+  color: #c7c4d7;
+  transition: color 0.2s;
+}
+.landing-page a.landing-link:hover {
+  color: #dae2fd;
+}
+.landing-aurora {
+  position: absolute;
+  filter: blur(80px);
+  border-radius: 9999px;
+  z-index: 0;
+  opacity: 0.15;
+  pointer-events: none;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* Fixed header: backdrop-blur recomposites every frame while the page scrolls → jank. */
+.landing-header-fixed {
+  background: rgba(11, 19, 38, 0.94);
+  border-bottom: 1px solid rgba(70, 69, 84, 0.2);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+}
+
+.landing-glass {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/*
+ * Long landing scroll: many frosted panels force expensive repaints. Sign-in stays short;
+ * scoped removal keeps glass on auth headers / short pages.
+ */
+.landing-page main .landing-glass {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.landing-page .landing-hero-deck {
+  transition: transform 0.45s ease;
+}
+@media (hover: hover) {
+  .landing-page .landing-hero-deck:hover {
+    transform: translateY(-6px);
+  }
+}
+.landing-nav-center {
+  display: none;
+  align-items: center;
+  gap: 2rem;
+}
+@media (min-width: 768px) {
+  .landing-nav-center {
+    display: flex;
+  }
+}
+.landing-icon {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  display: inline-block;
+  vertical-align: middle;
+  -webkit-font-smoothing: antialiased;
 }
 
 @keyframes lookupSkeletonPulse {
