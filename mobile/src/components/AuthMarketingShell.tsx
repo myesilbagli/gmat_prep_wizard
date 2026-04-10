@@ -4,11 +4,16 @@ import { Platform, Pressable, StyleSheet, Text, View, useWindowDimensions } from
 import { MaterialIcons } from '@expo/vector-icons'
 import { AUTH } from '../lib/authMarketingTheme'
 
-export function AuthMarketingBackground() {
+export function AuthMarketingBackground({
+  baseColor = AUTH.bgBase,
+}: {
+  /** Welcome uses indigo-purple full-bleed; auth cards keep near-black. */
+  baseColor?: string
+}) {
   const { width, height } = useWindowDimensions()
   const dim = Math.max(width, height) * 1.35
   return (
-    <View style={[StyleSheet.absoluteFill, { backgroundColor: AUTH.bgBase }]} pointerEvents="none">
+    <View style={[StyleSheet.absoluteFill, { backgroundColor: baseColor }]} pointerEvents="none">
       <View
         style={{
           position: 'absolute',

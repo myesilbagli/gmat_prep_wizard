@@ -14,7 +14,6 @@ import {
   useGlassFonts,
 } from '../components/GlassUi'
 import { LearnFlashcardModal } from '../components/LearnFlashcardModal'
-import { WordStacksSection } from '../components/WordStacksSection'
 import { generateParagraph } from '../lib/api'
 import {
   deleteVocabItem,
@@ -60,11 +59,13 @@ export function LearnScreen({
   mainLanguage,
   items,
   onReload,
+  onOpenWordStacks,
 }: {
   theme: AppTheme
   mainLanguage: string
   items: VocabItem[]
   onReload: () => Promise<void>
+  onOpenWordStacks: () => void
 }) {
   const { fontHeadline, fontHeadlineSm, fontBody, fontLabel, fontLabelBold } = useGlassFonts()
 
@@ -198,7 +199,54 @@ export function LearnScreen({
             : 'Read a formal paragraph that weaves in your Learning items—targets are highlighted.'}
         </Text>
 
-        <WordStacksSection theme={theme} />
+        <Pressable
+          onPress={onOpenWordStacks}
+          style={({ pressed }) => ({
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginTop: 20,
+            marginBottom: 4,
+            paddingVertical: 16,
+            paddingHorizontal: 16,
+            borderRadius: 14,
+            borderWidth: 1,
+            borderColor: theme.learnGlassBorder,
+            backgroundColor: theme.learnSearchBg,
+            opacity: pressed ? 0.9 : 1,
+          })}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <View
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 12,
+                backgroundColor: theme.learnViewToggleBg,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <MaterialIcons name="layers" size={24} color={theme.learnAccent} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text
+                style={{
+                  fontFamily: fontHeadlineSm,
+                  fontSize: 16,
+                  fontWeight: '800',
+                  color: theme.learnOnSurface,
+                }}
+              >
+                Word stacks
+              </Text>
+              <Text style={{ fontFamily: fontBody, fontSize: 13, color: theme.learnOnSurfaceVariant, marginTop: 2 }}>
+                Curated packs — open to browse and add to your deck
+              </Text>
+            </View>
+          </View>
+          <MaterialIcons name="chevron-right" size={24} color={theme.learnOutline} />
+        </Pressable>
 
         <View
           style={{

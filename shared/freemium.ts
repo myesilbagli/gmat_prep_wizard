@@ -2,9 +2,10 @@
 
 export const FREE_MAX_SAVED_WORDS = 50
 export const FREE_MAX_SESSION_STARTS_PER_DAY = 3
-export const BASIC_STACK_WORD_COUNT = 50
+/** Words per stack in `wordStackContent` (expand lists alongside this). */
+export const BASIC_STACK_WORD_COUNT = 20
 
-/** The two basic stacks free users can open (full word lists ship in a later release). */
+/** The two basic stacks free users can open (see `shared/wordStackContent`). */
 export const FREE_BASIC_STACK_IDS = ['stack_gmat_core_50', 'stack_verbal_essentials_50'] as const
 
 export type WordStackTier = 'basic' | 'pro'
@@ -14,11 +15,11 @@ export type WordStackDefinition = {
   title: string
   description: string
   tier: WordStackTier
-  /** Planned size; basic stacks are 50 words each for the free tier. */
+    /** Words available in the in-app stack pack (see `wordStackContent`). */
   wordCount: number
 }
 
-/** Placeholder catalog — replace with real stack content when stacks ship. */
+/** Stack metadata; word lists live in `shared/wordStackContent`. */
 export const WORD_STACK_CATALOG: WordStackDefinition[] = [
   {
     id: 'stack_gmat_core_50',

@@ -1,9 +1,10 @@
-import { Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native'
+import { Linking, Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { MaterialIcons } from '@expo/vector-icons'
 import { AuthMarketingBackground } from '../components/AuthMarketingShell'
 import { useGlassFonts } from '../components/GlassUi'
 import { AUTH } from '../lib/authMarketingTheme'
+import { getPrivacyPolicyUrl, getTermsOfServiceUrl } from '../lib/legalLinks'
 import type { AppTheme } from '../theme'
 
 /** Cohesive with Sign In marketing UI (indigo radial + glass). */
@@ -63,29 +64,7 @@ function WelcomeLexiconMockCard({
         borderColor: 'rgba(99, 102, 241, 0.2)',
       }}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-        <View
-          style={{
-            paddingHorizontal: 7,
-            paddingVertical: 3,
-            borderRadius: 6,
-            backgroundColor: 'rgba(99, 102, 241, 0.22)',
-            borderWidth: 1,
-            borderColor: 'rgba(129, 140, 248, 0.35)',
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 8,
-              fontWeight: '900',
-              letterSpacing: 1.4,
-              color: '#c4b5fd',
-              fontFamily: fonts.fontLabelBold,
-            }}
-          >
-            LEXICON
-          </Text>
-        </View>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
         <View
           style={{
             paddingHorizontal: 8,
@@ -188,7 +167,7 @@ function WelcomeLexiconMockCard({
             fontFamily: fonts.fontLabelBold,
           }}
         >
-          01 / 500
+          1/100
         </Text>
       </View>
     </View>
@@ -207,14 +186,18 @@ export function WelcomeScreen({
   const { width } = useWindowDimensions()
   const insets = useSafeAreaInsets()
   const fonts = useGlassFonts()
+  const privacyUrl = getPrivacyPolicyUrl()
+  const termsUrl = getTermsOfServiceUrl()
+  const showLegal = Boolean(privacyUrl || termsUrl)
+
   const maxContent = 400
   const contentW = Math.min(width - 48, maxContent)
   const cardW = Math.min(168, contentW * 0.46)
   const cardH = cardW * 1.52
 
   return (
-    <View style={{ flex: 1, backgroundColor: AUTH.bgBase, overflow: 'hidden' }}>
-      <AuthMarketingBackground />
+    <View style={{ flex: 1, backgroundColor: AUTH.radialViolet, overflow: 'hidden' }}>
+      <AuthMarketingBackground baseColor={AUTH.radialViolet} />
 
       <ScrollView
         style={{ flex: 1 }}
@@ -323,7 +306,7 @@ export function WelcomeScreen({
             >
               <WelcomeLexiconMockCard
                 fonts={fonts}
-                word="GRIT"
+                word="Grit"
                 pos="noun"
                 ipa="/ɡrɪt/"
                 definition="Courage and resolve; the stamina to push through dense verbal sections without losing focus."
@@ -432,12 +415,54 @@ export function WelcomeScreen({
           </View>
         </View>
 
-        <View style={{ alignItems: 'center', marginTop: 28, paddingBottom: 8 }}>
-          <View style={{ flexDirection: 'row', gap: 18, opacity: 0.45 }}>
-            <Text style={{ fontSize: 9, fontWeight: '800', letterSpacing: 1.5, color: W.onSurfaceVariant }}>PRIVACY</Text>
-            <Text style={{ fontSize: 9, fontWeight: '800', letterSpacing: 1.5, color: W.onSurfaceVariant }}>TERMS</Text>
+        {showLegal ? (
+          <View style={{ alignItems: 'center', marginTop: 28, paddingBottom: 8 }}>
+            <View style={{ flexDirection: 'row', gap: 18 }}>
+              {privacyUrl ? (
+                <Pressable
+                  onPress={() => void Linking.openURL(privacyUrl)}
+                  hitSlop={10}
+                  accessibilityRole="link"
+                  accessibilityLabel="Privacy policy"
+                >
+                  <Text
+                    style={{
+                      fontSize: 9,
+                      fontWeight: '800',
+                      letterSpacing: 1.5,
+                      color: W.onSurfaceVariant,
+                      opacity: 0.65,
+                      textDecorationLine: 'underline',
+                    }}
+                  >
+                    PRIVACY
+                  </Text>
+                </Pressable>
+              ) : null}
+              {termsUrl ? (
+                <Pressable
+                  onPress={() => void Linking.openURL(termsUrl)}
+                  hitSlop={10}
+                  accessibilityRole="link"
+                  accessibilityLabel="Terms of service"
+                >
+                  <Text
+                    style={{
+                      fontSize: 9,
+                      fontWeight: '800',
+                      letterSpacing: 1.5,
+                      color: W.onSurfaceVariant,
+                      opacity: 0.65,
+                      textDecorationLine: 'underline',
+                    }}
+                  >
+                    TERMS
+                  </Text>
+                </Pressable>
+              ) : null}
+            </View>
           </View>
-        </View>
+        ) : null}
       </ScrollView>
     </View>
   )

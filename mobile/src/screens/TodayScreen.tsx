@@ -18,7 +18,7 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons'
 import { FREE_MAX_SAVED_WORDS } from '@shared/freemium'
 import { getMainLanguageLabel } from '@shared/languages'
 import type { GeneratedResult, VocabItem } from '@shared/types'
-import { GlassScreenRoot, isLearnDarkUi, useGlassFonts } from '../components/GlassUi'
+import { GlassScreenRoot, glassScreenShadow, isLearnDarkUi, useGlassFonts } from '../components/GlassUi'
 import { useSubscription } from '../context/SubscriptionContext'
 import { generateWord } from '../lib/api'
 import { saveWord } from '../lib/words'
@@ -153,6 +153,9 @@ export function TodayScreen({
   const surfaceContainer = '#1d2026'
   const inputBg = '#0b0e14'
   const borderSubtle = 'rgba(70, 69, 84, 0.35)'
+  /** Mint label for “DAILY OBJECTIVE” (coherent on dark Lexicon UI). */
+  const dailyLabelTeal = learnDark ? '#66d9b8' : '#0d9488'
+  const cardRadius = 22
 
   return (
     <GlassScreenRoot theme={theme}>
@@ -169,19 +172,18 @@ export function TodayScreen({
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* Quick Capture */}
-        <View style={{ marginBottom: 12 }}>
-          <Text
-            style={{
-              fontFamily: fontHeadline,
-              fontSize: 17,
-              fontWeight: '700',
-              color: theme.learnOnSurface,
-              marginBottom: 8,
-            }}
-          >
-            Quick Capture
-          </Text>
+        {/* Card generation */}
+        <View
+          style={{
+            marginBottom: 16,
+            borderRadius: cardRadius,
+            borderWidth: 1,
+            borderColor: theme.learnGlassBorder,
+            backgroundColor: theme.surface2,
+            padding: 18,
+            ...glassScreenShadow(theme),
+          }}
+        >
           {!subLoading && !isPro ? (
             <Text
               style={{
@@ -189,169 +191,185 @@ export function TodayScreen({
                 fontSize: 12,
                 lineHeight: 16,
                 color: theme.learnOnSurfaceVariant,
-                marginBottom: 8,
+                marginBottom: 12,
               }}
             >
-              Free plan: up to {FREE_MAX_SAVED_WORDS} saved words total · {items.length}/{FREE_MAX_SAVED_WORDS} used
+              Free plan: up to {FREE_MAX_SAVED_WORDS} saved words · {items.length}/{FREE_MAX_SAVED_WORDS} used
             </Text>
           ) : null}
-          <View
-            style={{
-              borderRadius: 14,
-              padding: 14,
-              borderWidth: 1,
-              borderColor: borderSubtle,
-              backgroundColor: learnDark ? 'rgba(189, 194, 255, 0.04)' : theme.learnGlass,
-            }}
-          >
+          <View style={{ position: 'relative' }}>
             <TextInput
               value={text}
               onChangeText={(v) => {
                 setText(v)
                 setSaved(false)
               }}
-              placeholder="Enter word or phrase"
-              placeholderTextColor={`${theme.learnOutline}99`}
+              placeholder="Enter word or phrase…"
+              placeholderTextColor={`${theme.learnOutline}aa`}
               style={{
                 fontFamily: fontBody,
                 fontSize: 15,
                 color: theme.learnOnSurface,
                 backgroundColor: inputBg,
-                borderRadius: 12,
-                paddingHorizontal: 14,
-                paddingVertical: 11,
-                marginBottom: 8,
+                borderRadius: 999,
+                paddingHorizontal: 18,
+                paddingVertical: 14,
+                paddingRight: 48,
               }}
               returnKeyType="done"
               onSubmitEditing={() => {
                 if (canGenerate && state.status !== 'loading') void onGenerate()
               }}
             />
-            <Pressable
-              onPress={() => void onGenerate()}
-              disabled={!canGenerate || state.status === 'loading'}
-              style={({ pressed }) => ({
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 6,
-                paddingVertical: 10,
-                borderRadius: 12,
-                opacity: !canGenerate || state.status === 'loading' ? 0.45 : pressed ? 0.85 : 1,
-              })}
-            >
-              <MaterialIcons name="add-circle-outline" size={20} color={theme.learnAccent} />
-              <Text style={{ fontFamily: fontHeadline, fontSize: 15, fontWeight: '700', color: theme.learnAccent }}>
-                Generate Card
-              </Text>
-            </Pressable>
-          </View>
-        </View>
-
-        {/* Today's Session */}
-        <View style={{ marginBottom: 12 }}>
-          <Text
-            style={{
-              fontFamily: fontHeadline,
-              fontSize: 22,
-              fontWeight: '800',
-              color: theme.learnOnSurface,
-              letterSpacing: -0.4,
-            }}
-          >
-            Today&apos;s Session
-          </Text>
-          <Text
-            style={{
-              fontFamily: fontBody,
-              fontSize: 13,
-              lineHeight: 18,
-              color: theme.learnOnSurfaceVariant,
-              marginTop: 4,
-            }}
-            numberOfLines={2}
-          >
-            Resume your daily path — swipe cards below or start a session.
-          </Text>
-
-          <View
-            style={{
-              marginTop: 10,
-              backgroundColor: surfaceLow,
-              borderRadius: 14,
-              padding: 16,
-              overflow: 'hidden',
-              borderWidth: 1,
-              borderColor: borderSubtle,
-            }}
-          >
-            <View style={{ position: 'absolute', top: 4, right: 4, opacity: 0.08 }} pointerEvents="none">
-              <MaterialIcons name="import-contacts" size={64} color={theme.learnAccent} />
+            <View style={{ position: 'absolute', right: 16, top: 0, bottom: 0, justifyContent: 'center' }} pointerEvents="none">
+              <MaterialIcons name="edit-note" size={22} color={theme.learnOutline} />
             </View>
-            <View style={{ gap: 12, zIndex: 1 }}>
-              <View style={{ flexDirection: 'row', gap: 20 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <View
-                    style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: 4,
-                      backgroundColor: theme.learnAccent,
-                      shadowColor: theme.learnAccent,
-                      shadowOpacity: 0.6,
-                      shadowRadius: 8,
-                    }}
-                  />
-                  <Text style={{ fontFamily: fontHeadline, fontSize: 13, fontWeight: '700', color: theme.learnOnSurface }}>
-                    {profileLoading ? '…' : stats.learning} Learning
-                  </Text>
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <View
-                    style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: 4,
-                      backgroundColor: theme.learnTertiary,
-                      shadowColor: theme.learnTertiary,
-                      shadowOpacity: 0.5,
-                      shadowRadius: 8,
-                    }}
-                  />
-                  <Text style={{ fontFamily: fontHeadline, fontSize: 13, fontWeight: '700', color: theme.learnOnSurface }}>
-                    {profileLoading ? '…' : stats.flagged} Flagged
-                  </Text>
-                </View>
-              </View>
-              <Pressable
-                onPress={onStartSession}
-                style={({ pressed }) => ({
-                  backgroundColor: theme.learnAccentStrong,
-                  borderRadius: 999,
-                  paddingVertical: 12,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  opacity: pressed ? 0.92 : 1,
-                  shadowColor: '#7c87f3',
-                  shadowOffset: { width: 0, height: 8 },
-                  shadowOpacity: 0.22,
-                  shadowRadius: 14,
-                  elevation: 6,
-                })}
-              >
+          </View>
+          <Pressable
+            onPress={() => void onGenerate()}
+            disabled={!canGenerate || state.status === 'loading'}
+            style={({ pressed }) => ({
+              marginTop: 14,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              paddingVertical: 15,
+              borderRadius: 999,
+              backgroundColor: theme.learnPillActiveBg,
+              opacity: !canGenerate || state.status === 'loading' ? 0.45 : pressed ? 0.9 : 1,
+            })}
+          >
+            {state.status === 'loading' ? (
+              <ActivityIndicator color={theme.learnPillActiveText} />
+            ) : (
+              <>
+                <MaterialIcons name="flash-on" size={22} color={theme.learnPillActiveText} />
                 <Text
                   style={{
                     fontFamily: fontHeadline,
                     fontSize: 16,
                     fontWeight: '800',
-                    color: '#081486',
+                    color: theme.learnPillActiveText,
                   }}
                 >
-                  Start Session
+                  Generate Card
                 </Text>
-              </Pressable>
+              </>
+            )}
+          </Pressable>
+        </View>
+
+        {/* Daily objective */}
+        <View
+          style={{
+            marginBottom: 16,
+            borderRadius: cardRadius,
+            borderWidth: 1,
+            borderColor: theme.learnGlassBorder,
+            backgroundColor: theme.surface2,
+            padding: 20,
+            ...glassScreenShadow(theme),
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: fontHeadlineSm,
+              fontSize: 10,
+              fontWeight: '800',
+              letterSpacing: 2,
+              color: dailyLabelTeal,
+            }}
+          >
+            DAILY OBJECTIVE
+          </Text>
+          <Text
+            style={{
+              fontFamily: fontHeadline,
+              fontSize: 22,
+              fontWeight: '800',
+              letterSpacing: -0.3,
+              color: theme.learnOnSurface,
+              marginTop: 6,
+            }}
+          >
+            Focus Mastery
+          </Text>
+
+          <View style={{ flexDirection: 'row', marginTop: 18, paddingRight: 8 }}>
+            <View style={{ flex: 1 }}>
+              <Text
+                style={{
+                  fontFamily: fontHeadline,
+                  fontSize: 34,
+                  fontWeight: '800',
+                  color: theme.learnOnSurface,
+                  letterSpacing: -1,
+                }}
+              >
+                {profileLoading ? '…' : stats.learning}
+              </Text>
+              <Text
+                style={{
+                  fontFamily: fontLabel,
+                  fontSize: 11,
+                  fontWeight: '700',
+                  letterSpacing: 1,
+                  color: theme.learnOnSurfaceVariant,
+                  marginTop: 4,
+                }}
+              >
+                LEARNING
+              </Text>
+            </View>
+            <View style={{ flex: 1, alignItems: 'flex-start' }}>
+              <Text
+                style={{
+                  fontFamily: fontHeadline,
+                  fontSize: 34,
+                  fontWeight: '800',
+                  letterSpacing: -1,
+                  color: stats.mastered === 0 ? theme.learnOutline : theme.learnOnSurface,
+                }}
+              >
+                {profileLoading ? '…' : stats.mastered}
+              </Text>
+              <Text
+                style={{
+                  fontFamily: fontLabel,
+                  fontSize: 11,
+                  fontWeight: '700',
+                  letterSpacing: 1,
+                  color: theme.learnOnSurfaceVariant,
+                  marginTop: 4,
+                }}
+              >
+                MASTERED
+              </Text>
             </View>
           </View>
+
+          <Pressable
+            onPress={onStartSession}
+            style={({ pressed }) => ({
+              marginTop: 20,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              paddingVertical: 15,
+              borderRadius: 999,
+              borderWidth: 1,
+              borderColor: learnDark ? 'rgba(255,255,255,0.22)' : theme.learnGlassBorder,
+              backgroundColor: 'transparent',
+              opacity: pressed ? 0.85 : 1,
+            })}
+          >
+            <Text style={{ fontFamily: fontHeadline, fontSize: 16, fontWeight: '700', color: theme.learnOnSurface }}>
+              Start Session
+            </Text>
+            <MaterialIcons name="play-arrow" size={24} color={theme.learnOnSurface} />
+          </Pressable>
         </View>
 
         {/* Active Deck */}

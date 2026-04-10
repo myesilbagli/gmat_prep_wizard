@@ -20,11 +20,32 @@ function requireUserId(): string {
   return uid
 }
 
+const STACK_IMPORT_RESULT: GeneratedResult = {
+  definition:
+    'Imported from a Lexicon word stack. Use Quick Capture on Today to generate a full AI card with examples.',
+  simpleDefinition: 'Stack vocabulary',
+  exampleSentence: '',
+  synonyms: [],
+  nuanceNote: '',
+  gmatUsageNote: '',
+}
+
+export async function saveWordFromStackImport(params: { text: string; mainLanguage?: string }) {
+  return saveWord({
+    text: params.text,
+    result: STACK_IMPORT_RESULT,
+    mainLanguage: params.mainLanguage,
+    source: 'stack',
+  })
+}
+
 export async function saveWord(params: {
   text: string
   type?: 'word' | 'phrase'
   result: GeneratedResult
   mainLanguage?: string
+  /** Firestore `source` field; stack imports use minimal gloss until user regenerates. */
+  source?: 'gpt' | 'stack'
 }) {
   const uid = requireUserId()
   const normalizedText = params.text.trim().replace(/\s+/g, ' ')
@@ -56,7 +77,7 @@ export async function saveWord(params: {
     gmatUsageNote: params.result.gmatUsageNote ?? '',
     status: 'learning',
     flagged: false,
-    source: 'gpt',
+    source: params.source ?? 'gpt',
     result: params.result,
     ...(translations ? { translations } : {}),
     tags: [],

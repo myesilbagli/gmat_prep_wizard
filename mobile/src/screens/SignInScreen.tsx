@@ -174,8 +174,8 @@ export function SignInScreen({
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: AUTH.bgBase }}>
-      <AuthMarketingBackground />
+    <View style={{ flex: 1, backgroundColor: AUTH.radialViolet }}>
+      <AuthMarketingBackground baseColor={AUTH.radialViolet} />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
           keyboardShouldPersistTaps="handled"

@@ -11,6 +11,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -32,6 +33,12 @@ import type { AppTheme } from '../theme'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
+const EXAM_PART_ROWS: { id: ExamPart; label: string; hint: string }[] = [
+  { id: 'early', label: 'Early', hint: 'Days 1–10' },
+  { id: 'mid', label: 'Mid', hint: 'Days 11–20' },
+  { id: 'late', label: 'Late', hint: 'Days 21–31' },
+]
+
 type Props = {
   theme: AppTheme
   colorScheme: 'light' | 'dark'
@@ -52,6 +59,8 @@ export function ProfileSheet({
   onProfileSaved,
 }: Props) {
   const insets = useSafeAreaInsets()
+  const { height: windowHeight } = useWindowDimensions()
+  const [profileChromeHeight, setProfileChromeHeight] = useState(0)
   const { user } = useAuth()
   const { isPro, loading: subLoading, openPaywall, restore } = useSubscription()
   const [subScreen, setSubScreen] = useState<SubScreen>('main')
@@ -60,7 +69,6 @@ export function ProfileSheet({
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
-  const [timezone, setTimezone] = useState(DEFAULT_TIMEZONE)
   const [examYear, setExamYear] = useState(new Date().getFullYear())
   const [examMonth, setExamMonth] = useState(1)
   const [examPart, setExamPart] = useState<ExamPart>('mid')
@@ -97,7 +105,6 @@ export function ProfileSheet({
     void ensureUserProfileDefaults()
       .then((p) => {
         if (cancelled) return
-        setTimezone(p.timezone || DEFAULT_TIMEZONE)
         setMainLanguage(normalizeMainLanguageCode(p.mainLanguage))
         if (p.examTarget) {
           setExamYear(p.examTarget.year)
@@ -120,7 +127,7 @@ export function ProfileSheet({
     setSaved(false)
     try {
       await saveUserProfilePatch({
-        timezone: timezone.trim() || DEFAULT_TIMEZONE,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || DEFAULT_TIMEZONE,
         mainLanguage: normalizeMainLanguageCode(mainLanguage),
       })
       const target: ExamTarget = { year: examYear, month: examMonth, part: examPart }
@@ -134,10 +141,17 @@ export function ProfileSheet({
 
   const sheetBg = theme.learnScreenBg
   const cardBg = theme.surface2
-  const onPrimary = colorScheme === 'dark' ? '#ffffff' : '#ffffff'
   const privacyUrl = getPrivacyPolicyUrl()
   const termsUrl = getTermsOfServiceUrl()
   const showLegal = Boolean(privacyUrl || termsUrl)
+
+  const sheetMaxHeight = windowHeight * 0.92
+  const sheetPadTop = 4
+  const sheetPadBottom = Math.max(insets.bottom, 16)
+  const profileScrollMaxHeight =
+    profileChromeHeight > 0
+      ? Math.max(160, sheetMaxHeight - sheetPadTop - profileChromeHeight - sheetPadBottom)
+      : Math.max(160, sheetMaxHeight * 0.68)
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
@@ -145,65 +159,81 @@ export function ProfileSheet({
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Dismiss profile" />
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.kav}
+          style={[styles.kav, { maxHeight: sheetMaxHeight }]}
         >
           <View
             style={[
               styles.sheet,
               {
                 backgroundColor: sheetBg,
-                paddingBottom: Math.max(insets.bottom, 16),
+                paddingBottom: sheetPadBottom,
+                paddingTop: sheetPadTop,
+                maxHeight: sheetMaxHeight,
                 borderColor: theme.learnGlassBorder,
               },
             ]}
           >
-            <View style={styles.handleWrap}>
-              <View style={[styles.handle, { backgroundColor: theme.learnOutline }]} />
-            </View>
-
             {subScreen === 'language' ? (
-              <LanguagePickerBody
-                theme={theme}
-                query={langQuery}
-                onQueryChange={setLangQuery}
-                filtered={filteredLanguages}
-                selected={mainLanguage}
-                onSelect={(code) => {
-                  setMainLanguage(code)
-                  setSubScreen('main')
-                  setLangQuery('')
-                }}
-                onBack={() => {
-                  setSubScreen('main')
-                  setLangQuery('')
-                }}
-              />
+              <>
+                <View style={styles.handleWrap}>
+                  <View style={[styles.handle, { backgroundColor: theme.learnOutline }]} />
+                </View>
+                <LanguagePickerBody
+                  theme={theme}
+                  query={langQuery}
+                  onQueryChange={setLangQuery}
+                  filtered={filteredLanguages}
+                  selected={mainLanguage}
+                  onSelect={(code) => {
+                    setMainLanguage(code)
+                    setSubScreen('main')
+                    setLangQuery('')
+                  }}
+                  onBack={() => {
+                    setSubScreen('main')
+                    setLangQuery('')
+                  }}
+                />
+              </>
             ) : (
               <>
-                <View style={styles.headerRow}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.title, { color: theme.learnOnSurface }]}>Profile</Text>
-                    {user?.email ? (
-                      <Text style={[styles.email, { color: theme.learnOnSurfaceVariant }]} numberOfLines={1}>
-                        {user.email}
-                      </Text>
-                    ) : null}
+                <View
+                  style={{ width: '100%' }}
+                  onLayout={(e) => setProfileChromeHeight(e.nativeEvent.layout.height)}
+                >
+                  <View style={styles.handleWrap}>
+                    <View style={[styles.handle, { backgroundColor: theme.learnOutline }]} />
                   </View>
-                  <Pressable
-                    onPress={onClose}
-                    hitSlop={12}
-                    accessibilityRole="button"
-                    accessibilityLabel="Close"
-                    style={[styles.iconBtn, { backgroundColor: cardBg }]}
-                  >
-                    <MaterialIcons name="close" size={22} color={theme.learnOnSurface} />
-                  </Pressable>
+                  <View style={styles.headerRow}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.title, { color: theme.learnOnSurface }]}>Profile</Text>
+                      {user?.email ? (
+                        <Text style={[styles.email, { color: theme.learnOnSurfaceVariant }]} numberOfLines={1}>
+                          {user.email}
+                        </Text>
+                      ) : null}
+                    </View>
+                    <Pressable
+                      onPress={onClose}
+                      hitSlop={12}
+                      accessibilityRole="button"
+                      accessibilityLabel="Close"
+                      style={[styles.iconBtn, { backgroundColor: cardBg }]}
+                    >
+                      <MaterialIcons name="close" size={22} color={theme.learnOnSurface} />
+                    </Pressable>
+                  </View>
                 </View>
 
                 <ScrollView
                   keyboardShouldPersistTaps="handled"
-                  showsVerticalScrollIndicator={false}
-                  contentContainerStyle={styles.scrollContent}
+                  showsVerticalScrollIndicator
+                  nestedScrollEnabled
+                  style={[styles.scrollView, { maxHeight: profileScrollMaxHeight }]}
+                  contentContainerStyle={[
+                    styles.scrollContent,
+                    { paddingBottom: Math.max(insets.bottom, 12) + 8 },
+                  ]}
                 >
                   <SectionCard theme={theme} cardBg={cardBg} title="Appearance" subtitle="App colors across Lexicon.">
                     <View style={[styles.segmentWrap, { backgroundColor: theme.learnViewToggleBg }]}>
@@ -279,130 +309,15 @@ export function ProfileSheet({
                       <ActivityIndicator style={{ marginVertical: 12 }} color={theme.learnAccent} />
                     ) : (
                       <>
-                        <Text style={[styles.fieldLabel, { color: theme.learnOnSurfaceVariant }]}>Month</Text>
-                        <ScrollView
-                          horizontal
-                          showsHorizontalScrollIndicator={false}
-                          contentContainerStyle={styles.chipRow}
-                        >
-                          {MONTHS.map((name, idx) => {
-                            const m = idx + 1
-                            const on = examMonth === m
-                            return (
-                              <Pressable
-                                key={name}
-                                onPress={() => setExamMonth(m)}
-                                style={[
-                                  styles.monthChip,
-                                  {
-                                    borderColor: on ? theme.learnAccent : theme.learnGlassBorder,
-                                    backgroundColor: on ? 'rgba(99,102,241,0.2)' : theme.learnSearchBg,
-                                  },
-                                ]}
-                              >
-                                <Text
-                                  style={{
-                                    fontSize: 13,
-                                    fontWeight: '700',
-                                    color: on ? theme.learnAccent : theme.learnOnSurfaceVariant,
-                                  }}
-                                >
-                                  {name}
-                                </Text>
-                              </Pressable>
-                            )
-                          })}
-                        </ScrollView>
-
-                        <Text style={[styles.fieldLabel, { color: theme.learnOnSurfaceVariant, marginTop: 14 }]}>
-                          Year
-                        </Text>
-                        <ScrollView
-                          horizontal
-                          showsHorizontalScrollIndicator={false}
-                          contentContainerStyle={styles.chipRow}
-                        >
-                          {yearOptions.map((y) => {
-                            const on = examYear === y
-                            return (
-                              <Pressable
-                                key={y}
-                                onPress={() => setExamYear(y)}
-                                style={[
-                                  styles.yearChip,
-                                  {
-                                    borderColor: on ? theme.learnAccent : theme.learnGlassBorder,
-                                    backgroundColor: on ? 'rgba(99,102,241,0.2)' : theme.learnSearchBg,
-                                  },
-                                ]}
-                              >
-                                <Text
-                                  style={{
-                                    fontSize: 14,
-                                    fontWeight: '800',
-                                    color: on ? theme.learnAccent : theme.learnOnSurface,
-                                  }}
-                                >
-                                  {y}
-                                </Text>
-                              </Pressable>
-                            )
-                          })}
-                        </ScrollView>
-
-                        <Text style={[styles.fieldLabel, { color: theme.learnOnSurfaceVariant, marginTop: 14 }]}>
-                          Part of month
-                        </Text>
-                        <View
-                          style={[
-                            styles.partRail,
-                            { backgroundColor: theme.learnViewToggleBg, borderColor: theme.learnGlassBorder },
-                          ]}
-                        >
-                          {(['early', 'mid', 'late'] as ExamPart[]).map((p) => {
-                            const on = examPart === p
-                            return (
-                              <Pressable
-                                key={p}
-                                onPress={() => setExamPart(p)}
-                                style={[
-                                  styles.partCell,
-                                  on && { backgroundColor: theme.learnAccent },
-                                ]}
-                              >
-                                <Text
-                                  style={{
-                                    fontSize: 13,
-                                    fontWeight: '800',
-                                    textTransform: 'capitalize',
-                                    color: on ? onPrimary : theme.learnOnSurfaceVariant,
-                                  }}
-                                >
-                                  {p}
-                                </Text>
-                              </Pressable>
-                            )
-                          })}
-                        </View>
-
-                        <Text style={[styles.fieldLabel, { color: theme.learnOnSurfaceVariant, marginTop: 14 }]}>
-                          Timezone (IANA)
-                        </Text>
-                        <TextInput
-                          value={timezone}
-                          onChangeText={setTimezone}
-                          placeholder="e.g. Europe/Istanbul"
-                          placeholderTextColor={theme.learnOutline}
-                          style={[
-                            styles.input,
-                            {
-                              borderColor: theme.learnGlassBorder,
-                              color: theme.learnOnSurface,
-                              backgroundColor: theme.learnSearchBg,
-                            },
-                          ]}
-                          autoCapitalize="none"
-                          autoCorrect={false}
+                        <ExamWindowFields
+                          theme={theme}
+                          examMonth={examMonth}
+                          examYear={examYear}
+                          examPart={examPart}
+                          yearOptions={yearOptions}
+                          onMonth={setExamMonth}
+                          onYear={setExamYear}
+                          onPart={setExamPart}
                         />
                       </>
                     )}
@@ -545,6 +460,157 @@ export function ProfileSheet({
   )
 }
 
+function ExamWindowFields({
+  theme,
+  examMonth,
+  examYear,
+  examPart,
+  yearOptions,
+  onMonth,
+  onYear,
+  onPart,
+}: {
+  theme: AppTheme
+  examMonth: number
+  examYear: number
+  examPart: ExamPart
+  yearOptions: number[]
+  onMonth: (m: number) => void
+  onYear: (y: number) => void
+  onPart: (p: ExamPart) => void
+}) {
+  const partLabel = EXAM_PART_ROWS.find((r) => r.id === examPart)?.label ?? examPart
+  const summary = `${MONTHS[examMonth - 1]} ${examYear} · ${partLabel}`
+
+  const yearRows: number[][] = []
+  for (let i = 0; i < yearOptions.length; i += 4) {
+    yearRows.push(yearOptions.slice(i, i + 4))
+  }
+
+  return (
+    <View style={[styles.examWell, { borderColor: theme.learnGlassBorder, backgroundColor: theme.learnSearchBg }]}>
+      <Text style={[styles.examSummary, { color: theme.learnOnSurface }]} numberOfLines={2}>
+        {summary}
+      </Text>
+      <Text style={[styles.examSummaryHint, { color: theme.learnOnSurfaceVariant }]}>
+        Target window for streaks and planning
+      </Text>
+
+      <Text style={[styles.examFieldLabel, { color: theme.learnOnSurfaceVariant }]}>Month</Text>
+      <View style={styles.examMonthGrid}>
+        {[0, 1, 2].map((row) => (
+          <View key={row} style={styles.examGridRow}>
+            {MONTHS.slice(row * 4, row * 4 + 4).map((name, col) => {
+              const m = row * 4 + col + 1
+              const on = examMonth === m
+              return (
+                <Pressable
+                  key={name}
+                  onPress={() => onMonth(m)}
+                  style={[
+                    styles.examMonthCell,
+                    {
+                      borderColor: on ? theme.learnAccent : theme.learnGlassBorder,
+                      backgroundColor: on ? 'rgba(99, 102, 241, 0.18)' : theme.learnViewToggleBg,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.examMonthCellText,
+                      { color: on ? theme.learnAccent : theme.learnOnSurfaceVariant, fontWeight: on ? '800' : '600' },
+                    ]}
+                  >
+                    {name}
+                  </Text>
+                </Pressable>
+              )
+            })}
+          </View>
+        ))}
+      </View>
+
+      <Text style={[styles.examFieldLabel, { color: theme.learnOnSurfaceVariant, marginTop: 14 }]}>Year</Text>
+      <View style={styles.examYearBlock}>
+        {yearRows.map((row, ri) => (
+          <View key={ri} style={[styles.examGridRow, ri < yearRows.length - 1 && { marginBottom: 6 }]}>
+            {row.map((y) => {
+              const on = examYear === y
+              return (
+                <Pressable
+                  key={y}
+                  onPress={() => onYear(y)}
+                  style={[
+                    styles.examYearCell,
+                    {
+                      borderColor: on ? theme.learnAccent : theme.learnGlassBorder,
+                      backgroundColor: on ? 'rgba(99, 102, 241, 0.18)' : theme.learnViewToggleBg,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      fontWeight: on ? '800' : '600',
+                      color: on ? theme.learnAccent : theme.learnOnSurface,
+                    }}
+                  >
+                    {y}
+                  </Text>
+                </Pressable>
+              )
+            })}
+          </View>
+        ))}
+      </View>
+
+      <Text style={[styles.examFieldLabel, { color: theme.learnOnSurfaceVariant, marginTop: 14 }]}>Part of month</Text>
+      <View style={styles.examPartRow}>
+        {EXAM_PART_ROWS.map(({ id, label, hint }) => {
+          const on = examPart === id
+          return (
+            <Pressable
+              key={id}
+              onPress={() => onPart(id)}
+              style={[
+                styles.examPartCard,
+                {
+                  borderColor: on ? theme.learnAccent : theme.learnGlassBorder,
+                  backgroundColor: on ? theme.learnAccent : theme.learnViewToggleBg,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.examPartTitle,
+                  {
+                    color: on ? theme.learnPillActiveText : theme.learnOnSurface,
+                    fontWeight: on ? '800' : '700',
+                  },
+                ]}
+              >
+                {label}
+              </Text>
+              <Text
+                style={[
+                  styles.examPartHint,
+                  {
+                    color: on ? theme.learnPillActiveText : theme.learnOnSurfaceVariant,
+                    opacity: on ? 0.88 : 1,
+                  },
+                ]}
+                numberOfLines={1}
+              >
+                {hint}
+              </Text>
+            </Pressable>
+          )
+        })}
+      </View>
+    </View>
+  )
+}
+
 function SectionCard({
   theme,
   cardBg,
@@ -680,14 +746,13 @@ const styles = StyleSheet.create({
   },
   kav: {
     width: '100%',
-    maxHeight: '92%',
   },
   sheet: {
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     borderTopWidth: 1,
     paddingHorizontal: 20,
-    paddingTop: 4,
+    maxWidth: '100%',
   },
   handleWrap: {
     alignItems: 'center',
@@ -720,9 +785,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  scrollView: {
+    width: '100%',
+  },
   scrollContent: {
     paddingTop: 8,
     paddingBottom: 8,
+    width: '100%',
   },
   sectionCard: {
     borderRadius: 14,
@@ -775,43 +844,85 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     marginBottom: 8,
   },
-  chipRow: {
+  examWell: {
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 14,
+    marginTop: 2,
+  },
+  examSummary: {
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: -0.2,
+    textAlign: 'center',
+  },
+  examSummaryHint: {
+    fontSize: 12,
+    lineHeight: 16,
+    textAlign: 'center',
+    marginTop: 4,
+    marginBottom: 16,
+  },
+  examFieldLabel: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    marginBottom: 8,
+  },
+  examMonthGrid: {
+    gap: 6,
+  },
+  examGridRow: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  examMonthCell: {
+    flex: 1,
+    minHeight: 40,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  examMonthCellText: {
+    fontSize: 12,
+    letterSpacing: -0.2,
+  },
+  examYearBlock: {
+    width: '100%',
+  },
+  examYearCell: {
+    flex: 1,
+    minHeight: 44,
+    borderRadius: 11,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  examPartRow: {
     flexDirection: 'row',
     gap: 8,
-    paddingVertical: 2,
+    alignItems: 'stretch',
   },
-  monthChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-  },
-  yearChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    minWidth: 64,
-    alignItems: 'center',
-  },
-  partRail: {
-    flexDirection: 'row',
-    borderRadius: 12,
-    borderWidth: 1,
-    overflow: 'hidden',
-  },
-  partCell: {
+  examPartCard: {
     flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  input: {
-    borderWidth: 1,
+    minHeight: 64,
     borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 15,
+    borderWidth: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  examPartTitle: {
+    fontSize: 14,
+  },
+  examPartHint: {
+    fontSize: 11,
+    fontWeight: '600',
     marginTop: 4,
+    textAlign: 'center',
   },
   primaryBtn: {
     borderRadius: 14,

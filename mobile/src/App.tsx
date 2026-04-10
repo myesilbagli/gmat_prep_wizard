@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ActivityIndicator, Pressable, Text, View } from 'react-native'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ActivityIndicator, Animated, Easing, Pressable, Text, View } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { MaterialIcons } from '@expo/vector-icons'
 import type { VocabItem } from '@shared/types'
@@ -19,6 +19,8 @@ import { listVocabItems } from './lib/vocab'
 import { SessionScreen } from './screens/SessionScreen'
 import { computeDashboardStats, TodayScreen } from './screens/TodayScreen'
 import { LearnScreen } from './screens/LearnScreen'
+import { WordStackBrowseScreen } from './screens/WordStackBrowseScreen'
+import { WordStackDetailScreen } from './screens/WordStackDetailScreen'
 import { SignInScreen } from './screens/SignInScreen'
 import { SignUpScreen } from './screens/SignUpScreen'
 import { TestScreen } from './screens/TestScreen'
@@ -29,9 +31,62 @@ function ShellBackground({ theme, children }: { theme: AppTheme; children: React
   return <View style={{ flex: 1, backgroundColor: theme.learnScreenBg }}>{children}</View>
 }
 
+type AuthMode = 'welcome' | 'signin' | 'signup'
+
 function AuthNavigator() {
   const { theme } = useAppTheme()
-  const [mode, setMode] = useState<'welcome' | 'signin' | 'signup'>('welcome')
+  const [mode, setMode] = useState<AuthMode>('welcome')
+  const opacity = useRef(new Animated.Value(1)).current
+  const translateX = useRef(new Animated.Value(0)).current
+  const modeRef = useRef<AuthMode>('welcome')
+  const animating = useRef(false)
+
+  modeRef.current = mode
+
+  const transition = useCallback(
+    (next: AuthMode, dir: 'forward' | 'back') => {
+      if (animating.current || modeRef.current === next) return
+      animating.current = true
+      const outX = dir === 'forward' ? -36 : 36
+      const inX = dir === 'forward' ? 44 : -44
+
+      Animated.parallel([
+        Animated.timing(opacity, {
+          toValue: 0,
+          duration: 180,
+          easing: Easing.in(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(translateX, {
+          toValue: outX,
+          duration: 180,
+          easing: Easing.in(Easing.cubic),
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        setMode(next)
+        translateX.setValue(inX)
+        opacity.setValue(0)
+        Animated.parallel([
+          Animated.timing(opacity, {
+            toValue: 1,
+            duration: 260,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          }),
+          Animated.timing(translateX, {
+            toValue: 0,
+            duration: 260,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          }),
+        ]).start(() => {
+          animating.current = false
+        })
+      })
+    },
+    [opacity, translateX],
+  )
 
   /**
    * Full-bleed shell (no SafeAreaView here). iOS defaults the window under the home
@@ -39,25 +94,48 @@ function AuthNavigator() {
    * backgroundColor / SystemUI so the same navy fills the whole display.
    */
   return (
-    <View style={{ flex: 1, backgroundColor: AUTH.bgBase }}>
-      {mode === 'welcome' ? (
-        <WelcomeScreen theme={theme} onSignIn={() => setMode('signin')} onSignUp={() => setMode('signup')} />
-      ) : null}
-      {mode === 'signin' ? (
-        <SignInScreen theme={theme} onGoSignUp={() => setMode('signup')} onBack={() => setMode('welcome')} />
-      ) : null}
-      {mode === 'signup' ? (
-        <SignUpScreen theme={theme} onGoSignIn={() => setMode('signin')} onBack={() => setMode('welcome')} />
-      ) : null}
+    <View style={{ flex: 1, backgroundColor: AUTH.radialViolet }}>
+      <Animated.View
+        style={{
+          flex: 1,
+          opacity,
+          transform: [{ translateX }],
+        }}
+      >
+        {mode === 'welcome' ? (
+          <WelcomeScreen
+            theme={theme}
+            onSignIn={() => transition('signin', 'forward')}
+            onSignUp={() => transition('signup', 'forward')}
+          />
+        ) : null}
+        {mode === 'signin' ? (
+          <SignInScreen
+            theme={theme}
+            onGoSignUp={() => transition('signup', 'forward')}
+            onBack={() => transition('welcome', 'back')}
+          />
+        ) : null}
+        {mode === 'signup' ? (
+          <SignUpScreen
+            theme={theme}
+            onGoSignIn={() => transition('signin', 'back')}
+            onBack={() => transition('welcome', 'back')}
+          />
+        ) : null}
+      </Animated.View>
     </View>
   )
 }
+
+type LearnFlow = { screen: 'main' } | { screen: 'stacks' } | { screen: 'detail'; stackId: string }
 
 function MainTabs() {
   const insets = useSafeAreaInsets()
   const { theme, colorScheme, setColorScheme } = useAppTheme()
   const { isPro, loading: subLoading, openPaywall } = useSubscription()
   const [tab, setTab] = useState<'today' | 'learn' | 'test'>('today')
+  const [learnFlow, setLearnFlow] = useState<LearnFlow>({ screen: 'main' })
   const [sessionOpen, setSessionOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [items, setItems] = useState<VocabItem[]>([])
@@ -81,6 +159,10 @@ function MainTabs() {
   useEffect(() => {
     void reloadItems()
   }, [])
+
+  useEffect(() => {
+    if (tab !== 'learn') setLearnFlow({ screen: 'main' })
+  }, [tab])
 
   useEffect(() => {
     let cancelled = false
@@ -213,10 +295,33 @@ function MainTabs() {
                 />
               ) : null}
               {tab === 'learn' ? (
-                <LearnScreen theme={theme} mainLanguage={mainLanguage} items={items} onReload={reloadItems} />
+                learnFlow.screen === 'main' ? (
+                  <LearnScreen
+                    theme={theme}
+                    mainLanguage={mainLanguage}
+                    items={items}
+                    onReload={reloadItems}
+                    onOpenWordStacks={() => setLearnFlow({ screen: 'stacks' })}
+                  />
+                ) : learnFlow.screen === 'stacks' ? (
+                  <WordStackBrowseScreen
+                    theme={theme}
+                    onBack={() => setLearnFlow({ screen: 'main' })}
+                    onSelectStack={(stackId) => setLearnFlow({ screen: 'detail', stackId })}
+                  />
+                ) : (
+                  <WordStackDetailScreen
+                    theme={theme}
+                    stackId={learnFlow.stackId}
+                    mainLanguage={mainLanguage}
+                    items={items}
+                    onBack={() => setLearnFlow({ screen: 'stacks' })}
+                    onReload={reloadItems}
+                  />
+                )
               ) : null}
               {tab === 'test' ? (
-                <TestScreen theme={theme} items={items} onOpenProfile={() => setProfileOpen(true)} />
+                <TestScreen theme={theme} items={items} />
               ) : null}
             </View>
             <View
