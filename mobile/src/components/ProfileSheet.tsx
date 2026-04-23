@@ -16,28 +16,23 @@ import {
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { MaterialIcons } from '@expo/vector-icons'
+import { formatDateKeyInTimezone } from '@shared/dateInTimezone'
+import { resolveExamDateIso } from '@shared/examDate'
 import { MAIN_LANGUAGE_OPTIONS, normalizeMainLanguageCode } from '@shared/languages'
-import type { ExamPart, ExamTarget } from '@shared/userProfile'
 import { DEFAULT_TIMEZONE } from '@shared/userProfile'
 import { useAuth } from '../context/AuthContext'
 import { signOutUser } from '../lib/auth'
 import {
+  clearOnboardingCompletedFlag,
   ensureUserProfileDefaults,
-  saveExamTarget,
+  saveExamDateIso,
   saveUserProfilePatch,
 } from '../lib/userProfile'
+import { ExamDatePickerBlock } from './ExamDatePickerBlock'
 import Purchases from 'react-native-purchases'
 import { useSubscription } from '../context/SubscriptionContext'
 import { getPrivacyPolicyUrl, getTermsOfServiceUrl } from '../lib/legalLinks'
 import type { AppTheme } from '../theme'
-
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-
-const EXAM_PART_ROWS: { id: ExamPart; label: string; hint: string }[] = [
-  { id: 'early', label: 'Early', hint: 'Days 1–10' },
-  { id: 'mid', label: 'Mid', hint: 'Days 11–20' },
-  { id: 'late', label: 'Late', hint: 'Days 21–31' },
-]
 
 type Props = {
   theme: AppTheme
@@ -46,6 +41,8 @@ type Props = {
   visible: boolean
   onClose: () => void
   onProfileSaved?: () => void
+  /** Dev: replay onboarding after clearing completion flag in Firestore. */
+  onRequestOnboardingReplay?: () => void
 }
 
 type SubScreen = 'main' | 'language'
@@ -57,6 +54,7 @@ export function ProfileSheet({
   visible,
   onClose,
   onProfileSaved,
+  onRequestOnboardingReplay,
 }: Props) {
   const insets = useSafeAreaInsets()
   const { height: windowHeight } = useWindowDimensions()
@@ -69,15 +67,11 @@ export function ProfileSheet({
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
-  const [examYear, setExamYear] = useState(new Date().getFullYear())
-  const [examMonth, setExamMonth] = useState(1)
-  const [examPart, setExamPart] = useState<ExamPart>('mid')
+  const [examDateIso, setExamDateIso] = useState(() =>
+    formatDateKeyInTimezone(new Date(), Intl.DateTimeFormat().resolvedOptions().timeZone || DEFAULT_TIMEZONE),
+  )
+  const [profileTimezone, setProfileTimezone] = useState(DEFAULT_TIMEZONE)
   const [mainLanguage, setMainLanguage] = useState('en')
-
-  const yearOptions = useMemo(() => {
-    const y = new Date().getFullYear()
-    return Array.from({ length: 8 }, (_, i) => y + i)
-  }, [])
 
   const filteredLanguages = useMemo(() => {
     const q = langQuery.trim().toLowerCase()
@@ -106,11 +100,12 @@ export function ProfileSheet({
       .then((p) => {
         if (cancelled) return
         setMainLanguage(normalizeMainLanguageCode(p.mainLanguage))
-        if (p.examTarget) {
-          setExamYear(p.examTarget.year)
-          setExamMonth(p.examTarget.month)
-          setExamPart(p.examTarget.part)
-        }
+        const tz = p.timezone || DEFAULT_TIMEZONE
+        setProfileTimezone(tz)
+        const resolved =
+          resolveExamDateIso({ examDateIso: p.examDateIso, examTarget: p.examTarget }) ??
+          formatDateKeyInTimezone(new Date(), tz)
+        setExamDateIso(resolved)
       })
       .catch(() => {})
       .finally(() => {
@@ -126,12 +121,12 @@ export function ProfileSheet({
     setSaving(true)
     setSaved(false)
     try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || DEFAULT_TIMEZONE
       await saveUserProfilePatch({
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || DEFAULT_TIMEZONE,
+        timezone: tz,
         mainLanguage: normalizeMainLanguageCode(mainLanguage),
       })
-      const target: ExamTarget = { year: examYear, month: examMonth, part: examPart }
-      await saveExamTarget(target)
+      await saveExamDateIso(examDateIso)
       setSaved(true)
       onProfileSaved?.()
     } finally {
@@ -302,24 +297,18 @@ export function ProfileSheet({
                   <SectionCard
                     theme={theme}
                     cardBg={cardBg}
-                    title="Exam window"
-                    subtitle="Used for streaks and session planning."
+                    title="GMAT test date"
+                    subtitle="Used for countdown, streaks, and session planning."
                   >
                     {loadingProfile ? (
                       <ActivityIndicator style={{ marginVertical: 12 }} color={theme.learnAccent} />
                     ) : (
-                      <>
-                        <ExamWindowFields
-                          theme={theme}
-                          examMonth={examMonth}
-                          examYear={examYear}
-                          examPart={examPart}
-                          yearOptions={yearOptions}
-                          onMonth={setExamMonth}
-                          onYear={setExamYear}
-                          onPart={setExamPart}
-                        />
-                      </>
+                      <ExamDatePickerBlock
+                        theme={theme}
+                        timezone={profileTimezone}
+                        examDateIso={examDateIso}
+                        onExamDateIsoChange={setExamDateIso}
+                      />
                     )}
                   </SectionCard>
 
@@ -349,7 +338,7 @@ export function ProfileSheet({
                     subtitle={
                       isPro
                         ? 'Your subscription is active.'
-                        : 'Free: 50 saved words, 3 session starts/day, 2 basic stacks. Pro: unlimited saves & sessions, all stacks.'
+                        : 'Free: 50 saved words, 3 session starts/day, 3 basic stacks. Pro: unlimited saves & sessions, all stacks.'
                     }
                   >
                     {subLoading ? (
@@ -430,6 +419,35 @@ export function ProfileSheet({
                     </SectionCard>
                   ) : null}
 
+                  {__DEV__ && onRequestOnboardingReplay ? (
+                    <Pressable
+                      onPress={() => {
+                        void (async () => {
+                          try {
+                            await clearOnboardingCompletedFlag()
+                            onRequestOnboardingReplay()
+                            onClose()
+                          } catch {
+                            /* ignore */
+                          }
+                        })()
+                      }}
+                      style={[
+                        styles.rowChevron,
+                        {
+                          borderColor: theme.learnGlassBorder,
+                          backgroundColor: theme.learnSearchBg,
+                          marginBottom: 12,
+                        },
+                      ]}
+                      accessibilityRole="button"
+                      accessibilityLabel="Onboarding test"
+                    >
+                      <Text style={[styles.rowValue, { color: theme.learnOnSurface }]}>Onboarding test</Text>
+                      <MaterialIcons name="refresh" size={20} color={theme.learnOutline} />
+                    </Pressable>
+                  ) : null}
+
                   <Pressable
                     onPress={() => {
                       void (async () => {
@@ -457,157 +475,6 @@ export function ProfileSheet({
         </KeyboardAvoidingView>
       </View>
     </Modal>
-  )
-}
-
-function ExamWindowFields({
-  theme,
-  examMonth,
-  examYear,
-  examPart,
-  yearOptions,
-  onMonth,
-  onYear,
-  onPart,
-}: {
-  theme: AppTheme
-  examMonth: number
-  examYear: number
-  examPart: ExamPart
-  yearOptions: number[]
-  onMonth: (m: number) => void
-  onYear: (y: number) => void
-  onPart: (p: ExamPart) => void
-}) {
-  const partLabel = EXAM_PART_ROWS.find((r) => r.id === examPart)?.label ?? examPart
-  const summary = `${MONTHS[examMonth - 1]} ${examYear} · ${partLabel}`
-
-  const yearRows: number[][] = []
-  for (let i = 0; i < yearOptions.length; i += 4) {
-    yearRows.push(yearOptions.slice(i, i + 4))
-  }
-
-  return (
-    <View style={[styles.examWell, { borderColor: theme.learnGlassBorder, backgroundColor: theme.learnSearchBg }]}>
-      <Text style={[styles.examSummary, { color: theme.learnOnSurface }]} numberOfLines={2}>
-        {summary}
-      </Text>
-      <Text style={[styles.examSummaryHint, { color: theme.learnOnSurfaceVariant }]}>
-        Target window for streaks and planning
-      </Text>
-
-      <Text style={[styles.examFieldLabel, { color: theme.learnOnSurfaceVariant }]}>Month</Text>
-      <View style={styles.examMonthGrid}>
-        {[0, 1, 2].map((row) => (
-          <View key={row} style={styles.examGridRow}>
-            {MONTHS.slice(row * 4, row * 4 + 4).map((name, col) => {
-              const m = row * 4 + col + 1
-              const on = examMonth === m
-              return (
-                <Pressable
-                  key={name}
-                  onPress={() => onMonth(m)}
-                  style={[
-                    styles.examMonthCell,
-                    {
-                      borderColor: on ? theme.learnAccent : theme.learnGlassBorder,
-                      backgroundColor: on ? 'rgba(99, 102, 241, 0.18)' : theme.learnViewToggleBg,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.examMonthCellText,
-                      { color: on ? theme.learnAccent : theme.learnOnSurfaceVariant, fontWeight: on ? '800' : '600' },
-                    ]}
-                  >
-                    {name}
-                  </Text>
-                </Pressable>
-              )
-            })}
-          </View>
-        ))}
-      </View>
-
-      <Text style={[styles.examFieldLabel, { color: theme.learnOnSurfaceVariant, marginTop: 14 }]}>Year</Text>
-      <View style={styles.examYearBlock}>
-        {yearRows.map((row, ri) => (
-          <View key={ri} style={[styles.examGridRow, ri < yearRows.length - 1 && { marginBottom: 6 }]}>
-            {row.map((y) => {
-              const on = examYear === y
-              return (
-                <Pressable
-                  key={y}
-                  onPress={() => onYear(y)}
-                  style={[
-                    styles.examYearCell,
-                    {
-                      borderColor: on ? theme.learnAccent : theme.learnGlassBorder,
-                      backgroundColor: on ? 'rgba(99, 102, 241, 0.18)' : theme.learnViewToggleBg,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={{
-                      fontSize: 15,
-                      fontWeight: on ? '800' : '600',
-                      color: on ? theme.learnAccent : theme.learnOnSurface,
-                    }}
-                  >
-                    {y}
-                  </Text>
-                </Pressable>
-              )
-            })}
-          </View>
-        ))}
-      </View>
-
-      <Text style={[styles.examFieldLabel, { color: theme.learnOnSurfaceVariant, marginTop: 14 }]}>Part of month</Text>
-      <View style={styles.examPartRow}>
-        {EXAM_PART_ROWS.map(({ id, label, hint }) => {
-          const on = examPart === id
-          return (
-            <Pressable
-              key={id}
-              onPress={() => onPart(id)}
-              style={[
-                styles.examPartCard,
-                {
-                  borderColor: on ? theme.learnAccent : theme.learnGlassBorder,
-                  backgroundColor: on ? theme.learnAccent : theme.learnViewToggleBg,
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.examPartTitle,
-                  {
-                    color: on ? theme.learnPillActiveText : theme.learnOnSurface,
-                    fontWeight: on ? '800' : '700',
-                  },
-                ]}
-              >
-                {label}
-              </Text>
-              <Text
-                style={[
-                  styles.examPartHint,
-                  {
-                    color: on ? theme.learnPillActiveText : theme.learnOnSurfaceVariant,
-                    opacity: on ? 0.88 : 1,
-                  },
-                ]}
-                numberOfLines={1}
-              >
-                {hint}
-              </Text>
-            </Pressable>
-          )
-        })}
-      </View>
-    </View>
   )
 }
 
@@ -843,86 +710,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
     textTransform: 'uppercase',
     marginBottom: 8,
-  },
-  examWell: {
-    borderRadius: 14,
-    borderWidth: 1,
-    padding: 14,
-    marginTop: 2,
-  },
-  examSummary: {
-    fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: -0.2,
-    textAlign: 'center',
-  },
-  examSummaryHint: {
-    fontSize: 12,
-    lineHeight: 16,
-    textAlign: 'center',
-    marginTop: 4,
-    marginBottom: 16,
-  },
-  examFieldLabel: {
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-    marginBottom: 8,
-  },
-  examMonthGrid: {
-    gap: 6,
-  },
-  examGridRow: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  examMonthCell: {
-    flex: 1,
-    minHeight: 40,
-    borderRadius: 10,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  examMonthCellText: {
-    fontSize: 12,
-    letterSpacing: -0.2,
-  },
-  examYearBlock: {
-    width: '100%',
-  },
-  examYearCell: {
-    flex: 1,
-    minHeight: 44,
-    borderRadius: 11,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  examPartRow: {
-    flexDirection: 'row',
-    gap: 8,
-    alignItems: 'stretch',
-  },
-  examPartCard: {
-    flex: 1,
-    minHeight: 64,
-    borderRadius: 12,
-    borderWidth: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  examPartTitle: {
-    fontSize: 14,
-  },
-  examPartHint: {
-    fontSize: 11,
-    fontWeight: '600',
-    marginTop: 4,
-    textAlign: 'center',
   },
   primaryBtn: {
     borderRadius: 14,

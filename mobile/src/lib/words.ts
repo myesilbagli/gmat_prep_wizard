@@ -1,6 +1,7 @@
 import {
   addDoc,
   collection,
+  deleteField,
   doc,
   getDoc,
   getDocs,
@@ -11,6 +12,7 @@ import {
   where,
 } from 'firebase/firestore'
 import type { GeneratedResult } from '@shared/types'
+import { getStackImportResult } from '@shared/wordStackContent'
 import { mergeTranslationsForSave } from '@shared/vocab'
 import { auth, db } from './firebase'
 
@@ -20,22 +22,19 @@ function requireUserId(): string {
   return uid
 }
 
-const STACK_IMPORT_RESULT: GeneratedResult = {
-  definition:
-    'Imported from a Lexicon word stack. Use Quick Capture on Today to generate a full AI card with examples.',
-  simpleDefinition: 'Stack vocabulary',
-  exampleSentence: '',
-  synonyms: [],
-  nuanceNote: '',
-  gmatUsageNote: '',
-}
-
-export async function saveWordFromStackImport(params: { text: string; mainLanguage?: string }) {
+export async function saveWordFromStackImport(params: {
+  text: string
+  mainLanguage?: string
+  stackId: string
+  stackPosition: number
+}) {
   return saveWord({
     text: params.text,
-    result: STACK_IMPORT_RESULT,
+    result: getStackImportResult(params.stackId, params.stackPosition),
     mainLanguage: params.mainLanguage,
     source: 'stack',
+    stackId: params.stackId,
+    stackPosition: params.stackPosition,
   })
 }
 
@@ -44,8 +43,10 @@ export async function saveWord(params: {
   type?: 'word' | 'phrase'
   result: GeneratedResult
   mainLanguage?: string
-  /** Firestore `source` field; stack imports use minimal gloss until user regenerates. */
+  /** Legacy; mapped to `wordSource` on write. */
   source?: 'gpt' | 'stack'
+  stackId?: string
+  stackPosition?: number
 }) {
   const uid = requireUserId()
   const normalizedText = params.text.trim().replace(/\s+/g, ' ')
@@ -64,33 +65,103 @@ export async function saveWord(params: {
     params.mainLanguage,
     params.result,
   )
-  const payload = {
+  const wordSource =
+    params.source === 'stack' ? 'word_stack' : ('lookup' as const)
+
+  const useNewCardShape =
+    Array.isArray(params.result.examples) && params.result.examples.length === 2
+
+  const legacyExampleFields = useNewCardShape
+    ? {}
+    : {
+        exampleSentence: params.result.exampleSentence ?? '',
+        gmatUsageNote: params.result.gmatUsageNote ?? '',
+      }
+
+  const legacyStripOnUpdate = useNewCardShape
+    ? { exampleSentence: deleteField(), gmatUsageNote: deleteField() }
+    : {}
+
+  const newShapeFields = {
+    ...(useNewCardShape
+      ? {
+          examples: params.result.examples,
+          wordTags: params.result.wordTags ?? [],
+          contrastWord: params.result.contrastWord,
+          memoryHook: params.result.memoryHook ?? '',
+        }
+      : {}),
+  }
+
+  const contentPayload = {
     word: textLower,
     text: normalizedText,
     textLower,
     type,
     definition: params.result.definition ?? '',
     simpleDefinition: params.result.simpleDefinition ?? '',
-    exampleSentence: params.result.exampleSentence ?? '',
+    ...legacyExampleFields,
     synonyms: Array.isArray(params.result.synonyms) ? params.result.synonyms : [],
     nuanceNote: params.result.nuanceNote ?? '',
-    gmatUsageNote: params.result.gmatUsageNote ?? '',
-    status: 'learning',
-    flagged: false,
+    ...newShapeFields,
     source: params.source ?? 'gpt',
     result: params.result,
     ...(translations ? { translations } : {}),
-    tags: [],
     updatedAt: serverTimestamp(),
   }
 
   if (!existing.empty) {
+    const prev = existing.docs[0].data() as Record<string, unknown>
     const ref = doc(db, 'users', uid, 'words', existing.docs[0].id)
-    await updateDoc(ref, payload)
+    const mergedWordSource =
+      params.source === 'stack' ? 'word_stack' : (prev.wordSource as string) || wordSource
+    const preservedTags = Array.isArray(prev.tags) ? prev.tags : []
+    await updateDoc(ref, {
+      ...contentPayload,
+      ...legacyStripOnUpdate,
+      wordSource: mergedWordSource,
+      ...(params.stackId != null ? { stackId: params.stackId } : prev.stackId != null ? { stackId: prev.stackId } : {}),
+      ...(params.stackPosition != null
+        ? { stackPosition: params.stackPosition }
+        : prev.stackPosition != null
+          ? { stackPosition: prev.stackPosition }
+          : {}),
+      exposureScore:
+        typeof prev.exposureScore === 'number' && Number.isFinite(prev.exposureScore)
+          ? prev.exposureScore
+          : 0,
+      flagged: Boolean(prev.flagged),
+      lastSeenAt: prev.lastSeenAt ?? null,
+      lastAnsweredAt: prev.lastAnsweredAt ?? null,
+      lastCorrect: prev.lastCorrect === true || prev.lastCorrect === false ? prev.lastCorrect : null,
+      seenCount: typeof prev.seenCount === 'number' ? prev.seenCount : undefined,
+      meaningQuizStreak:
+        typeof prev.meaningQuizStreak === 'number' ? prev.meaningQuizStreak : undefined,
+      lastSessionSwipe:
+        prev.lastSessionSwipe === 'weak' || prev.lastSessionSwipe === 'strong'
+          ? prev.lastSessionSwipe
+          : undefined,
+      status: typeof prev.status === 'string' ? prev.status : 'learning',
+      tags: preservedTags,
+    })
     return { id: existing.docs[0].id }
   }
 
-  const ref = await addDoc(wordsCol, { ...payload, createdAt: serverTimestamp() })
+  const payloadNew = {
+    ...contentPayload,
+    status: 'learning',
+    exposureScore: 0,
+    lastSeenAt: null,
+    lastAnsweredAt: null,
+    lastCorrect: null,
+    flagged: false,
+    wordSource,
+    ...(params.stackId != null ? { stackId: params.stackId } : {}),
+    ...(params.stackPosition != null ? { stackPosition: params.stackPosition } : {}),
+    tags: [],
+  }
+
+  const ref = await addDoc(wordsCol, { ...payloadNew, createdAt: serverTimestamp() })
   return { id: ref.id }
 }
 

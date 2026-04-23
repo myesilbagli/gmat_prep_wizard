@@ -1,0 +1,1787 @@
+{
+  "meta": {
+    "source": "User-provided pasted vocabulary list",
+    "normalized_levels": [
+      "foundation",
+      "intermediate",
+      "advanced"
+    ],
+    "notes": [
+      "Normalized 'intermadieate' to 'intermediate'.",
+      "Kept multi-word phrases as entries.",
+      "For 'The Advanced & Literary Reserve', all entries were labeled 'advanced' based on the stack title.",
+      "For 'The Near-Synonym Discriminator — Sorted by Difficulty', entries are ordered Foundation, then Intermediate, then Advanced; synonym clusters were removed in favor of explicit difficulty bands."
+    ],
+    "total_items": 433,
+    "total_stacks": 7
+  },
+  "stacks": [
+    {
+      "stack": "The Argument Architecture Lexicon",
+      "items": [
+        {
+          "word": "whereas",
+          "level": "foundation"
+        },
+        {
+          "word": "nevertheless",
+          "level": "foundation"
+        },
+        {
+          "word": "thus",
+          "level": "foundation"
+        },
+        {
+          "word": "hence",
+          "level": "foundation"
+        },
+        {
+          "word": "yet",
+          "level": "foundation"
+        },
+        {
+          "word": "conversely",
+          "level": "foundation"
+        },
+        {
+          "word": "accordingly",
+          "level": "foundation"
+        },
+        {
+          "word": "consequently",
+          "level": "foundation"
+        },
+        {
+          "word": "given that",
+          "level": "foundation"
+        },
+        {
+          "word": "support",
+          "level": "foundation"
+        },
+        {
+          "word": "strengthen",
+          "level": "foundation"
+        },
+        {
+          "word": "weaken",
+          "level": "foundation"
+        },
+        {
+          "word": "insofar as",
+          "level": "intermediate"
+        },
+        {
+          "word": "inasmuch as",
+          "level": "intermediate"
+        },
+        {
+          "word": "to the extent that",
+          "level": "intermediate"
+        },
+        {
+          "word": "provided that",
+          "level": "intermediate"
+        },
+        {
+          "word": "assuming that",
+          "level": "intermediate"
+        },
+        {
+          "word": "granting that",
+          "level": "intermediate"
+        },
+        {
+          "word": "albeit",
+          "level": "intermediate"
+        },
+        {
+          "word": "notwithstanding",
+          "level": "intermediate"
+        },
+        {
+          "word": "barring",
+          "level": "intermediate"
+        },
+        {
+          "word": "absent",
+          "level": "intermediate"
+        },
+        {
+          "word": "in light of",
+          "level": "intermediate"
+        },
+        {
+          "word": "on the grounds that",
+          "level": "intermediate"
+        },
+        {
+          "word": "by virtue of",
+          "level": "intermediate"
+        },
+        {
+          "word": "predicated on",
+          "level": "intermediate"
+        },
+        {
+          "word": "contingent upon",
+          "level": "intermediate"
+        },
+        {
+          "word": "ostensibly",
+          "level": "intermediate"
+        },
+        {
+          "word": "purportedly",
+          "level": "intermediate"
+        },
+        {
+          "word": "allegedly",
+          "level": "intermediate"
+        },
+        {
+          "word": "presumably",
+          "level": "intermediate"
+        },
+        {
+          "word": "arguably",
+          "level": "intermediate"
+        },
+        {
+          "word": "seemingly",
+          "level": "intermediate"
+        },
+        {
+          "word": "nominally",
+          "level": "intermediate"
+        },
+        {
+          "word": "qualify",
+          "level": "intermediate"
+        },
+        {
+          "word": "concede",
+          "level": "intermediate"
+        },
+        {
+          "word": "grant",
+          "level": "intermediate"
+        },
+        {
+          "word": "stipulate",
+          "level": "intermediate"
+        },
+        {
+          "word": "posit",
+          "level": "intermediate"
+        },
+        {
+          "word": "contend",
+          "level": "intermediate"
+        },
+        {
+          "word": "maintain",
+          "level": "intermediate"
+        },
+        {
+          "word": "assert",
+          "level": "intermediate"
+        },
+        {
+          "word": "hold",
+          "level": "intermediate"
+        },
+        {
+          "word": "undermine",
+          "level": "intermediate"
+        },
+        {
+          "word": "bolster",
+          "level": "intermediate"
+        },
+        {
+          "word": "buttress",
+          "level": "intermediate"
+        },
+        {
+          "word": "substantiate",
+          "level": "intermediate"
+        },
+        {
+          "word": "corroborate",
+          "level": "intermediate"
+        },
+        {
+          "word": "rebut",
+          "level": "intermediate"
+        },
+        {
+          "word": "refute",
+          "level": "intermediate"
+        },
+        {
+          "word": "call into question",
+          "level": "intermediate"
+        },
+        {
+          "word": "lend credence to",
+          "level": "intermediate"
+        },
+        {
+          "word": "give rise to",
+          "level": "intermediate"
+        },
+        {
+          "word": "stem from",
+          "level": "intermediate"
+        },
+        {
+          "word": "attribute to",
+          "level": "intermediate"
+        },
+        {
+          "word": "account for",
+          "level": "intermediate"
+        },
+        {
+          "word": "foster",
+          "level": "intermediate"
+        },
+        {
+          "word": "mitigate",
+          "level": "intermediate"
+        },
+        {
+          "word": "reconcile",
+          "level": "intermediate"
+        },
+        {
+          "word": "presume",
+          "level": "intermediate"
+        },
+        {
+          "word": "take for granted",
+          "level": "intermediate"
+        },
+        {
+          "word": "implicit",
+          "level": "intermediate"
+        },
+        {
+          "word": "infer",
+          "level": "intermediate"
+        },
+        {
+          "word": "follow from",
+          "level": "intermediate"
+        },
+        {
+          "word": "hinge on",
+          "level": "intermediate"
+        },
+        {
+          "word": "controvert",
+          "level": "advanced"
+        },
+        {
+          "word": "precipitate",
+          "level": "advanced"
+        },
+        {
+          "word": "engender",
+          "level": "advanced"
+        },
+        {
+          "word": "preclude",
+          "level": "advanced"
+        },
+        {
+          "word": "obviate",
+          "level": "advanced"
+        },
+        {
+          "word": "vitiate",
+          "level": "advanced"
+        },
+        {
+          "word": "belie",
+          "level": "advanced"
+        },
+        {
+          "word": "attenuate",
+          "level": "advanced"
+        },
+        {
+          "word": "disentangle",
+          "level": "advanced"
+        },
+        {
+          "word": "presuppose",
+          "level": "advanced"
+        },
+        {
+          "word": "tacit",
+          "level": "advanced"
+        },
+        {
+          "word": "entail",
+          "level": "advanced"
+        },
+        {
+          "word": "necessitate",
+          "level": "advanced"
+        },
+        {
+          "word": "warrant",
+          "level": "advanced"
+        },
+        {
+          "word": "militate against",
+          "level": "advanced"
+        }
+      ]
+    },
+    {
+      "stack": "Academic Register Essentials",
+      "items": [
+        {
+          "word": "prevailing",
+          "level": "foundation"
+        },
+        {
+          "word": "conventional",
+          "level": "foundation"
+        },
+        {
+          "word": "characterize",
+          "level": "foundation"
+        },
+        {
+          "word": "depict",
+          "level": "foundation"
+        },
+        {
+          "word": "empirical",
+          "level": "foundation"
+        },
+        {
+          "word": "salient",
+          "level": "intermediate"
+        },
+        {
+          "word": "pertinent",
+          "level": "intermediate"
+        },
+        {
+          "word": "germane",
+          "level": "intermediate"
+        },
+        {
+          "word": "tangential",
+          "level": "intermediate"
+        },
+        {
+          "word": "pervasive",
+          "level": "intermediate"
+        },
+        {
+          "word": "ubiquitous",
+          "level": "intermediate"
+        },
+        {
+          "word": "rigorous",
+          "level": "intermediate"
+        },
+        {
+          "word": "systematic",
+          "level": "intermediate"
+        },
+        {
+          "word": "substantive",
+          "level": "intermediate"
+        },
+        {
+          "word": "cursory",
+          "level": "intermediate"
+        },
+        {
+          "word": "robust",
+          "level": "intermediate"
+        },
+        {
+          "word": "speculative",
+          "level": "intermediate"
+        },
+        {
+          "word": "plausible",
+          "level": "intermediate"
+        },
+        {
+          "word": "compelling",
+          "level": "intermediate"
+        },
+        {
+          "word": "striking",
+          "level": "intermediate"
+        },
+        {
+          "word": "purport",
+          "level": "intermediate"
+        },
+        {
+          "word": "construe",
+          "level": "intermediate"
+        },
+        {
+          "word": "conceive of",
+          "level": "intermediate"
+        },
+        {
+          "word": "regard as",
+          "level": "intermediate"
+        },
+        {
+          "word": "posit",
+          "level": "intermediate"
+        },
+        {
+          "word": "emergent",
+          "level": "intermediate"
+        },
+        {
+          "word": "entrenched",
+          "level": "intermediate"
+        },
+        {
+          "word": "enduring",
+          "level": "intermediate"
+        },
+        {
+          "word": "formative",
+          "level": "intermediate"
+        },
+        {
+          "word": "foundational",
+          "level": "intermediate"
+        },
+        {
+          "word": "rudimentary",
+          "level": "intermediate"
+        },
+        {
+          "word": "profound",
+          "level": "intermediate"
+        },
+        {
+          "word": "far-reaching",
+          "level": "intermediate"
+        },
+        {
+          "word": "marked",
+          "level": "intermediate"
+        },
+        {
+          "word": "sweeping",
+          "level": "intermediate"
+        },
+        {
+          "word": "nuanced",
+          "level": "intermediate"
+        },
+        {
+          "word": "ambiguous",
+          "level": "intermediate"
+        },
+        {
+          "word": "paradoxical",
+          "level": "intermediate"
+        },
+        {
+          "word": "counterintuitive",
+          "level": "intermediate"
+        },
+        {
+          "word": "contested",
+          "level": "intermediate"
+        },
+        {
+          "word": "discrete",
+          "level": "intermediate"
+        },
+        {
+          "word": "discernible",
+          "level": "intermediate"
+        },
+        {
+          "word": "coherent",
+          "level": "intermediate"
+        },
+        {
+          "word": "proponent",
+          "level": "intermediate"
+        },
+        {
+          "word": "detractor",
+          "level": "intermediate"
+        },
+        {
+          "word": "manifestation",
+          "level": "intermediate"
+        },
+        {
+          "word": "simplistic",
+          "level": "intermediate"
+        },
+        {
+          "word": "superficial",
+          "level": "intermediate"
+        },
+        {
+          "word": "reductive",
+          "level": "intermediate"
+        },
+        {
+          "word": "hallmark",
+          "level": "intermediate"
+        },
+        {
+          "word": "canonical",
+          "level": "advanced"
+        },
+        {
+          "word": "seminal",
+          "level": "advanced"
+        },
+        {
+          "word": "extant",
+          "level": "advanced"
+        },
+        {
+          "word": "nascent",
+          "level": "advanced"
+        },
+        {
+          "word": "equivocal",
+          "level": "advanced"
+        },
+        {
+          "word": "tenuous",
+          "level": "advanced"
+        },
+        {
+          "word": "tenable",
+          "level": "advanced"
+        },
+        {
+          "word": "disparate",
+          "level": "advanced"
+        },
+        {
+          "word": "heterogeneous",
+          "level": "advanced"
+        },
+        {
+          "word": "monolithic",
+          "level": "advanced"
+        },
+        {
+          "word": "fragmentary",
+          "level": "advanced"
+        },
+        {
+          "word": "ad hoc",
+          "level": "advanced"
+        },
+        {
+          "word": "eclectic",
+          "level": "advanced"
+        },
+        {
+          "word": "doctrinaire",
+          "level": "advanced"
+        },
+        {
+          "word": "vestige",
+          "level": "advanced"
+        }
+      ]
+    },
+    {
+      "stack": "The Near-Synonym Discriminator — Sorted by Difficulty",
+      "items": [
+        {
+          "word": "suggest",
+          "level": "foundation"
+        },
+        {
+          "word": "indicate",
+          "level": "foundation"
+        },
+        {
+          "word": "infer",
+          "level": "foundation"
+        },
+        {
+          "word": "conclude",
+          "level": "foundation"
+        },
+        {
+          "word": "describe",
+          "level": "foundation"
+        },
+        {
+          "word": "explain",
+          "level": "foundation"
+        },
+        {
+          "word": "propose",
+          "level": "foundation"
+        },
+        {
+          "word": "critical",
+          "level": "foundation"
+        },
+        {
+          "word": "enthusiastic",
+          "level": "foundation"
+        },
+        {
+          "word": "cautious",
+          "level": "foundation"
+        },
+        {
+          "word": "acknowledge",
+          "level": "foundation"
+        },
+        {
+          "word": "admit",
+          "level": "foundation"
+        },
+        {
+          "word": "disagree",
+          "level": "foundation"
+        },
+        {
+          "word": "certain",
+          "level": "foundation"
+        },
+        {
+          "word": "possible",
+          "level": "foundation"
+        },
+        {
+          "word": "likely",
+          "level": "foundation"
+        },
+        {
+          "word": "support",
+          "level": "foundation"
+        },
+        {
+          "word": "weaken",
+          "level": "foundation"
+        },
+        {
+          "word": "cause",
+          "level": "foundation"
+        },
+        {
+          "word": "lead to",
+          "level": "foundation"
+        },
+        {
+          "word": "result in",
+          "level": "foundation"
+        },
+        {
+          "word": "imply",
+          "level": "intermediate"
+        },
+        {
+          "word": "assert",
+          "level": "intermediate"
+        },
+        {
+          "word": "establish",
+          "level": "intermediate"
+        },
+        {
+          "word": "demonstrate",
+          "level": "intermediate"
+        },
+        {
+          "word": "prove",
+          "level": "intermediate"
+        },
+        {
+          "word": "contradict",
+          "level": "intermediate"
+        },
+        {
+          "word": "rebut",
+          "level": "intermediate"
+        },
+        {
+          "word": "refute",
+          "level": "intermediate"
+        },
+        {
+          "word": "undermine",
+          "level": "intermediate"
+        },
+        {
+          "word": "disprove",
+          "level": "intermediate"
+        },
+        {
+          "word": "gather",
+          "level": "intermediate"
+        },
+        {
+          "word": "justify",
+          "level": "intermediate"
+        },
+        {
+          "word": "defend",
+          "level": "intermediate"
+        },
+        {
+          "word": "advocate",
+          "level": "intermediate"
+        },
+        {
+          "word": "advance",
+          "level": "intermediate"
+        },
+        {
+          "word": "put forward",
+          "level": "intermediate"
+        },
+        {
+          "word": "posit",
+          "level": "intermediate"
+        },
+        {
+          "word": "attribute",
+          "level": "intermediate"
+        },
+        {
+          "word": "skeptical",
+          "level": "intermediate"
+        },
+        {
+          "word": "dismissive",
+          "level": "intermediate"
+        },
+        {
+          "word": "ambivalent",
+          "level": "intermediate"
+        },
+        {
+          "word": "wary",
+          "level": "intermediate"
+        },
+        {
+          "word": "approving",
+          "level": "intermediate"
+        },
+        {
+          "word": "admiring",
+          "level": "intermediate"
+        },
+        {
+          "word": "measured",
+          "level": "intermediate"
+        },
+        {
+          "word": "reserved",
+          "level": "intermediate"
+        },
+        {
+          "word": "concede",
+          "level": "intermediate"
+        },
+        {
+          "word": "grant",
+          "level": "intermediate"
+        },
+        {
+          "word": "dispute",
+          "level": "intermediate"
+        },
+        {
+          "word": "challenge",
+          "level": "intermediate"
+        },
+        {
+          "word": "contest",
+          "level": "intermediate"
+        },
+        {
+          "word": "definite",
+          "level": "intermediate"
+        },
+        {
+          "word": "plausible",
+          "level": "intermediate"
+        },
+        {
+          "word": "probable",
+          "level": "intermediate"
+        },
+        {
+          "word": "bolster",
+          "level": "intermediate"
+        },
+        {
+          "word": "corroborate",
+          "level": "intermediate"
+        },
+        {
+          "word": "substantiate",
+          "level": "intermediate"
+        },
+        {
+          "word": "mitigate",
+          "level": "intermediate"
+        },
+        {
+          "word": "contribute to",
+          "level": "intermediate"
+        },
+        {
+          "word": "generalize",
+          "level": "intermediate"
+        },
+        {
+          "word": "extend",
+          "level": "intermediate"
+        },
+        {
+          "word": "entail",
+          "level": "advanced"
+        },
+        {
+          "word": "presuppose",
+          "level": "advanced"
+        },
+        {
+          "word": "falsify",
+          "level": "advanced"
+        },
+        {
+          "word": "invalidate",
+          "level": "advanced"
+        },
+        {
+          "word": "deduce",
+          "level": "advanced"
+        },
+        {
+          "word": "surmise",
+          "level": "advanced"
+        },
+        {
+          "word": "ascribe",
+          "level": "advanced"
+        },
+        {
+          "word": "impute",
+          "level": "advanced"
+        },
+        {
+          "word": "laudatory",
+          "level": "advanced"
+        },
+        {
+          "word": "circumspect",
+          "level": "advanced"
+        },
+        {
+          "word": "unequivocal",
+          "level": "advanced"
+        },
+        {
+          "word": "categorical",
+          "level": "advanced"
+        },
+        {
+          "word": "buttress",
+          "level": "advanced"
+        },
+        {
+          "word": "attenuate",
+          "level": "advanced"
+        },
+        {
+          "word": "temper",
+          "level": "advanced"
+        },
+        {
+          "word": "extrapolate",
+          "level": "advanced"
+        }
+      ]
+    },
+    {
+      "stack": "Attitude, Tone & Author Stance",
+      "items": [
+        {
+          "word": "earnest",
+          "level": "foundation"
+        },
+        {
+          "word": "solemn",
+          "level": "foundation"
+        },
+        {
+          "word": "defiant",
+          "level": "foundation"
+        },
+        {
+          "word": "nostalgic",
+          "level": "foundation"
+        },
+        {
+          "word": "celebratory",
+          "level": "foundation"
+        },
+        {
+          "word": "emphatic",
+          "level": "foundation"
+        },
+        {
+          "word": "adamant",
+          "level": "foundation"
+        },
+        {
+          "word": "ironic",
+          "level": "foundation"
+        },
+        {
+          "word": "trace",
+          "level": "foundation"
+        },
+        {
+          "word": "aloof",
+          "level": "intermediate"
+        },
+        {
+          "word": "detached",
+          "level": "intermediate"
+        },
+        {
+          "word": "impartial",
+          "level": "intermediate"
+        },
+        {
+          "word": "evenhanded",
+          "level": "intermediate"
+        },
+        {
+          "word": "partisan",
+          "level": "intermediate"
+        },
+        {
+          "word": "reverent",
+          "level": "intermediate"
+        },
+        {
+          "word": "irreverent",
+          "level": "intermediate"
+        },
+        {
+          "word": "condescending",
+          "level": "intermediate"
+        },
+        {
+          "word": "bitter",
+          "level": "intermediate"
+        },
+        {
+          "word": "resigned",
+          "level": "intermediate"
+        },
+        {
+          "word": "apologetic",
+          "level": "intermediate"
+        },
+        {
+          "word": "unapologetic",
+          "level": "intermediate"
+        },
+        {
+          "word": "tentative",
+          "level": "intermediate"
+        },
+        {
+          "word": "noncommittal",
+          "level": "intermediate"
+        },
+        {
+          "word": "cynical",
+          "level": "intermediate"
+        },
+        {
+          "word": "lament",
+          "level": "intermediate"
+        },
+        {
+          "word": "survey",
+          "level": "intermediate"
+        },
+        {
+          "word": "chronicle",
+          "level": "intermediate"
+        },
+        {
+          "word": "champion",
+          "level": "intermediate"
+        },
+        {
+          "word": "polemical",
+          "level": "intermediate"
+        },
+        {
+          "word": "conciliatory",
+          "level": "intermediate"
+        },
+        {
+          "word": "equivocal",
+          "level": "intermediate"
+        },
+        {
+          "word": "deferential",
+          "level": "advanced"
+        },
+        {
+          "word": "derisive",
+          "level": "advanced"
+        },
+        {
+          "word": "sardonic",
+          "level": "advanced"
+        },
+        {
+          "word": "indignant",
+          "level": "advanced"
+        },
+        {
+          "word": "fervent",
+          "level": "advanced"
+        },
+        {
+          "word": "zealous",
+          "level": "advanced"
+        },
+        {
+          "word": "sanguine",
+          "level": "advanced"
+        },
+        {
+          "word": "wistful",
+          "level": "advanced"
+        },
+        {
+          "word": "elegiac",
+          "level": "advanced"
+        },
+        {
+          "word": "wry",
+          "level": "advanced"
+        },
+        {
+          "word": "expound",
+          "level": "advanced"
+        },
+        {
+          "word": "deride",
+          "level": "advanced"
+        },
+        {
+          "word": "decry",
+          "level": "advanced"
+        },
+        {
+          "word": "extol",
+          "level": "advanced"
+        },
+        {
+          "word": "repudiate",
+          "level": "advanced"
+        },
+        {
+          "word": "disavow",
+          "level": "advanced"
+        }
+      ]
+    },
+    {
+      "stack": "Business, Economics & Policy Terrain",
+      "items": [
+        {
+          "word": "incentive",
+          "level": "foundation"
+        },
+        {
+          "word": "incumbent",
+          "level": "foundation"
+        },
+        {
+          "word": "subsidy",
+          "level": "foundation"
+        },
+        {
+          "word": "tariff",
+          "level": "foundation"
+        },
+        {
+          "word": "deregulation",
+          "level": "foundation"
+        },
+        {
+          "word": "regulation",
+          "level": "foundation"
+        },
+        {
+          "word": "scarcity",
+          "level": "foundation"
+        },
+        {
+          "word": "monopoly",
+          "level": "foundation"
+        },
+        {
+          "word": "stakeholder",
+          "level": "foundation"
+        },
+        {
+          "word": "governance",
+          "level": "foundation"
+        },
+        {
+          "word": "opportunity cost",
+          "level": "intermediate"
+        },
+        {
+          "word": "marginal",
+          "level": "intermediate"
+        },
+        {
+          "word": "elasticity",
+          "level": "intermediate"
+        },
+        {
+          "word": "externality",
+          "level": "intermediate"
+        },
+        {
+          "word": "diminishing returns",
+          "level": "intermediate"
+        },
+        {
+          "word": "economies of scale",
+          "level": "intermediate"
+        },
+        {
+          "word": "barriers to entry",
+          "level": "intermediate"
+        },
+        {
+          "word": "oligopoly",
+          "level": "intermediate"
+        },
+        {
+          "word": "antitrust",
+          "level": "intermediate"
+        },
+        {
+          "word": "concentration",
+          "level": "intermediate"
+        },
+        {
+          "word": "consolidation",
+          "level": "intermediate"
+        },
+        {
+          "word": "protectionism",
+          "level": "intermediate"
+        },
+        {
+          "word": "equilibrium",
+          "level": "intermediate"
+        },
+        {
+          "word": "structural",
+          "level": "intermediate"
+        },
+        {
+          "word": "cyclical",
+          "level": "intermediate"
+        },
+        {
+          "word": "zero-sum",
+          "level": "intermediate"
+        },
+        {
+          "word": "rational actor",
+          "level": "intermediate"
+        },
+        {
+          "word": "public good",
+          "level": "intermediate"
+        },
+        {
+          "word": "free rider",
+          "level": "intermediate"
+        },
+        {
+          "word": "collective action",
+          "level": "intermediate"
+        },
+        {
+          "word": "price signal",
+          "level": "intermediate"
+        },
+        {
+          "word": "leverage",
+          "level": "intermediate"
+        },
+        {
+          "word": "liquidity",
+          "level": "intermediate"
+        },
+        {
+          "word": "equity",
+          "level": "intermediate"
+        },
+        {
+          "word": "liability",
+          "level": "intermediate"
+        },
+        {
+          "word": "capital-intensive",
+          "level": "intermediate"
+        },
+        {
+          "word": "diversification",
+          "level": "intermediate"
+        },
+        {
+          "word": "hedge",
+          "level": "intermediate"
+        },
+        {
+          "word": "speculation",
+          "level": "intermediate"
+        },
+        {
+          "word": "bubble",
+          "level": "intermediate"
+        },
+        {
+          "word": "deflation",
+          "level": "intermediate"
+        },
+        {
+          "word": "fiscal",
+          "level": "intermediate"
+        },
+        {
+          "word": "monetary",
+          "level": "intermediate"
+        },
+        {
+          "word": "commodity",
+          "level": "intermediate"
+        },
+        {
+          "word": "monopsony",
+          "level": "advanced"
+        },
+        {
+          "word": "countercyclical",
+          "level": "advanced"
+        },
+        {
+          "word": "secular",
+          "level": "advanced"
+        },
+        {
+          "word": "path-dependent",
+          "level": "advanced"
+        },
+        {
+          "word": "rent-seeking",
+          "level": "advanced"
+        },
+        {
+          "word": "arbitrage",
+          "level": "advanced"
+        },
+        {
+          "word": "fungible",
+          "level": "advanced"
+        },
+        {
+          "word": "counterfactual",
+          "level": "advanced"
+        },
+        {
+          "word": "ceteris paribus",
+          "level": "advanced"
+        },
+        {
+          "word": "asymmetric information",
+          "level": "advanced"
+        },
+        {
+          "word": "moral hazard",
+          "level": "advanced"
+        },
+        {
+          "word": "adverse selection",
+          "level": "advanced"
+        },
+        {
+          "word": "bounded rationality",
+          "level": "advanced"
+        },
+        {
+          "word": "principal-agent",
+          "level": "advanced"
+        },
+        {
+          "word": "tragedy of the commons",
+          "level": "advanced"
+        },
+        {
+          "word": "solvency",
+          "level": "advanced"
+        },
+        {
+          "word": "comparative advantage",
+          "level": "advanced"
+        },
+        {
+          "word": "regulatory capture",
+          "level": "advanced"
+        }
+      ]
+    },
+    {
+      "stack": "Science & Natural-World Passages",
+      "items": [
+        {
+          "word": "magnitude",
+          "level": "foundation"
+        },
+        {
+          "word": "proliferate",
+          "level": "foundation"
+        },
+        {
+          "word": "ecosystem",
+          "level": "foundation"
+        },
+        {
+          "word": "flora",
+          "level": "foundation"
+        },
+        {
+          "word": "fauna",
+          "level": "foundation"
+        },
+        {
+          "word": "mutation",
+          "level": "foundation"
+        },
+        {
+          "word": "climatic",
+          "level": "foundation"
+        },
+        {
+          "word": "erosion",
+          "level": "foundation"
+        },
+        {
+          "word": "replicate",
+          "level": "intermediate"
+        },
+        {
+          "word": "empirical",
+          "level": "intermediate"
+        },
+        {
+          "word": "symbiotic",
+          "level": "intermediate"
+        },
+        {
+          "word": "metabolic",
+          "level": "intermediate"
+        },
+        {
+          "word": "endemic",
+          "level": "intermediate"
+        },
+        {
+          "word": "pandemic",
+          "level": "intermediate"
+        },
+        {
+          "word": "photosynthesis",
+          "level": "intermediate"
+        },
+        {
+          "word": "biomass",
+          "level": "intermediate"
+        },
+        {
+          "word": "taxonomy",
+          "level": "intermediate"
+        },
+        {
+          "word": "genotype",
+          "level": "intermediate"
+        },
+        {
+          "word": "phenotype",
+          "level": "intermediate"
+        },
+        {
+          "word": "heritable",
+          "level": "intermediate"
+        },
+        {
+          "word": "natural selection",
+          "level": "intermediate"
+        },
+        {
+          "word": "catalyst",
+          "level": "intermediate"
+        },
+        {
+          "word": "catalyze",
+          "level": "intermediate"
+        },
+        {
+          "word": "compound",
+          "level": "intermediate"
+        },
+        {
+          "word": "kinetic",
+          "level": "intermediate"
+        },
+        {
+          "word": "sedimentary",
+          "level": "intermediate"
+        },
+        {
+          "word": "tectonic",
+          "level": "intermediate"
+        },
+        {
+          "word": "weathering",
+          "level": "intermediate"
+        },
+        {
+          "word": "aerosol",
+          "level": "intermediate"
+        },
+        {
+          "word": "pathogen",
+          "level": "intermediate"
+        },
+        {
+          "word": "predation",
+          "level": "intermediate"
+        },
+        {
+          "word": "order of magnitude",
+          "level": "intermediate"
+        },
+        {
+          "word": "stratum",
+          "level": "advanced"
+        },
+        {
+          "word": "glaciation",
+          "level": "advanced"
+        },
+        {
+          "word": "sequestration",
+          "level": "advanced"
+        },
+        {
+          "word": "albedo",
+          "level": "advanced"
+        },
+        {
+          "word": "pathogenesis",
+          "level": "advanced"
+        },
+        {
+          "word": "speciation",
+          "level": "advanced"
+        },
+        {
+          "word": "genetic drift",
+          "level": "advanced"
+        },
+        {
+          "word": "paleontological",
+          "level": "advanced"
+        },
+        {
+          "word": "anthropogenic",
+          "level": "advanced"
+        },
+        {
+          "word": "entropy",
+          "level": "advanced"
+        }
+      ]
+    },
+    {
+      "stack": "The Advanced & Literary Reserve",
+      "items": [
+        {
+          "word": "quixotic",
+          "level": "advanced"
+        },
+        {
+          "word": "byzantine",
+          "level": "advanced"
+        },
+        {
+          "word": "protean",
+          "level": "advanced"
+        },
+        {
+          "word": "sui generis",
+          "level": "advanced"
+        },
+        {
+          "word": "halcyon",
+          "level": "advanced"
+        },
+        {
+          "word": "arcane",
+          "level": "advanced"
+        },
+        {
+          "word": "apocryphal",
+          "level": "advanced"
+        },
+        {
+          "word": "recondite",
+          "level": "advanced"
+        },
+        {
+          "word": "salutary",
+          "level": "advanced"
+        },
+        {
+          "word": "inveterate",
+          "level": "advanced"
+        },
+        {
+          "word": "putative",
+          "level": "advanced"
+        },
+        {
+          "word": "specious",
+          "level": "advanced"
+        },
+        {
+          "word": "nugatory",
+          "level": "advanced"
+        },
+        {
+          "word": "mercurial",
+          "level": "advanced"
+        },
+        {
+          "word": "perfunctory",
+          "level": "advanced"
+        },
+        {
+          "word": "fastidious",
+          "level": "advanced"
+        },
+        {
+          "word": "venal",
+          "level": "advanced"
+        },
+        {
+          "word": "mendacious",
+          "level": "advanced"
+        },
+        {
+          "word": "feckless",
+          "level": "advanced"
+        },
+        {
+          "word": "truculent",
+          "level": "advanced"
+        },
+        {
+          "word": "sanctimonious",
+          "level": "advanced"
+        },
+        {
+          "word": "obsequious",
+          "level": "advanced"
+        },
+        {
+          "word": "pellucid",
+          "level": "advanced"
+        },
+        {
+          "word": "plaintive",
+          "level": "advanced"
+        },
+        {
+          "word": "lugubrious",
+          "level": "advanced"
+        },
+        {
+          "word": "trenchant",
+          "level": "advanced"
+        },
+        {
+          "word": "tendentious",
+          "level": "advanced"
+        },
+        {
+          "word": "peremptory",
+          "level": "advanced"
+        },
+        {
+          "word": "axiomatic",
+          "level": "advanced"
+        },
+        {
+          "word": "inexorable",
+          "level": "advanced"
+        },
+        {
+          "word": "inimical",
+          "level": "advanced"
+        },
+        {
+          "word": "invidious",
+          "level": "advanced"
+        },
+        {
+          "word": "inscrutable",
+          "level": "advanced"
+        },
+        {
+          "word": "intransigent",
+          "level": "advanced"
+        },
+        {
+          "word": "implacable",
+          "level": "advanced"
+        },
+        {
+          "word": "insidious",
+          "level": "advanced"
+        },
+        {
+          "word": "chimerical",
+          "level": "advanced"
+        },
+        {
+          "word": "panacea",
+          "level": "advanced"
+        },
+        {
+          "word": "paragon",
+          "level": "advanced"
+        },
+        {
+          "word": "pastiche",
+          "level": "advanced"
+        },
+        {
+          "word": "polemic",
+          "level": "advanced"
+        },
+        {
+          "word": "invective",
+          "level": "advanced"
+        },
+        {
+          "word": "diatribe",
+          "level": "advanced"
+        },
+        {
+          "word": "apotheosis",
+          "level": "advanced"
+        },
+        {
+          "word": "watershed",
+          "level": "advanced"
+        },
+        {
+          "word": "crucible",
+          "level": "advanced"
+        },
+        {
+          "word": "panoply",
+          "level": "advanced"
+        },
+        {
+          "word": "welter",
+          "level": "advanced"
+        },
+        {
+          "word": "panegyric",
+          "level": "advanced"
+        },
+        {
+          "word": "jeremiad",
+          "level": "advanced"
+        },
+        {
+          "word": "iconoclastic",
+          "level": "advanced"
+        },
+        {
+          "word": "hagiography",
+          "level": "advanced"
+        },
+        {
+          "word": "polymath",
+          "level": "advanced"
+        },
+        {
+          "word": "pedantic",
+          "level": "advanced"
+        },
+        {
+          "word": "bombastic",
+          "level": "advanced"
+        },
+        {
+          "word": "turgid",
+          "level": "advanced"
+        },
+        {
+          "word": "inveigh",
+          "level": "advanced"
+        },
+        {
+          "word": "excoriate",
+          "level": "advanced"
+        },
+        {
+          "word": "castigate",
+          "level": "advanced"
+        }
+      ]
+    }
+  ]
+}

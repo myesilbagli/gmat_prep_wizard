@@ -2,7 +2,7 @@ import { arrayUnion, doc, getDoc, increment, serverTimestamp, setDoc } from 'fir
 import { formatDateKeyInTimezone, getYesterdayKeyInTimezone } from '@shared/dateInTimezone'
 import { DEFAULT_MAIN_LANGUAGE, normalizeMainLanguageCode } from '@shared/languages'
 import type { DailyDoc, ExamTarget, UserProfileDoc } from '@shared/userProfile'
-import { DEFAULT_TIMEZONE } from '@shared/userProfile'
+import { DEFAULT_TIMEZONE, profileNeedsOnboarding } from '@shared/userProfile'
 import { auth, db } from './firebase'
 
 const PROFILE_PATH = ['settings', 'profile'] as const
@@ -27,7 +27,10 @@ export async function saveUserProfilePatch(
       UserProfileDoc,
       | 'timezone'
       | 'mainLanguage'
+      | 'examDateIso'
       | 'examTarget'
+      | 'onboardingCompletedAt'
+      | 'onboardingFirstStackId'
       | 'streakCurrent'
       | 'streakLongest'
       | 'sessionCount'
@@ -47,26 +50,37 @@ export async function saveUserProfilePatch(
   )
 }
 
+function mergeProfileDefaults(d: Partial<UserProfileDoc>): UserProfileDoc {
+  return {
+    timezone: typeof d.timezone === 'string' && d.timezone ? d.timezone : DEFAULT_TIMEZONE,
+    mainLanguage: normalizeMainLanguageCode(d.mainLanguage),
+    examDateIso: typeof d.examDateIso === 'string' && d.examDateIso ? d.examDateIso : null,
+    examTarget: d.examTarget ?? null,
+    onboardingCompletedAt: d.onboardingCompletedAt ?? null,
+    onboardingFirstStackId:
+      typeof d.onboardingFirstStackId === 'string' ? d.onboardingFirstStackId : null,
+    streakCurrent: typeof d.streakCurrent === 'number' ? d.streakCurrent : 0,
+    streakLongest: typeof d.streakLongest === 'number' ? d.streakLongest : 0,
+    sessionCount: typeof d.sessionCount === 'number' ? d.sessionCount : 0,
+    lastActiveDate: d.lastActiveDate ?? null,
+  }
+}
+
 export async function ensureUserProfileDefaults(): Promise<UserProfileDoc> {
   const uid = requireUid()
   const ref = doc(db, 'users', uid, ...PROFILE_PATH)
   const snap = await getDoc(ref)
   if (snap.exists()) {
     const d = snap.data() as Partial<UserProfileDoc>
-    return {
-      timezone: typeof d.timezone === 'string' && d.timezone ? d.timezone : DEFAULT_TIMEZONE,
-      mainLanguage: normalizeMainLanguageCode(d.mainLanguage),
-      examTarget: d.examTarget ?? null,
-      streakCurrent: typeof d.streakCurrent === 'number' ? d.streakCurrent : 0,
-      streakLongest: typeof d.streakLongest === 'number' ? d.streakLongest : 0,
-      sessionCount: typeof d.sessionCount === 'number' ? d.sessionCount : 0,
-      lastActiveDate: d.lastActiveDate ?? null,
-    }
+    return mergeProfileDefaults(d)
   }
   const initial: UserProfileDoc = {
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || DEFAULT_TIMEZONE,
     mainLanguage: DEFAULT_MAIN_LANGUAGE,
+    examDateIso: null,
     examTarget: null,
+    onboardingCompletedAt: null,
+    onboardingFirstStackId: null,
     streakCurrent: 0,
     streakLongest: 0,
     sessionCount: 0,
@@ -74,6 +88,11 @@ export async function ensureUserProfileDefaults(): Promise<UserProfileDoc> {
   }
   await setDoc(ref, { ...initial, updatedAt: serverTimestamp() })
   return initial
+}
+
+/** Whether the onboarding flow should be shown (see shared `profileNeedsOnboarding`). */
+export function shouldShowOnboarding(profile: UserProfileDoc): boolean {
+  return profileNeedsOnboarding(profile)
 }
 
 export function getTodayKey(profile: UserProfileDoc): string {
@@ -162,4 +181,41 @@ export async function recordDailySessionCompletion(sessionId: string = 'daily_vo
 
 export async function saveExamTarget(exam: ExamTarget | null) {
   await saveUserProfilePatch({ examTarget: exam })
+}
+
+export async function saveExamDateIso(iso: string | null) {
+  await saveUserProfilePatch({ examDateIso: iso, examTarget: null })
+}
+
+export async function completeOnboardingProfile(params: {
+  examDateIso: string | null
+  firstStackId: string
+}) {
+  const uid = requireUid()
+  const ref = doc(db, 'users', uid, ...PROFILE_PATH)
+  await setDoc(
+    ref,
+    {
+      examDateIso: params.examDateIso,
+      examTarget: null,
+      onboardingCompletedAt: serverTimestamp(),
+      onboardingFirstStackId: params.firstStackId,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  )
+}
+
+/** Dev / replay: clear completion so onboarding runs again. */
+export async function clearOnboardingCompletedFlag(): Promise<void> {
+  const uid = requireUid()
+  const ref = doc(db, 'users', uid, ...PROFILE_PATH)
+  await setDoc(
+    ref,
+    {
+      onboardingCompletedAt: null,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  )
 }

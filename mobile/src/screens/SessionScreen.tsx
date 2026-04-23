@@ -3,42 +3,211 @@ import {
   ActivityIndicator,
   Animated,
   Easing,
-  PanResponder,
   Pressable,
   ScrollView,
   Text,
-  useWindowDimensions,
   View,
+  type ViewStyle,
 } from 'react-native'
 import { MaterialIcons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { VocabWordCardContent, VocabWordCardSwipeFooter } from '../components/VocabWordCardContent'
 import * as Haptics from 'expo-haptics'
-import type { QuizQuestion, VocabItem } from '@shared/types'
-import { pickSessionBatchFive } from '@shared/sessionPlanner'
-import { orderQuestionsBySwipeWeakFirst, type SwipeSignal } from '@shared/sessionQuiz'
-import { getMatchGloss, shuffledCopy } from '@shared/matchPhase'
+import type { LearningBucket, QuizQuestion, VocabItem } from '@shared/types'
+import { formatSessionBatchComposition, pickSessionBatchTwelve } from '@shared/sessionPlanner'
 import type { SessionWordOutcome } from '@shared/sessionOutcome'
+import { bucketFromWord, countDeckBuckets, type DeckBucketCounts } from '@shared/learningBuckets'
+import { DEFAULT_TIMEZONE } from '@shared/userProfile'
 import { fetchMeaningQuestionsForBatch } from '../lib/api'
-import { applyStreakAfterSessionComplete, recordDailySessionCompletion } from '../lib/userProfile'
-import { applySessionBatchOutcome, listVocabItems } from '../lib/vocab'
+import {
+  applyStreakAfterSessionComplete,
+  ensureUserProfileDefaults,
+  recordDailySessionCompletion,
+} from '../lib/userProfile'
+import { applySessionBatchOutcome, listVocabItems, markWordIntroduced } from '../lib/vocab'
 import { PrimaryButton } from '../components/UI'
+import { LearnFlashcardModal } from '../components/LearnFlashcardModal'
 import type { AppTheme } from '../theme'
 
-type Phase = 'loading' | 'learn' | 'match' | 'mcq' | 'summary' | 'empty'
+type Phase = 'loading' | 'intro' | 'mcq' | 'summary' | 'empty'
 
-const SWIPE_THRESHOLD = 96
+type QuizFetchStatus = 'idle' | 'pending' | 'ready' | 'error'
+
+function bucketRank(b: LearningBucket): number {
+  if (b === 'new') return 0
+  if (b === 'learning') return 1
+  if (b === 'familiar') return 2
+  return 3
+}
+
+/** 6-digit hex → rgba for translucent fills/banners */
+function bucketDeltaText(before: number, after: number): string {
+  const d = after - before
+  if (d === 0) return '±0'
+  return d > 0 ? `+${d}` : `${d}`
+}
+
+function hexAlpha(hex: string, alpha: number): string {
+  const h = hex.replace('#', '')
+  const r = parseInt(h.slice(0, 2), 16)
+  const g = parseInt(h.slice(2, 4), 16)
+  const b = parseInt(h.slice(4, 6), 16)
+  return `rgba(${r},${g},${b},${alpha})`
+}
+
+function McqStepMobile({
+  theme,
+  question,
+  quizSub,
+  quizPicked,
+  finishing,
+  onQuizPick,
+  onQuizContinue,
+}: {
+  theme: AppTheme
+  question: QuizQuestion
+  quizSub: 'mcq' | 'feedback'
+  quizPicked: number | null
+  finishing: boolean
+  onQuizPick: (idx: number) => void
+  onQuizContinue: () => void
+}) {
+  const reviewing = quizSub === 'feedback'
+  const correctIdx = question.correctIndex
+  const pickedOk = quizPicked !== null && quizPicked === correctIdx
+
+  const bannerTint = 0.175
+  const rowTint = 0.2
+
+  return (
+    <View style={{ gap: 10 }}>
+      <Text style={{ color: theme.text, fontSize: 17, lineHeight: 24 }}>{question.questionText}</Text>
+
+      {reviewing ? (
+        <View
+          accessibilityLiveRegion="polite"
+          accessibilityLabel={pickedOk ? 'Correct' : 'Not quite'}
+          style={{
+            minHeight: 52,
+            borderRadius: 12,
+            paddingHorizontal: 14,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 10,
+            backgroundColor: pickedOk ? hexAlpha(theme.success, bannerTint) : hexAlpha(theme.danger, bannerTint),
+          }}
+        >
+          <MaterialIcons
+            name={pickedOk ? 'check' : 'close'}
+            size={28}
+            color={pickedOk ? theme.success : theme.danger}
+          />
+          <Text
+            style={{
+              fontSize: 19,
+              fontWeight: '800',
+              color: pickedOk ? theme.success : theme.danger,
+            }}
+          >
+            {pickedOk ? 'Correct' : 'Not quite'}
+          </Text>
+        </View>
+      ) : null}
+
+      <View style={{ gap: 10 }}>
+        {question.options.map((opt, i) => {
+          const isCorrectRow = i === correctIdx
+          const isWrongPicked = reviewing && quizPicked === i && i !== correctIdx
+
+          const baseRow: ViewStyle = {
+            paddingVertical: 14,
+            paddingHorizontal: 14,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: theme.border,
+            backgroundColor: theme.surface,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+          }
+
+          let rowStyle: ViewStyle = baseRow
+          let showCheck = false
+          let showClose = false
+
+          if (reviewing) {
+            if (isCorrectRow) {
+              rowStyle = {
+                ...baseRow,
+                backgroundColor: hexAlpha(theme.success, rowTint),
+                borderColor: theme.success,
+              }
+              showCheck = true
+            } else if (isWrongPicked) {
+              rowStyle = {
+                ...baseRow,
+                backgroundColor: hexAlpha(theme.danger, rowTint),
+                borderColor: theme.danger,
+              }
+              showClose = true
+            } else {
+              rowStyle = {
+                ...baseRow,
+                borderColor: 'transparent',
+                opacity: 0.6,
+              }
+            }
+          }
+
+          return (
+            <Pressable
+              key={i}
+              onPress={() => onQuizPick(i)}
+              disabled={reviewing}
+              accessibilityState={{ disabled: reviewing }}
+              style={rowStyle}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: theme.text, fontSize: 15 }}>{opt}</Text>
+              </View>
+              {reviewing && showCheck ? (
+                <MaterialIcons name="check" size={20} color={theme.success} />
+              ) : reviewing && showClose ? (
+                <MaterialIcons name="close" size={20} color={theme.danger} />
+              ) : null}
+            </Pressable>
+          )
+        })}
+      </View>
+
+      {reviewing ? (
+        <>
+          <Text style={{ color: theme.muted, fontSize: 14 }}>{question.explanation}</Text>
+          <PrimaryButton
+            theme={theme}
+            label={finishing ? 'Saving…' : 'Next'}
+            onPress={onQuizContinue}
+            disabled={finishing}
+          />
+        </>
+      ) : null}
+    </View>
+  )
+}
 
 export function SessionScreen({
   theme,
   mainLanguage,
   onClose,
   onCompleted,
+  onRequestNewSession,
 }: {
   theme: AppTheme
   mainLanguage: string
   onClose: () => void
   onCompleted: () => void
+  /** Same entry path as Today → Start session; parent remounts session when returning true from start flow. */
+  onRequestNewSession?: () => void | Promise<void>
 }) {
   const insets = useSafeAreaInsets()
   const [initError, setInitError] = useState<string | null>(null)
@@ -47,9 +216,9 @@ export function SessionScreen({
   const itemsById = useMemo(() => new Map(batch.map((w) => [w.id, w])), [batch])
 
   const [phase, setPhase] = useState<Phase>('loading')
-  const [learnIndex, setLearnIndex] = useState(0)
-  const swipeByIdRef = useRef<Map<string, SwipeSignal>>(new Map())
-  const [weakSwipeCount, setWeakSwipeCount] = useState(0)
+  const [introIds, setIntroIds] = useState<string[]>([])
+  const [introIndex, setIntroIndex] = useState(0)
+  const [introSubmitting, setIntroSubmitting] = useState(false)
 
   const [mcqQuestions, setMcqQuestions] = useState<QuizQuestion[]>([])
   const [quizIdx, setQuizIdx] = useState(0)
@@ -57,26 +226,65 @@ export function SessionScreen({
   const [quizPicked, setQuizPicked] = useState<number | null>(null)
   const [mcqCorrectById, setMcqCorrectById] = useState<Map<string, boolean>>(new Map())
 
-  const [matchRows, setMatchRows] = useState<{ id: string; gloss: string }[]>([])
-  const [matchChips, setMatchChips] = useState<{ id: string; text: string }[]>([])
-  const [matchAssignments, setMatchAssignments] = useState<(string | null)[]>([])
-  const [selectedChipId, setSelectedChipId] = useState<string | null>(null)
-  const [matchChecked, setMatchChecked] = useState(false)
-  const [matchCorrectCount, setMatchCorrectCount] = useState(0)
-
   const [finishing, setFinishing] = useState(false)
   const [finishError, setFinishError] = useState<string | null>(null)
   const [streakAfter, setStreakAfter] = useState<number | null>(null)
   const stepAnim = useRef(new Animated.Value(1)).current
-  const completionPulse = useRef(new Animated.Value(0)).current
+
+  const [deckBefore, setDeckBefore] = useState<DeckBucketCounts | null>(null)
+  const [deckAfter, setDeckAfter] = useState<DeckBucketCounts | null>(null)
+  const [streakAtSessionStart, setStreakAtSessionStart] = useState<number | null>(null)
+  const [postSessionVocabItems, setPostSessionVocabItems] = useState<VocabItem[] | null>(null)
+  const [sessionTimezone, setSessionTimezone] = useState(DEFAULT_TIMEZONE)
+  const [summaryFlashOpen, setSummaryFlashOpen] = useState(false)
+  const [summaryFlashIndex, setSummaryFlashIndex] = useState(0)
+
+  const [quizFetchStatus, setQuizFetchStatus] = useState<QuizFetchStatus>('idle')
+  const [quizFetchError, setQuizFetchError] = useState<string | null>(null)
+  const [compositionPreview, setCompositionPreview] = useState('')
+  const quizFetchGenRef = useRef(0)
 
   const batchSize = batch.length
-  const currentLearnWord = batch[learnIndex]
-
-  const totalLearnSteps = batchSize
-
+  const currentIntroId = introIds[introIndex]
+  const currentIntroWord = currentIntroId ? itemsById.get(currentIntroId) : undefined
   const currentQuizQ = mcqQuestions[quizIdx]
-  const stepKey = `${phase}-${learnIndex}-${quizIdx}-${quizSub}`
+  const stepKey = `${phase}-${introIndex}-${quizIdx}-${quizSub}-${quizFetchStatus}`
+
+  const runQuizFetchForBatch = useCallback((pickIds: string[], orderedLen: number) => {
+    quizFetchGenRef.current += 1
+    const gen = quizFetchGenRef.current
+    void fetchMeaningQuestionsForBatch(pickIds)
+      .then((questions) => {
+        if (gen !== quizFetchGenRef.current) return
+        if (questions.length !== orderedLen) {
+          setQuizFetchStatus('error')
+          setQuizFetchError('Could not prepare all session questions. Please try again.')
+          return
+        }
+        const byId = new Map(questions.map((q) => [q.itemId, q]))
+        const orderedQs = pickIds.map((id) => byId.get(id)).filter(Boolean) as QuizQuestion[]
+        if (orderedQs.length !== orderedLen) {
+          setQuizFetchStatus('error')
+          setQuizFetchError('Could not prepare all session questions. Please try again.')
+          return
+        }
+        setMcqQuestions(orderedQs)
+        setQuizFetchStatus('ready')
+      })
+      .catch((e) => {
+        if (gen !== quizFetchGenRef.current) return
+        setQuizFetchStatus('error')
+        setQuizFetchError(e instanceof Error ? e.message : 'Quiz failed')
+      })
+  }, [])
+
+  const retryQuizFetch = useCallback(() => {
+    const ids = batch.map((w) => w.id)
+    if (ids.length === 0) return
+    setQuizFetchStatus('pending')
+    setQuizFetchError(null)
+    runQuizFetchForBatch(ids, ids.length)
+  }, [batch, runQuizFetchForBatch])
 
   useEffect(() => {
     let cancelled = false
@@ -86,31 +294,54 @@ export function SessionScreen({
       try {
         const all = await listVocabItems()
         if (cancelled) return
-        const picked = pickSessionBatchFive(all)
-        if (picked.length === 0) {
+        const profile = await ensureUserProfileDefaults()
+        const tz = profile.timezone || DEFAULT_TIMEZONE
+        const pick = pickSessionBatchTwelve(all, { nowMs: Date.now(), userTimezone: tz })
+        if (pick.ids.length === 0) {
           setBatch([])
           setPhase('empty')
+          setQuizFetchStatus('idle')
+          setPostSessionVocabItems(null)
+          setStreakAtSessionStart(null)
           setVocabLoading(false)
           return
         }
-        const ids = picked.map((w) => w.id)
-        const questions = await fetchMeaningQuestionsForBatch(ids)
-        if (cancelled) return
-        if (questions.length !== picked.length) {
-          throw new Error('Could not prepare all session questions. Please try again.')
+        const byIdAll = new Map(all.map((w) => [w.id, w]))
+        const ordered: VocabItem[] = []
+        for (const id of pick.ids) {
+          const w = byIdAll.get(id)
+          if (w) ordered.push(w)
         }
-        const byId = new Map(questions.map((q) => [q.itemId, q]))
-        const orderedQs = ids.map((id) => byId.get(id)).filter(Boolean) as QuizQuestion[]
-        setBatch(picked)
-        setMcqQuestions(orderedQs)
-        setPhase('learn')
-        setLearnIndex(0)
-        setWeakSwipeCount(0)
-        swipeByIdRef.current = new Map()
+        if (ordered.length === 0) {
+          setBatch([])
+          setPhase('empty')
+          setQuizFetchStatus('idle')
+          setPostSessionVocabItems(null)
+          setStreakAtSessionStart(null)
+          setVocabLoading(false)
+          return
+        }
+
+        setDeckBefore(countDeckBuckets(all))
+        setStreakAtSessionStart(profile.streakCurrent ?? null)
+        setSessionTimezone(tz)
+        setPostSessionVocabItems(null)
+        setBatch(ordered)
+        setMcqQuestions([])
+        setCompositionPreview(formatSessionBatchComposition(pick.slots))
+        const intros = pick.slots.filter((s) => s.role === 'new').map((s) => s.id)
+        setIntroIds(intros)
+        setIntroIndex(0)
         setMcqCorrectById(new Map())
         setQuizIdx(0)
         setQuizSub('mcq')
         setQuizPicked(null)
+        setDeckAfter(null)
+        setQuizFetchStatus('pending')
+        setQuizFetchError(null)
+        setPhase(intros.length > 0 ? 'intro' : 'mcq')
+
+        runQuizFetchForBatch(pick.ids, ordered.length)
       } catch (e) {
         if (!cancelled) setInitError(e instanceof Error ? e.message : 'Failed to load')
       } finally {
@@ -119,70 +350,9 @@ export function SessionScreen({
     })()
     return () => {
       cancelled = true
+      quizFetchGenRef.current += 1
     }
-  }, [])
-
-  useEffect(() => {
-    if (phase !== 'match' || batch.length === 0) return
-    const rows = shuffledCopy(batch.map((w) => ({ id: w.id, gloss: getMatchGloss(w) })))
-    const chips = shuffledCopy(batch.map((w) => ({ id: w.id, text: w.text })))
-    setMatchRows(rows)
-    setMatchChips(chips)
-    setMatchAssignments(rows.map(() => null))
-    setSelectedChipId(null)
-    setMatchChecked(false)
-    setMatchCorrectCount(0)
-  }, [phase, batch])
-
-  const goMatch = useCallback(() => {
-    setPhase('match')
-  }, [])
-
-  const goMcq = useCallback(() => {
-    const swipeMap = swipeByIdRef.current
-    setMcqQuestions((prev) => orderQuestionsBySwipeWeakFirst(prev, swipeMap))
-    setQuizIdx(0)
-    setQuizSub('mcq')
-    setQuizPicked(null)
-    setMcqCorrectById(new Map())
-    setPhase('mcq')
-  }, [])
-
-  const onLearnSwipe = useCallback(
-    (signal: SwipeSignal) => {
-      const w = batch[learnIndex]
-      if (!w) return
-      swipeByIdRef.current.set(w.id, signal)
-      if (signal === 'weak') setWeakSwipeCount((c) => c + 1)
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-      if (learnIndex + 1 < batch.length) {
-        setLearnIndex((i) => i + 1)
-      } else {
-        goMatch()
-      }
-    },
-    [batch, learnIndex, goMatch],
-  )
-
-  const finishMatchAndGoQuiz = useCallback(() => {
-    let correct = 0
-    for (let i = 0; i < matchRows.length; i++) {
-      const rowId = matchRows[i]!.id
-      const assigned = matchAssignments[i]
-      if (assigned === rowId) correct++
-    }
-    setMatchCorrectCount(correct)
-    setMatchChecked(true)
-    void Haptics.notificationAsync(
-      correct === matchRows.length
-        ? Haptics.NotificationFeedbackType.Success
-        : Haptics.NotificationFeedbackType.Warning,
-    )
-  }, [matchRows, matchAssignments])
-
-  const continueAfterMatch = useCallback(() => {
-    goMcq()
-  }, [goMcq])
+  }, [runQuizFetchForBatch])
 
   const finishSession = useCallback(async () => {
     setFinishing(true)
@@ -190,13 +360,17 @@ export function SessionScreen({
     try {
       const outcomes: SessionWordOutcome[] = batch.map((w) => ({
         id: w.id,
-        swipe: swipeByIdRef.current.get(w.id) ?? 'strong',
+        swipe: 'strong',
         mcqCorrect: mcqCorrectById.get(w.id) ?? false,
       }))
       await applySessionBatchOutcome(itemsById, outcomes)
       const profile = await applyStreakAfterSessionComplete()
       await recordDailySessionCompletion('daily_vocab')
       setStreakAfter(profile.streakCurrent)
+
+      const allAfter = await listVocabItems()
+      setPostSessionVocabItems(allAfter)
+      setDeckAfter(countDeckBuckets(allAfter))
       setPhase('summary')
       onCompleted()
     } catch (e) {
@@ -233,6 +407,25 @@ export function SessionScreen({
     }
   }, [currentQuizQ, quizIdx, mcqQuestions.length, finishSession])
 
+  const onIntroGotIt = useCallback(async () => {
+    const w = currentIntroWord
+    if (!w || introSubmitting) return
+    setIntroSubmitting(true)
+    try {
+      await markWordIntroduced(w.id)
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+      if (introIndex + 1 < introIds.length) {
+        setIntroIndex((i) => i + 1)
+      } else {
+        setPhase('mcq')
+      }
+    } catch (e) {
+      setInitError(e instanceof Error ? e.message : 'Could not save intro')
+    } finally {
+      setIntroSubmitting(false)
+    }
+  }, [currentIntroWord, introIds.length, introIndex, introSubmitting])
+
   useEffect(() => {
     stepAnim.setValue(0)
     Animated.timing(stepAnim, {
@@ -243,36 +436,30 @@ export function SessionScreen({
     }).start()
   }, [stepKey, stepAnim])
 
-  useEffect(() => {
-    if (phase !== 'summary') return
-    completionPulse.setValue(0)
-    const loop = Animated.loop(
-      Animated.timing(completionPulse, {
-        toValue: 1,
-        duration: 1200,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
+  const movedUpWords = useMemo(() => {
+    if (!postSessionVocabItems?.length) return []
+    const byId = new Map(postSessionVocabItems.map((w) => [w.id, w]))
+    const out: VocabItem[] = []
+    for (const w of batch) {
+      const w1 = byId.get(w.id)
+      if (!w1) continue
+      if (bucketRank(bucketFromWord(w1)) > bucketRank(bucketFromWord(w))) out.push(w1)
+    }
+    return out
+  }, [batch, postSessionVocabItems])
+
+  const canStartAnotherSession = useMemo(() => {
+    if (!postSessionVocabItems?.length) return false
+    return (
+      pickSessionBatchTwelve(postSessionVocabItems, {
+        nowMs: Date.now(),
+        userTimezone: sessionTimezone,
+      }).ids.length > 0
     )
-    loop.start()
-    return () => loop.stop()
-  }, [phase, completionPulse])
+  }, [postSessionVocabItems, sessionTimezone])
 
-  const mcqCorrectTotal = useMemo(() => {
-    let n = 0
-    for (const w of batch) {
-      if (mcqCorrectById.get(w.id)) n++
-    }
-    return n
-  }, [batch, mcqCorrectById, phase])
-
-  const stillNeedWork = useMemo(() => {
-    let n = 0
-    for (const w of batch) {
-      if (!mcqCorrectById.get(w.id)) n++
-    }
-    return n
-  }, [batch, mcqCorrectById, phase])
+  const streakIncreased =
+    streakAfter != null && streakAtSessionStart != null && streakAfter > streakAtSessionStart
 
   if (vocabLoading) {
     return (
@@ -310,8 +497,16 @@ export function SessionScreen({
     )
   }
 
-  const phaseLabel =
-    phase === 'learn' ? 'Learn' : phase === 'match' ? 'Match' : phase === 'mcq' ? 'Quiz' : phase === 'summary' ? 'Done' : ''
+  const headerCenter =
+    phase === 'summary'
+      ? 'Done'
+      : phase === 'intro' && introIds.length > 0
+        ? `${introIndex + 1} / ${introIds.length}`
+        : phase === 'mcq' && quizFetchStatus === 'ready' && mcqQuestions.length > 0
+          ? `${quizIdx + 1} / ${mcqQuestions.length}`
+          : phase === 'mcq'
+            ? 'Quiz'
+            : ''
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.learnScreenBg }}>
@@ -335,325 +530,304 @@ export function SessionScreen({
           <MaterialIcons name="close" size={20} color={theme.primary} />
           <Text style={{ color: theme.primary, fontWeight: '800', fontSize: 15 }}>Exit</Text>
         </Pressable>
-        <Text style={{ color: theme.muted, fontWeight: '800', fontSize: 13 }}>
-          {phase === 'summary' ? 'Done' : phase === 'learn' ? `${learnIndex + 1} / ${totalLearnSteps}` : phaseLabel}
-        </Text>
+        <Text style={{ color: theme.muted, fontWeight: '800', fontSize: 13 }}>{headerCenter}</Text>
         <View style={{ width: 56 }} />
       </View>
 
-      {phase === 'learn' && currentLearnWord ? (
-        <View style={{ flex: 1, paddingHorizontal: 12, paddingBottom: 12 }}>
+      {phase === 'intro' && currentIntroWord ? (
+        <Animated.View
+          style={{
+            flex: 1,
+            paddingHorizontal: 16,
+            paddingBottom: 16,
+            opacity: stepAnim,
+            transform: [{ translateY: stepAnim.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }],
+          }}
+        >
           {initError ? <Text style={{ color: theme.danger, marginBottom: 8 }}>{initError}</Text> : null}
-          <Animated.View
-            style={{
-              flex: 1,
-              opacity: stepAnim,
-              transform: [{ translateY: stepAnim.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }],
-            }}
-          >
-            <Text style={{ color: theme.muted, fontSize: 12, fontWeight: '600', marginBottom: 8, paddingHorizontal: 2 }}>
-              Swipe right if you know this · left if you don&apos;t
-            </Text>
-            <SwipeLearnCard
-              key={currentLearnWord.id}
-              theme={theme}
-              mainLanguage={mainLanguage}
-              word={currentLearnWord}
-              onCommitted={onLearnSwipe}
-            />
-          </Animated.View>
-        </View>
+          <IntroCardMobile
+            theme={theme}
+            word={currentIntroWord}
+            newWordCurrent={introIndex + 1}
+            newWordTotal={introIds.length}
+            onGotIt={() => void onIntroGotIt()}
+            busy={introSubmitting}
+          />
+        </Animated.View>
       ) : (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
           {initError ? <Text style={{ color: theme.danger, marginBottom: 8 }}>{initError}</Text> : null}
 
-          {phase === 'match' ? (
-          <Animated.View style={{ gap: 14, opacity: stepAnim }}>
-            <Text style={{ color: theme.muted, fontSize: 12, fontWeight: '700' }}>MATCH</Text>
-            <Text style={{ color: theme.text, fontSize: 15 }}>Tap a word, then tap the blank it fits.</Text>
-            {matchRows.map((row, idx) => {
-              const assignedId = matchAssignments[idx]
-              const assignedWord = assignedId ? itemsById.get(assignedId) : undefined
-              const showOk = matchChecked && assignedId === row.id
-              const showBad = matchChecked && assignedId !== null && assignedId !== row.id
-              return (
-                <Pressable
-                  key={row.id}
-                  onPress={() => {
-                    if (matchChecked) return
-                    if (selectedChipId) {
-                      setMatchAssignments((prev) => {
-                        const next = [...prev]
-                        const oldIdx = next.findIndex((x, i) => i !== idx && x === selectedChipId)
-                        if (oldIdx >= 0) next[oldIdx] = null
-                        next[idx] = selectedChipId
-                        return next
-                      })
-                      setSelectedChipId(null)
-                    } else if (assignedId) {
-                      setMatchAssignments((prev) => {
-                        const next = [...prev]
-                        next[idx] = null
-                        return next
-                      })
-                    }
-                  }}
-                  style={{
-                    paddingVertical: 10,
-                    paddingHorizontal: 12,
-                    borderRadius: 12,
-                    borderWidth: 1,
-                    borderColor: showOk ? theme.success : showBad ? theme.danger : theme.border,
-                    backgroundColor: theme.surface,
-                  }}
-                >
-                  <Text style={{ color: theme.text, fontSize: 16, lineHeight: 22 }}>
-                    <Text style={{ fontWeight: '800' }}>{assignedWord ? assignedWord.text : '_____'}</Text>
-                    {': '}
-                    {row.gloss}
+          {phase === 'mcq' ? (
+            <Animated.View style={{ gap: 12, opacity: stepAnim, transform: [{ translateY: stepAnim.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }] }}>
+              <Text style={{ color: theme.muted, fontSize: 12, fontWeight: '700' }}>QUIZ</Text>
+              {quizFetchStatus === 'pending' ? (
+                <View style={{ gap: 12, paddingVertical: 8 }}>
+                  <Text style={{ color: theme.text, fontSize: 17, fontWeight: '800' }}>
+                    Preparing your {batchSize} words
                   </Text>
-                </Pressable>
-              )
-            })}
-            <Text style={{ color: theme.muted, fontSize: 12, fontWeight: '700', marginTop: 8 }}>WORD BANK</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-              {matchChips.map((c) => {
-                const placed = matchAssignments.includes(c.id)
-                const selected = selectedChipId === c.id
-                if (placed) return null
-                return (
-                  <Pressable
-                    key={c.id}
-                    onPress={() => {
-                      if (matchChecked) return
-                      setSelectedChipId((prev) => (prev === c.id ? null : c.id))
-                    }}
-                    style={{
-                      paddingHorizontal: 14,
-                      paddingVertical: 10,
-                      borderRadius: 20,
-                      backgroundColor: selected ? theme.primary : theme.surface2,
-                      borderWidth: 1,
-                      borderColor: theme.border,
-                    }}
-                  >
-                    <Text style={{ color: selected ? '#fff' : theme.text, fontWeight: '700' }}>{c.text}</Text>
-                  </Pressable>
-                )
-              })}
-            </View>
-            {!matchChecked ? (
-              <PrimaryButton
-                theme={theme}
-                label={matchAssignments.every((a) => a !== null) ? 'Check answers' : 'Fill all blanks first'}
-                onPress={() => {
-                  if (!matchAssignments.every((a) => a !== null)) return
-                  finishMatchAndGoQuiz()
-                }}
-                disabled={!matchAssignments.every((a) => a !== null)}
-              />
-            ) : (
-              <View style={{ gap: 10 }}>
-                <Text style={{ color: theme.text, fontSize: 16 }}>
-                  {matchCorrectCount === matchRows.length ? (
-                    <Text style={{ color: theme.success, fontWeight: '800' }}>Perfect match.</Text>
-                  ) : (
-                    <Text>
-                      <Text style={{ fontWeight: '800' }}>{matchCorrectCount}</Text> of {matchRows.length} correct
-                    </Text>
-                  )}
-                </Text>
-                <PrimaryButton theme={theme} label="Continue to quiz" onPress={continueAfterMatch} />
-              </View>
-            )}
-          </Animated.View>
-        ) : null}
+                  <Text style={{ color: theme.muted, fontSize: 15, lineHeight: 22 }}>{compositionPreview}</Text>
+                  <ActivityIndicator style={{ marginTop: 8 }} color={theme.primary} />
+                  <Text style={{ color: theme.muted, fontSize: 14 }}>Building your quiz…</Text>
+                </View>
+              ) : quizFetchStatus === 'error' ? (
+                <View style={{ gap: 12 }}>
+                  <Text style={{ color: theme.danger, fontSize: 15 }}>{quizFetchError ?? 'Quiz could not be loaded.'}</Text>
+                  <PrimaryButton theme={theme} label="Retry" onPress={retryQuizFetch} />
+                </View>
+              ) : quizFetchStatus === 'ready' && currentQuizQ ? (
+                <McqStepMobile
+                  theme={theme}
+                  question={currentQuizQ}
+                  quizSub={quizSub}
+                  quizPicked={quizPicked}
+                  finishing={finishing}
+                  onQuizPick={onQuizPick}
+                  onQuizContinue={() => void onQuizContinue()}
+                />
+              ) : quizFetchStatus === 'ready' ? (
+                <Text style={{ color: theme.muted }}>No quiz questions.</Text>
+              ) : null}
+            </Animated.View>
+          ) : null}
 
-        {phase === 'mcq' ? (
-          <Animated.View style={{ gap: 12, opacity: stepAnim, transform: [{ translateY: stepAnim.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }] }}>
-            <Text style={{ color: theme.muted, fontSize: 12, fontWeight: '700' }}>QUIZ</Text>
-            {!currentQuizQ ? (
-              <Text style={{ color: theme.muted }}>No quiz questions.</Text>
-            ) : (
-              <>
-                {quizSub === 'mcq' ? (
-                  <View style={{ gap: 10 }}>
-                    <Text style={{ color: theme.text, fontSize: 17, lineHeight: 24 }}>{currentQuizQ.questionText}</Text>
-                    {currentQuizQ.options.map((opt, i) => (
+          {phase === 'summary' ? (
+            <View style={{ gap: 20 }}>
+              <Text style={{ color: theme.text, fontSize: 24, fontWeight: '800' }}>Session complete</Text>
+
+              {deckBefore && deckAfter ? (
+                <View style={{ gap: 12 }}>
+                  <Text style={{ color: theme.text, fontSize: 13, fontWeight: '700' }}>Your deck</Text>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+                    {(
+                      [
+                        ['New', deckBefore.new, deckAfter.new],
+                        ['Learning', deckBefore.learning, deckAfter.learning],
+                        ['Familiar', deckBefore.familiar, deckAfter.familiar],
+                        ['Mastered', deckBefore.mastered, deckAfter.mastered],
+                      ] as const
+                    ).map(([label, before, after]) => {
+                      const delta = after - before
+                      const deltaColor =
+                        delta > 0 ? theme.success : delta < 0 ? theme.danger : theme.muted
+                      return (
+                        <View
+                          key={label}
+                          style={{
+                            flexGrow: 1,
+                            flexBasis: '44%',
+                            minWidth: 140,
+                            padding: 12,
+                            borderRadius: 12,
+                            borderWidth: 1,
+                            borderColor: theme.border,
+                            backgroundColor: theme.surface,
+                          }}
+                        >
+                          <Text style={{ color: theme.muted, fontSize: 11, fontWeight: '700', marginBottom: 8 }}>{label}</Text>
+                          <Text style={{ color: theme.text, fontSize: 14, fontWeight: '700', fontVariant: ['tabular-nums'] }}>
+                            <Text style={{ fontVariant: ['tabular-nums'] }}>{before}</Text>
+                            <Text style={{ color: theme.muted }}> → </Text>
+                            <Text style={{ fontVariant: ['tabular-nums'] }}>{after}</Text>
+                          </Text>
+                          <Text style={{ color: deltaColor, fontSize: 13, fontWeight: '700', marginTop: 6, fontVariant: ['tabular-nums'] }}>
+                            {bucketDeltaText(before, after)}
+                          </Text>
+                        </View>
+                      )
+                    })}
+                  </View>
+                </View>
+              ) : null}
+
+              <View style={{ gap: 8 }}>
+                <Text style={{ color: theme.text, fontSize: 15, fontWeight: '800' }}>
+                  {movedUpWords.length > 0
+                    ? `${movedUpWords.length} word${movedUpWords.length === 1 ? '' : 's'} moved up`
+                    : 'Promotions'}
+                </Text>
+                {movedUpWords.length === 0 ? (
+                  <Text style={{ color: theme.muted, fontSize: 14, lineHeight: 20 }}>
+                    No promotions this session — keep practicing.
+                  </Text>
+                ) : (
+                  <View style={{ gap: 6 }}>
+                    {movedUpWords.map((w, idx) => (
                       <Pressable
-                        key={i}
-                        onPress={() => onQuizPick(i)}
-                        disabled={quizSub !== 'mcq'}
+                        key={w.id}
+                        onPress={() => {
+                          setSummaryFlashIndex(idx)
+                          setSummaryFlashOpen(true)
+                        }}
                         style={{
-                          padding: 14,
-                          borderRadius: 12,
+                          paddingVertical: 10,
+                          paddingHorizontal: 12,
+                          borderRadius: 10,
                           borderWidth: 1,
                           borderColor: theme.border,
                           backgroundColor: theme.surface,
                         }}
                       >
-                        <Text style={{ color: theme.text, fontSize: 15 }}>{opt}</Text>
+                        <Text style={{ color: theme.primary, fontSize: 16, fontWeight: '700' }}>{w.text}</Text>
                       </Pressable>
                     ))}
                   </View>
-                ) : (
-                  <View style={{ gap: 10 }}>
-                    <Text style={{ color: theme.text, fontSize: 15 }}>
-                      {quizPicked === currentQuizQ.correctIndex ? (
-                        <Text style={{ color: theme.success, fontWeight: '800' }}>Correct.</Text>
-                      ) : (
-                        <Text>
-                          Correct: <Text style={{ fontWeight: '800' }}>{currentQuizQ.options[currentQuizQ.correctIndex]}</Text>
-                        </Text>
-                      )}
-                    </Text>
-                    <Text style={{ color: theme.muted, fontSize: 14 }}>{currentQuizQ.explanation}</Text>
-                    <PrimaryButton
-                      theme={theme}
-                      label={finishing ? 'Saving…' : 'Continue'}
-                      onPress={() => void onQuizContinue()}
-                      disabled={finishing}
-                    />
-                  </View>
                 )}
-              </>
-            )}
-          </Animated.View>
-        ) : null}
+              </View>
 
-        {phase === 'summary' ? (
-          <Animated.View style={{ gap: 12, opacity: stepAnim, transform: [{ translateY: stepAnim.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }] }}>
-            <View style={{ width: 88, height: 88, alignItems: 'center', justifyContent: 'center' }}>
-              <Animated.View
-                style={{
-                  position: 'absolute',
-                  width: 88,
-                  height: 88,
-                  borderRadius: 44,
-                  borderWidth: 2,
-                  borderColor: theme.primary,
-                  opacity: completionPulse.interpolate({ inputRange: [0, 1], outputRange: [0.7, 0] }),
-                  transform: [{ scale: completionPulse.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1.25] }) }],
-                }}
-              />
-              <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: theme.primary, alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ fontSize: 28, color: '#fff' }}>✨</Text>
+              {finishError ? <Text style={{ color: theme.danger }}>{finishError}</Text> : null}
+
+              {streakIncreased && streakAfter !== null ? (
+                <View
+                  style={{
+                    alignSelf: 'flex-start',
+                    paddingHorizontal: 10,
+                    paddingVertical: 6,
+                    borderRadius: 999,
+                    backgroundColor: hexAlpha(theme.primary, 0.15),
+                  }}
+                >
+                  <Text style={{ color: theme.primary, fontSize: 13, fontWeight: '700', fontVariant: ['tabular-nums'] }}>
+                    Streak: {streakAfter} days
+                  </Text>
+                </View>
+              ) : null}
+
+              <View style={{ gap: 10, marginTop: 8 }}>
+                <PrimaryButton theme={theme} label="Back to Today" onPress={onClose} />
+                {canStartAnotherSession && onRequestNewSession ? (
+                  <Pressable
+                    onPress={() => void onRequestNewSession()}
+                    style={{
+                      alignItems: 'center',
+                      paddingVertical: 12,
+                      paddingHorizontal: 16,
+                      borderRadius: 999,
+                      borderWidth: 2,
+                      borderColor: theme.primary,
+                    }}
+                  >
+                    <Text style={{ color: theme.primary, fontWeight: '700', fontSize: 16 }}>Start another session</Text>
+                  </Pressable>
+                ) : null}
               </View>
             </View>
-            <Text style={{ color: theme.text, fontSize: 24, fontWeight: '800' }}>Session complete</Text>
-            <Text style={{ color: theme.muted, fontSize: 16, lineHeight: 24 }}>
-              {batchSize} words reviewed{'\n'}
-              {weakSwipeCount} felt unfamiliar{'\n'}
-              {matchCorrectCount}/{batchSize} match correct{'\n'}
-              {mcqCorrectTotal}/{batchSize} quiz correct{'\n'}
-              {stillNeedWork} still need work
-            </Text>
-            {finishError ? <Text style={{ color: theme.danger }}>{finishError}</Text> : null}
-            {streakAfter !== null ? (
-              <Text style={{ color: theme.text, fontSize: 16 }}>
-                Streak: <Text style={{ fontWeight: '800' }}>{streakAfter}</Text> days
-              </Text>
-            ) : null}
-            <PrimaryButton theme={theme} label="End session" onPress={onClose} />
-          </Animated.View>
-        ) : null}
-      </ScrollView>
+          ) : null}
+        </ScrollView>
       )}
+
+      <LearnFlashcardModal
+        visible={summaryFlashOpen}
+        onClose={() => setSummaryFlashOpen(false)}
+        items={movedUpWords}
+        initialIndex={summaryFlashIndex}
+        mainLanguage={mainLanguage}
+        theme={theme}
+      />
     </View>
   )
 }
 
-function SwipeLearnCard({
+function IntroCardMobile({
   theme,
-  mainLanguage,
   word,
-  onCommitted,
+  newWordCurrent,
+  newWordTotal,
+  onGotIt,
+  busy,
 }: {
   theme: AppTheme
-  mainLanguage: string
   word: VocabItem
-  onCommitted: (signal: SwipeSignal) => void
+  /** 1-based index among new-word intros */
+  newWordCurrent?: number
+  newWordTotal?: number
+  onGotIt: () => void
+  busy: boolean
 }) {
-  const { height: windowHeight } = useWindowDimensions()
-  const cardBodyMaxH = Math.min(420, Math.max(240, windowHeight * 0.46))
+  const def = (word.definition || '').trim()
+  const simple = (word.simpleDefinition || word.definition || '').trim()
+  const hook = (word.memoryHook || '').trim()
+  const showProgress =
+    typeof newWordCurrent === 'number' &&
+    typeof newWordTotal === 'number' &&
+    newWordTotal > 1 &&
+    newWordCurrent >= 1
 
-  const translateX = useRef(new Animated.Value(0)).current
-  const rotate = translateX.interpolate({
-    inputRange: [-280, 280],
-    outputRange: ['-10deg', '10deg'],
-  })
-
-  useEffect(() => {
-    translateX.setValue(0)
-  }, [word.id, translateX])
-
-  const panResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_, g) =>
-          Math.abs(g.dx) > 8 && Math.abs(g.dx) > Math.abs(g.dy) * 0.85 + 2,
-        onPanResponderMove: (_, g) => {
-          translateX.setValue(g.dx)
-        },
-        onPanResponderRelease: (_, g) => {
-          const dx = g.dx
-          if (dx > SWIPE_THRESHOLD) {
-            Animated.timing(translateX, { toValue: 420, duration: 200, useNativeDriver: true }).start(() =>
-              onCommitted('strong'),
-            )
-          } else if (dx < -SWIPE_THRESHOLD) {
-            Animated.timing(translateX, { toValue: -420, duration: 200, useNativeDriver: true }).start(() =>
-              onCommitted('weak'),
-            )
-          } else {
-            Animated.spring(translateX, { toValue: 0, useNativeDriver: true, friction: 7 }).start()
-          }
-        },
-      }),
-    [onCommitted, translateX],
-  )
+  const pillTextColor = '#ffffff'
 
   return (
-    <View style={{ flex: 1, minHeight: 200 }}>
-      <Animated.View
-        collapsable={false}
-        {...panResponder.panHandlers}
-        style={[
-          {
-            flex: 1,
-            borderRadius: 16,
-            borderWidth: 1,
-            borderColor: theme.border,
-            backgroundColor: theme.surface,
-            overflow: 'hidden',
-            shadowColor: '#000',
-            shadowOpacity: 0.08,
-            shadowRadius: 10,
-            shadowOffset: { width: 0, height: 4 },
-            elevation: 4,
-          },
-          { transform: [{ translateX }, { rotate }] },
-        ]}
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 24 }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+        <View style={{ flexShrink: 1 }}>
+          <View
+            style={{
+              alignSelf: 'flex-start',
+              paddingHorizontal: 6,
+              paddingVertical: 3,
+              borderRadius: 6,
+              backgroundColor: theme.primary,
+            }}
+          >
+            <Text
+              style={{
+                color: pillTextColor,
+                fontSize: 11,
+                fontWeight: '800',
+                letterSpacing: 0.75,
+                textTransform: 'uppercase',
+              }}
+            >
+              NEW WORD
+            </Text>
+          </View>
+        </View>
+        {showProgress ? (
+          <Text style={{ color: theme.muted, fontSize: 12, fontWeight: '600', textAlign: 'right', marginTop: 2 }}>
+            New word {newWordCurrent} of {newWordTotal}
+          </Text>
+        ) : null}
+      </View>
+
+      <Text
+        style={{
+          color: theme.muted,
+          fontSize: 13,
+          lineHeight: 18,
+          marginTop: 10,
+          marginBottom: 22,
+        }}
       >
-        <ScrollView
-          style={{ maxHeight: cardBodyMaxH }}
-          contentContainerStyle={{ paddingBottom: 8 }}
-          showsVerticalScrollIndicator
-          bounces={false}
-          keyboardShouldPersistTaps="handled"
-          nestedScrollEnabled
-        >
-          <VocabWordCardContent
-            theme={theme}
-            mainLanguage={mainLanguage}
-            word={word}
-            variant="session"
-            topRightBadge="SWIPE"
-            compact
-            footer={<VocabWordCardSwipeFooter theme={theme} variant="session" compact />}
-          />
-        </ScrollView>
-      </Animated.View>
-    </View>
+        First time learning this — no test yet
+      </Text>
+
+      <Text style={{ color: theme.text, fontSize: 34, fontWeight: '800', lineHeight: 40, marginBottom: 20 }}>
+        {word.text}
+      </Text>
+
+      <View style={{ gap: 18 }}>
+        {def ? (
+          <View style={{ gap: 6 }}>
+            <Text style={{ color: theme.muted, fontSize: 11, fontWeight: '700', letterSpacing: 0.4 }}>DEFINITION</Text>
+            <Text style={{ color: theme.text, fontSize: 15, lineHeight: 22 }}>{def}</Text>
+          </View>
+        ) : null}
+        {simple && simple !== def ? (
+          <View style={{ gap: 6 }}>
+            <Text style={{ color: theme.muted, fontSize: 11, fontWeight: '700', letterSpacing: 0.4 }}>SIMPLE</Text>
+            <Text style={{ color: theme.text, fontSize: 15, lineHeight: 22 }}>{simple}</Text>
+          </View>
+        ) : null}
+        {hook ? (
+          <View style={{ gap: 6 }}>
+            <Text style={{ color: theme.muted, fontSize: 11, fontWeight: '700', letterSpacing: 0.4 }}>MEMORY HOOK</Text>
+            <Text style={{ color: theme.text, fontSize: 15, lineHeight: 22 }}>{hook}</Text>
+          </View>
+        ) : null}
+      </View>
+
+      <View style={{ marginTop: 20 }}>
+        <PrimaryButton theme={theme} label={busy ? 'Saving…' : 'Got it'} onPress={onGotIt} disabled={busy} />
+      </View>
+    </ScrollView>
   )
 }

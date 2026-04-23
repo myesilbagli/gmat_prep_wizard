@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { User } from 'firebase/auth'
 import { ActivityIndicator, Animated, Easing, Pressable, Text, View } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { MaterialIcons } from '@expo/vector-icons'
@@ -13,8 +14,15 @@ import { SubscriptionProvider, useSubscription } from './context/SubscriptionCon
 import { ThemeProvider, useAppTheme } from './context/ThemeContext'
 import { FREE_MAX_SESSION_STARTS_PER_DAY } from '@shared/freemium'
 import { DEFAULT_MAIN_LANGUAGE, normalizeMainLanguageCode } from '@shared/languages'
+import { DEFAULT_TIMEZONE } from '@shared/userProfile'
 import { AUTH } from './lib/authMarketingTheme'
-import { ensureUserProfileDefaults, getTodaySessionStarts, recordSessionStart } from './lib/userProfile'
+import {
+  ensureUserProfileDefaults,
+  getTodaySessionStarts,
+  recordSessionStart,
+  shouldShowOnboarding,
+} from './lib/userProfile'
+import { OnboardingFlow } from './onboarding/OnboardingFlow'
 import { listVocabItems } from './lib/vocab'
 import { SessionScreen } from './screens/SessionScreen'
 import { computeDashboardStats, TodayScreen } from './screens/TodayScreen'
@@ -130,19 +138,27 @@ function AuthNavigator() {
 
 type LearnFlow = { screen: 'main' } | { screen: 'stacks' } | { screen: 'detail'; stackId: string }
 
-function MainTabs() {
+function MainTabs({
+  sessionLaunchKey = 0,
+  onRequestOnboardingReplay,
+}: {
+  sessionLaunchKey?: number
+  onRequestOnboardingReplay?: () => void
+}) {
   const insets = useSafeAreaInsets()
   const { theme, colorScheme, setColorScheme } = useAppTheme()
   const { isPro, loading: subLoading, openPaywall } = useSubscription()
   const [tab, setTab] = useState<'today' | 'learn' | 'test'>('today')
   const [learnFlow, setLearnFlow] = useState<LearnFlow>({ screen: 'main' })
   const [sessionOpen, setSessionOpen] = useState(false)
+  const [sessionRemountKey, setSessionRemountKey] = useState(0)
   const [profileOpen, setProfileOpen] = useState(false)
   const [items, setItems] = useState<VocabItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [mainLanguage, setMainLanguage] = useState(DEFAULT_MAIN_LANGUAGE)
-  const stats = useMemo(() => computeDashboardStats(items), [items])
+  const [userTimezone, setUserTimezone] = useState(DEFAULT_TIMEZONE)
+  const stats = useMemo(() => computeDashboardStats(items, userTimezone), [items, userTimezone])
 
   async function reloadItems() {
     setError(null)
@@ -168,7 +184,10 @@ function MainTabs() {
     let cancelled = false
     void ensureUserProfileDefaults()
       .then((p) => {
-        if (!cancelled) setMainLanguage(normalizeMainLanguageCode(p.mainLanguage))
+        if (!cancelled) {
+          setMainLanguage(normalizeMainLanguageCode(p.mainLanguage))
+          setUserTimezone(typeof p.timezone === 'string' && p.timezone ? p.timezone : DEFAULT_TIMEZONE)
+        }
       })
       .catch(() => {})
     return () => {
@@ -182,18 +201,18 @@ function MainTabs() {
       .catch(() => {})
   }, [])
 
-  const handleStartSession = useCallback(async () => {
-    if (subLoading) return
+  const handleStartSession = useCallback(async (): Promise<boolean> => {
+    if (subLoading) return false
     if (!isPro) {
       try {
         const n = await getTodaySessionStarts()
         if (n >= FREE_MAX_SESSION_STARTS_PER_DAY) {
           openPaywall()
-          return
+          return false
         }
       } catch {
         openPaywall()
-        return
+        return false
       }
     }
     try {
@@ -202,7 +221,17 @@ function MainTabs() {
       /* still open session */
     }
     setSessionOpen(true)
+    return true
   }, [isPro, subLoading, openPaywall])
+
+  const consumedSessionLaunch = useRef(0)
+  useEffect(() => {
+    if (sessionLaunchKey === 0 || sessionLaunchKey <= consumedSessionLaunch.current || subLoading) return
+    void (async () => {
+      const opened = await handleStartSession()
+      if (opened) consumedSessionLaunch.current = sessionLaunchKey
+    })()
+  }, [sessionLaunchKey, subLoading, handleStartSession])
 
   if (loading) {
     return (
@@ -227,6 +256,7 @@ function MainTabs() {
         {sessionOpen ? (
           <GestureHandlerRootView style={{ flex: 1 }}>
             <SessionScreen
+              key={sessionRemountKey}
               theme={theme}
               mainLanguage={mainLanguage}
               onClose={() => {
@@ -234,6 +264,10 @@ function MainTabs() {
                 void reloadItems()
               }}
               onCompleted={() => void reloadItems()}
+              onRequestNewSession={async () => {
+                const opened = await handleStartSession()
+                if (opened) setSessionRemountKey((k) => k + 1)
+              }}
             />
           </GestureHandlerRootView>
         ) : (
@@ -278,6 +312,7 @@ function MainTabs() {
               visible={profileOpen}
               onClose={() => setProfileOpen(false)}
               onProfileSaved={refreshProfileLanguage}
+              onRequestOnboardingReplay={onRequestOnboardingReplay}
             />
             {error ? (
               <Text style={{ color: theme.danger, paddingHorizontal: 16, paddingTop: 8 }}>{error}</Text>
@@ -382,6 +417,58 @@ export default function App() {
   )
 }
 
+function PostAuthApp({ user }: { user: User }) {
+  const { theme } = useAppTheme()
+  const [gate, setGate] = useState<'loading' | 'onboarding' | 'main'>('loading')
+  const [sessionLaunchKey, setSessionLaunchKey] = useState(0)
+
+  useEffect(() => {
+    let cancelled = false
+    void ensureUserProfileDefaults()
+      .then((p) => {
+        if (cancelled) return
+        setGate(shouldShowOnboarding(p) ? 'onboarding' : 'main')
+      })
+      .catch(() => {
+        if (!cancelled) setGate('main')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [user.uid])
+
+  if (gate === 'loading') {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.learnScreenBg }}>
+        <ActivityIndicator color={theme.primary} />
+      </View>
+    )
+  }
+
+  if (gate === 'onboarding') {
+    return (
+      <OnboardingFlow
+        theme={theme}
+        onComplete={() => {
+          setGate('main')
+          setSessionLaunchKey((k) => k + 1)
+        }}
+        onReloadWords={async () => {}}
+      />
+    )
+  }
+
+  return (
+    <>
+      <MainTabs
+        sessionLaunchKey={sessionLaunchKey}
+        onRequestOnboardingReplay={() => setGate('onboarding')}
+      />
+      <SubscriptionPaywall />
+    </>
+  )
+}
+
 function AppChrome() {
   const insets = useSafeAreaInsets()
   const { theme } = useAppTheme()
@@ -410,8 +497,7 @@ function AppChrome() {
         </View>
       ) : user ? (
         <SubscriptionProvider userId={user.uid}>
-          <MainTabs />
-          <SubscriptionPaywall />
+          <PostAuthApp user={user} />
         </SubscriptionProvider>
       ) : (
         <AuthNavigator />

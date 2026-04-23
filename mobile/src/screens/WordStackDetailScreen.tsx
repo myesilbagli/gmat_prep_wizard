@@ -50,7 +50,8 @@ export function WordStackDetailScreen({
 
     try {
       let deckCount = items.length
-      for (const w of words) {
+      for (let idx = 0; idx < words.length; idx++) {
+        const w = words[idx]!
         const key = w.trim().toLowerCase()
         if (inDeck(w)) {
           skippedDup++
@@ -61,7 +62,7 @@ export function WordStackDetailScreen({
           stoppedForLimit = true
           break
         }
-        await saveWordFromStackImport({ text: w, mainLanguage })
+        await saveWordFromStackImport({ text: w, mainLanguage, stackId, stackPosition: idx })
         deckCount += 1
         added++
       }

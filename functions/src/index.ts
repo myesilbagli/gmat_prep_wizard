@@ -3,6 +3,14 @@ import { setGlobalOptions } from 'firebase-functions/v2'
 import * as admin from 'firebase-admin'
 import OpenAI from 'openai'
 import 'dotenv/config'
+import type { GeneratedResult as ApiGeneratedResult } from '../../shared/types'
+import {
+  buildEnglishGmCardPrompt,
+  buildLearnerGmCardPrompt,
+  inferGmTermType,
+} from '../../shared/generateGmCardPrompt'
+import { parseJsonFromOutputText } from '../../shared/parseOpenAiJson'
+import { validateGeneratedResult } from '../../shared/wordGeneration'
 
 setGlobalOptions({ region: 'us-central1' })
 
@@ -28,21 +36,6 @@ function requireEnv(name: string): string {
   const v = process.env[name]
   if (!v) throw new Error(`Missing env var: ${name}`)
   return v
-}
-
-type GeneratedResult = {
-  definition: string
-  simpleDefinition: string
-  exampleSentence?: string
-  synonyms?: string[]
-  nuanceNote?: string
-  gmatUsageNote?: string
-
-  // keep extra detail too
-  definitions?: string[]
-  examples?: string[]
-  /** Short gloss in mainLanguage when not English */
-  translationSimple?: string
 }
 
 type QuizMode = 'context' | 'verbal'
@@ -91,10 +84,6 @@ function normalizeText(text: unknown): string {
   // Allow letters, spaces, apostrophes, and hyphens for phrases.
   if (!/^[a-zA-Z\s-']+$/.test(t)) throw new Error('text contains invalid characters')
   return t
-}
-
-function inferType(text: string): 'word' | 'phrase' {
-  return text.includes(' ') ? 'phrase' : 'word'
 }
 
 export const api = onRequest(
@@ -159,7 +148,7 @@ async function handleGenerate(body: any, ipKey: string, res: any) {
   // Back-compat: accept both { text } and { word } from older clients.
   const rawText = body?.text ?? body?.word
   const text = normalizeText(rawText)
-  const type = inferType(text)
+  const type = inferGmTermType(text)
   const mainLanguage = normalizeMainLanguage(body?.mainLanguage)
 
   const key = `${ipKey}:${text.toLowerCase()}`
@@ -178,67 +167,49 @@ async function handleGenerate(body: any, ipKey: string, res: any) {
   }
 
   const openai = new OpenAI({ apiKey: requireEnv('OPENAI_API_KEY') })
-  const model = process.env.OPENAI_MODEL ?? 'gpt-4.1-mini'
+  const model = process.env.OPENAI_GENERATE_MODEL ?? 'gpt-4.1'
 
-  const langLine =
+  const prompt =
     mainLanguage === 'en'
-      ? `All definitions and glosses must be in English only. Omit key "translationSimple" or set it to "".`
-      : `All "definition", "simpleDefinition", "exampleSentence", and notes must remain in English (GMAT study language). ` +
-        `Also include "translationSimple": a very short gloss (2-8 words) of the main sense in the learner's language. ` +
-        `Language code for the learner: ${mainLanguage}. Use natural ${mainLanguage} for translationSimple only.`
+      ? buildEnglishGmCardPrompt(text, type)
+      : buildLearnerGmCardPrompt(text, type, mainLanguage)
 
-  const prompt = [
-    `You are a GMAT verbal tutor.`,
-    `Return a JSON object ONLY (no markdown) with keys:`,
-    `"definition": string (clear, full definition; 1-2 sentences),`,
-    `"simpleDefinition": string (short, easy; 2-6 words),`,
-    `"exampleSentence": string (one natural, serious sentence),`,
-    `"synonyms": string[] (2-4 good synonyms),`,
-    `"nuanceNote": string (subtle shade/trap; 1-2 sentences),`,
-    `"gmatUsageNote": string (how it appears in formal GMAT contexts; 1-2 sentences),`,
-    `"definitions": string[] (optional: 2-4 concise definitions),`,
-    `"examples": string[] (optional: 2-3 extra example sentences),`,
-    mainLanguage === 'en' ? '' : `"translationSimple": string (required when learner language is not English),`,
-    ``,
-    langLine,
-    ``,
-    `Text: ${text}`,
-    `Type: ${type}`,
-  ]
-    .filter(Boolean)
-    .join('\n')
+  async function runGenerate(): Promise<ApiGeneratedResult | null> {
+    const completion = await openai.responses.create({
+      model,
+      input: prompt,
+      temperature: 0.4,
+      max_output_tokens: 1500,
+    })
+    const outputText = completion.output_text?.trim() ?? ''
+    const raw = parseJsonFromOutputText<unknown>(outputText)
+    if (raw && validateGeneratedResult(raw)) return raw
+    return null
+  }
 
-  const completion = await openai.responses.create({
-    model,
-    input: prompt,
-    temperature: 0.4,
-    max_output_tokens: 450,
-  })
-
-  const outputText = completion.output_text?.trim() ?? ''
-  let parsed: GeneratedResult | null = null
-  try {
-    parsed = JSON.parse(outputText) as GeneratedResult
-  } catch {
-    const start = outputText.indexOf('{')
-    const end = outputText.lastIndexOf('}')
-    if (start >= 0 && end > start) {
-      parsed = JSON.parse(outputText.slice(start, end + 1)) as GeneratedResult
-    }
+  let parsed = await runGenerate()
+  if (!parsed) {
+    parsed = await runGenerate()
   }
 
   if (!parsed) {
-    res.status(502).json({ error: 'AI response was not valid JSON' })
+    res.status(502).json({ error: 'AI response failed validation' })
     return
   }
 
+  const shaped = parsed as Record<string, unknown>
+  if (typeof shaped.partOfSpeech !== 'string' && typeof shaped.part_of_speech === 'string') {
+    shaped.partOfSpeech = String(shaped.part_of_speech).trim().toLowerCase()
+    delete shaped.part_of_speech
+  }
+
   if (mainLanguage === 'en') {
-    delete (parsed as any).translationSimple
+    delete (parsed as { translationSimple?: string }).translationSimple
   } else if (
-    typeof (parsed as any).translationSimple === 'string' &&
-    !(parsed as any).translationSimple.trim()
+    typeof parsed.translationSimple === 'string' &&
+    !parsed.translationSimple.trim()
   ) {
-    delete (parsed as any).translationSimple
+    delete (parsed as { translationSimple?: string }).translationSimple
   }
 
   res.status(200).json(parsed)
@@ -250,7 +221,7 @@ function normalizeParagraphItems(body: any): { text: string; type: 'word' | 'phr
     .map((x: any) => {
       const text = normalizeText(x?.text)
       const type: 'word' | 'phrase' =
-        x?.type === 'phrase' || x?.type === 'word' ? x.type : inferType(text)
+        x?.type === 'phrase' || x?.type === 'word' ? x.type : inferGmTermType(text)
       return { text, type }
     })
     .slice(0, 5)
@@ -258,25 +229,6 @@ function normalizeParagraphItems(body: any): { text: string; type: 'word' | 'phr
   if (!items.length) throw new Error('items must be a non-empty array')
   if (items.length > 5) throw new Error('items must contain at most 5 entries')
   return items
-}
-
-function parseJsonFromOutputText<T>(outputText: string): T | null {
-  const t = outputText.trim()
-  if (!t) return null
-  try {
-    return JSON.parse(t) as T
-  } catch {
-    const start = t.indexOf('{')
-    const end = t.lastIndexOf('}')
-    if (start >= 0 && end > start) {
-      try {
-        return JSON.parse(t.slice(start, end + 1)) as T
-      } catch {
-        return null
-      }
-    }
-    return null
-  }
 }
 
 function isValidParagraphResponse(x: any): x is ParagraphResponse {

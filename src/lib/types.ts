@@ -1,19 +1,6 @@
-export type GeneratedResult = {
-  // New (preferred) structured fields
-  definition: string
-  simpleDefinition: string
-  exampleSentence?: string
-  synonyms?: string[]
-  nuanceNote?: string
-  gmatUsageNote?: string
+import type { ContrastWord, GeneratedResult } from '../../shared/types'
 
-  // Keep extra detail (optional) for richer displays / future use.
-  definitions?: string[]
-  examples?: string[]
-  antonyms?: string[]
-  /** Short gloss in main language when not English; stored under `translations[lang]`. */
-  translationSimple?: string
-}
+export type { GeneratedResult }
 
 export type WordDoc = {
   word: string
@@ -29,15 +16,26 @@ export type WordDoc = {
   type?: 'word' | 'phrase'
   definition?: string
   simpleDefinition?: string
+  /** @deprecated Prefer `examples` on new cards. */
   exampleSentence?: string
   synonyms?: string[]
   nuanceNote?: string
+  /** @deprecated Not written on new generates. */
   gmatUsageNote?: string
+  examples?: string[]
+  wordTags?: string[]
+  contrastWord?: ContrastWord
+  memoryHook?: string
   /** Short meanings keyed by language code (e.g. `tr`). */
   translations?: Record<string, string>
   // Back-compat (older docs)
   note?: string
   status?: 'learning' | 'mastered' | 'do_not_know' | 'know'
   flagged?: boolean
+  exposureScore?: number
+  lastSeenAt?: unknown
+  lastAnsweredAt?: unknown
+  lastCorrect?: boolean | null
+  wordSource?: 'lookup' | 'word_stack' | 'onboarding'
 }
 

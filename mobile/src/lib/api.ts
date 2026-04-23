@@ -1,4 +1,5 @@
 import type { GeneratedResult, QuizMode, QuizQuestion, VocabItem } from '@shared/types'
+import { normalizeGeneratedResultFromApi } from '@shared/wordGeneration'
 import { shuffleQuizQuestions } from '@shared/quizShuffle'
 import { auth } from './firebase'
 import { requireFunctionsBaseUrl } from './env'
@@ -23,7 +24,7 @@ export async function generateWord(text: string, mainLanguage?: string): Promise
     const err = await res.text().catch(() => '')
     throw new Error(err || `Request failed (${res.status})`)
   }
-  return (await res.json()) as GeneratedResult
+  return normalizeGeneratedResultFromApi(await res.json())
 }
 
 export async function generateParagraph(items: VocabItem[]) {

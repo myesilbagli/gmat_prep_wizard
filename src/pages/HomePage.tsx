@@ -4,6 +4,9 @@ import { Link } from 'react-router-dom'
 import { auth } from '../lib/firebase'
 import { listVocabItems } from '../lib/vocab'
 import type { GeneratedResult } from '../lib/types'
+import { normalizeGeneratedResultFromApi } from '../../shared/wordGeneration'
+import { countDeckBuckets } from '../../shared/learningBuckets'
+import { formatSessionBatchComposition, pickSessionBatchTwelve } from '../../shared/sessionPlanner'
 import {
   DEFAULT_MAIN_LANGUAGE,
   getMainLanguageLabel,
@@ -25,38 +28,6 @@ type GenerateState =
   | { status: 'ready'; result: GeneratedResult }
   | { status: 'error'; message: string }
 
-function emptyResult(): GeneratedResult {
-  return {
-    definition: '',
-    simpleDefinition: '',
-    exampleSentence: '',
-    synonyms: [],
-    nuanceNote: '',
-    gmatUsageNote: '',
-    definitions: [],
-    examples: [],
-  }
-}
-
-function pickTrimmedString(v: unknown): string | undefined {
-  if (typeof v !== 'string') return undefined
-  const t = v.trim()
-  return t || undefined
-}
-
-/** Merge `/generate` JSON; some models return `translation_simple` instead of `translationSimple`. */
-function normalizeGenerateResultFromApi(raw: unknown): GeneratedResult {
-  const o = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {}
-  const merged = { ...emptyResult(), ...o } as GeneratedResult
-  const gloss =
-    pickTrimmedString(o.translationSimple) ??
-    pickTrimmedString(o.translation_simple) ??
-    pickTrimmedString((o.result as Record<string, unknown> | undefined)?.translationSimple) ??
-    pickTrimmedString((o.result as Record<string, unknown> | undefined)?.translation_simple)
-  if (gloss) merged.translationSimple = gloss
-  return merged
-}
-
 export function HomePage() {
   const [text, setText] = useState('')
   const [state, setState] = useState<GenerateState>({ status: 'idle' })
@@ -66,9 +37,13 @@ export function HomePage() {
   const user = auth.currentUser
   const [deckStats, setDeckStats] = useState<{
     total: number
+    new: number
     learning: number
+    familiar: number
     mastered: number
     flagged: number
+    sessionWordCount: number
+    sessionComposition: string
   } | null>(null)
   const [profileLoading, setProfileLoading] = useState(false)
   const [streak, setStreak] = useState<number | null>(null)
@@ -82,11 +57,19 @@ export function HomePage() {
     }
     try {
       const items = await listVocabItems()
+      const profile = await ensureUserProfileDefaults()
+      const tz = profile.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone
+      const batch = pickSessionBatchTwelve(items, { nowMs: Date.now(), userTimezone: tz })
+      const bc = countDeckBuckets(items)
       setDeckStats({
         total: items.length,
-        learning: items.filter((i) => i.status === 'learning').length,
-        mastered: items.filter((i) => i.status === 'mastered').length,
-        flagged: items.filter((i) => i.flagged).length,
+        new: bc.new,
+        learning: bc.learning,
+        familiar: bc.familiar,
+        mastered: bc.mastered,
+        flagged: bc.flagged,
+        sessionWordCount: batch.ids.length,
+        sessionComposition: formatSessionBatchComposition(batch.slots),
       })
     } catch {
       setDeckStats(null)
@@ -157,7 +140,7 @@ export function HomePage() {
       }
 
       const raw = await res.json()
-      setState({ status: 'ready', result: normalizeGenerateResultFromApi(raw) })
+      setState({ status: 'ready', result: normalizeGeneratedResultFromApi(raw) })
     } catch (e) {
       setState({
         status: 'error',
@@ -258,19 +241,26 @@ export function HomePage() {
           style={{
             padding: 16,
             marginBottom: 20,
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            gap: 12,
+            display: 'grid',
+            gap: 10,
           }}
         >
-          <span className="muted" style={{ fontSize: 12, fontWeight: 700 }}>
-            Your deck
-          </span>
-          <span style={{ fontSize: 13 }}>
-            {deckStats.total} total · {deckStats.learning} learning · {deckStats.mastered}{' '}
-            mastered · {deckStats.flagged} flagged
-          </span>
+          <div style={{ fontSize: 15, fontWeight: 700 }}>Your Deck — {deckStats.total} words</div>
+          <div style={{ fontSize: 13, lineHeight: 1.6, fontFamily: 'ui-monospace, monospace' }}>
+            <div>New&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{deckStats.new}</div>
+            <div>Learning&nbsp;&nbsp;{deckStats.learning}</div>
+            <div>Familiar&nbsp;&nbsp;{deckStats.familiar}</div>
+            <div>Mastered&nbsp;&nbsp;{deckStats.mastered}</div>
+          </div>
+          <div className="muted" style={{ fontSize: 12 }}>
+            Flagged: {deckStats.flagged}
+          </div>
+          <div style={{ fontSize: 13, marginTop: 4 }}>
+            Today&apos;s session: {deckStats.sessionWordCount} words
+            <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+              {deckStats.sessionComposition}
+            </div>
+          </div>
         </div>
       ) : null}
 
@@ -402,7 +392,11 @@ function WordAnalysisCard({
   saved: boolean
 }) {
   const typeLabel = word.includes(' ') ? 'PHRASE' : 'WORD'
-  const exampleSentence = result.exampleSentence ?? ''
+  const twoExamples = result.examples?.length === 2 ? result.examples : null
+  const exampleSentence =
+    twoExamples == null
+      ? (result.exampleSentence?.trim() || result.examples?.[0]?.trim() || '')
+      : ''
   const wordRegex = new RegExp(`\\b(${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})\\b`, 'gi')
   const nativeGloss = result.translationSimple?.trim() ?? ''
   const languageTitle = (() => {
@@ -503,7 +497,50 @@ function WordAnalysisCard({
         </div>
       )}
 
-      {exampleSentence && (
+      {twoExamples ? (
+        <>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <div style={{ color: 'var(--muted)', flexShrink: 0, marginTop: 2 }}>
+              <IconQuote />
+            </div>
+            <div>
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: 'var(--muted)',
+                  marginBottom: 4,
+                }}
+              >
+                Example (academic)
+              </div>
+              <p className="muted" style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>
+                {twoExamples[0]}
+              </p>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <div style={{ color: 'var(--muted)', flexShrink: 0, marginTop: 2 }}>
+              <IconQuote />
+            </div>
+            <div>
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: 'var(--muted)',
+                  marginBottom: 4,
+                }}
+              >
+                Example (argument)
+              </div>
+              <p className="muted" style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>
+                {twoExamples[1]}
+              </p>
+            </div>
+          </div>
+        </>
+      ) : exampleSentence ? (
         <div style={{ display: 'flex', gap: 12 }}>
           <div style={{ color: 'var(--muted)', flexShrink: 0, marginTop: 2 }}>
             <IconQuote />
@@ -532,7 +569,7 @@ function WordAnalysisCard({
             </p>
           </div>
         </div>
-      )}
+      ) : null}
 
       {result.synonyms && result.synonyms.length > 0 && (
         <div>
@@ -565,6 +602,81 @@ function WordAnalysisCard({
           </div>
         </div>
       )}
+
+      {result.wordTags && result.wordTags.length > 0 && (
+        <div>
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              color: 'var(--muted)',
+              marginBottom: 8,
+            }}
+          >
+            Tags
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {result.wordTags.map((t, i) => (
+              <span
+                key={`${t}-${i}`}
+                style={{
+                  fontSize: 12,
+                  padding: '5px 10px',
+                  borderRadius: 999,
+                  border: '1px solid var(--border)',
+                  background: 'rgba(99,102,241,0.12)',
+                  color: 'var(--text)',
+                }}
+              >
+                {t}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {result.contrastWord?.word && result.contrastWord.explanation ? (
+        <div>
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              color: 'var(--muted)',
+              marginBottom: 6,
+            }}
+          >
+            Contrast
+          </div>
+          <p className="muted" style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>
+            <strong style={{ color: 'var(--text)' }}>{result.contrastWord.word}</strong>
+            {' — '}
+            {result.contrastWord.explanation}
+          </p>
+        </div>
+      ) : null}
+
+      {result.memoryHook ? (
+        <div style={{ display: 'flex', gap: 12 }}>
+          <div style={{ color: 'var(--muted)', flexShrink: 0, marginTop: 2 }}>
+            <IconLightbulb />
+          </div>
+          <div>
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 700,
+                color: 'var(--muted)',
+                marginBottom: 4,
+              }}
+            >
+              Memory hook
+            </div>
+            <p className="muted" style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>
+              {result.memoryHook}
+            </p>
+          </div>
+        </div>
+      ) : null}
 
       {nativeGloss ? (
         <div style={{ display: 'flex', gap: 12 }}>

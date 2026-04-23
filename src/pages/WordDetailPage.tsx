@@ -51,11 +51,24 @@ export function WordDetailPage() {
 }
 
 function WordDetailView({ data }: { data: WordDoc }) {
+  const r = data.result
+  const headword = (data.text ?? data.word).trim()
+  const examples =
+    data.examples?.length === 2
+      ? data.examples
+      : Array.isArray(r.examples) && r.examples.length === 2
+        ? r.examples
+        : []
+  const synonyms = (data.synonyms ?? r.synonyms ?? []).filter(Boolean) as string[]
+  const tags = (data.wordTags ?? r.wordTags ?? []).filter(Boolean) as string[]
+  const contrast = data.contrastWord ?? r.contrastWord
+  const memoryHook = (data.memoryHook ?? r.memoryHook)?.trim()
+
   return (
     <div style={{ display: 'grid', gap: 14 }}>
       <div>
         <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: -0.4 }}>
-          {data.word}
+          {headword}
         </div>
         <div className="muted" style={{ fontSize: 13 }}>
           Source: {data.source}
@@ -63,19 +76,71 @@ function WordDetailView({ data }: { data: WordDoc }) {
       </div>
 
       <div style={{ display: 'grid', gap: 12 }}>
-        <Block title="Definitions" items={data.result.definitions ?? []} />
-        <Block title="Examples" items={data.result.examples ?? []} />
-        <Block title="Synonyms" items={data.result.synonyms ?? []} inline />
-        <Block title="Antonyms" items={data.result.antonyms ?? []} inline />
-        {data.result.nuanceNote || data.result.gmatUsageNote ? (
+        {(data.simpleDefinition || data.definition || r.simpleDefinition || r.definition) && (
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>Meaning</div>
+            <div className="muted" style={{ whiteSpace: 'pre-wrap' }}>
+              {(data.simpleDefinition || r.simpleDefinition || data.definition || r.definition) ?? ''}
+            </div>
+            {data.definition &&
+            r.definition &&
+            data.definition.trim() !== (data.simpleDefinition || r.simpleDefinition || '').trim() ? (
+              <div style={{ marginTop: 10 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>Full definition</div>
+                <div className="muted" style={{ whiteSpace: 'pre-wrap' }}>
+                  {data.definition}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        )}
+        {examples.length === 2 ? (
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>Examples</div>
+            <ol style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 8 }}>
+              <li className="muted">(Academic) {examples[0]}</li>
+              <li className="muted">(Argument) {examples[1]}</li>
+            </ol>
+          </div>
+        ) : data.exampleSentence || r.exampleSentence || r.examples?.[0] ? (
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>Example</div>
+            <div className="muted" style={{ whiteSpace: 'pre-wrap' }}>
+              {data.exampleSentence || r.exampleSentence || r.examples?.[0]}
+            </div>
+          </div>
+        ) : (
+          <Block title="Examples" items={r.examples ?? []} />
+        )}
+        <Block title="Synonyms" items={synonyms} inline />
+        {tags.length > 0 ? <Block title="Tags" items={tags} inline /> : null}
+        {contrast?.word && contrast.explanation ? (
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>Contrast</div>
+            <div className="muted" style={{ whiteSpace: 'pre-wrap' }}>
+              <strong style={{ color: 'var(--text)' }}>{contrast.word}</strong>
+              {' — '}
+              {contrast.explanation}
+            </div>
+          </div>
+        ) : null}
+        {memoryHook ? (
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>Memory hook</div>
+            <div className="muted" style={{ whiteSpace: 'pre-wrap' }}>
+              {memoryHook}
+            </div>
+          </div>
+        ) : null}
+        <Block title="Definitions (legacy)" items={r.definitions ?? []} />
+        <Block title="Antonyms" items={r.antonyms ?? []} inline />
+        {r.nuanceNote || r.gmatUsageNote ? (
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>
               Notes
             </div>
             <div className="muted" style={{ whiteSpace: 'pre-wrap' }}>
-              {[data.result.nuanceNote, data.result.gmatUsageNote]
-                .filter(Boolean)
-                .join('\n\n')}
+              {[r.nuanceNote, r.gmatUsageNote].filter(Boolean).join('\n\n')}
             </div>
           </div>
         ) : null}

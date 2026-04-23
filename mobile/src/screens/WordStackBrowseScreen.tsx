@@ -59,7 +59,7 @@ export function WordStackBrowseScreen({
             marginBottom: 20,
           }}
         >
-          Curated packs for focused study. Free includes two basic stacks; Pro unlocks the full catalog. Open a pack to
+          Curated packs for focused study. Free includes three stacks; Pro unlocks the full catalog. Open a pack to
           preview words and add them to your deck.
         </Text>
 

@@ -1,6 +1,7 @@
 import {
   addDoc,
   collection,
+  deleteField,
   doc,
   getDoc,
   getDocs,
@@ -61,25 +62,44 @@ export async function saveWord(params: {
     params.result,
   )
 
-  const payload: Omit<WordDoc, 'createdAt' | 'updatedAt'> & {
+  const useNewCardShape =
+    Array.isArray(params.result.examples) && params.result.examples.length === 2
+
+  const legacyExampleFields = useNewCardShape
+    ? {}
+    : {
+        exampleSentence: params.result.exampleSentence,
+        gmatUsageNote: params.result.gmatUsageNote,
+      }
+
+  const legacyStripOnUpdate = useNewCardShape
+    ? { exampleSentence: deleteField(), gmatUsageNote: deleteField() }
+    : {}
+
+  const newShapeFields = useNewCardShape
+    ? {
+        examples: params.result.examples,
+        wordTags: params.result.wordTags ?? [],
+        contrastWord: params.result.contrastWord,
+        memoryHook: params.result.memoryHook ?? '',
+      }
+    : {}
+
+  const contentPayload: Omit<WordDoc, 'createdAt' | 'updatedAt'> & {
     createdAt?: unknown
     updatedAt: unknown
   } = {
-    // legacy field (keep for compatibility; only meaningful for single words)
     word: inferredType === 'word' ? textLower : textLower,
-    // new fields for simplified model
     text: normalizedText,
     textLower,
     type: inferredType,
     definition: params.result.definition ?? '',
     simpleDefinition: params.result.simpleDefinition ?? '',
-    exampleSentence: params.result.exampleSentence,
+    ...legacyExampleFields,
     synonyms: Array.isArray(params.result.synonyms) ? params.result.synonyms : [],
     nuanceNote: params.result.nuanceNote,
-    gmatUsageNote: params.result.gmatUsageNote,
-    status: 'learning',
-    flagged: false,
-    source: 'gpt',
+    ...newShapeFields,
+    source: 'gpt' as const,
     result: params.result,
     ...(translations ? { translations } : {}),
     tags: params.tags ?? [],
@@ -87,12 +107,48 @@ export async function saveWord(params: {
   }
 
   if (!existing.empty) {
+    const prev = existing.docs[0].data() as Record<string, unknown>
     const ref = doc(db, 'users', uid, 'words', existing.docs[0].id)
-    await updateDoc(ref, payload)
+    const mergedWordSource =
+      typeof prev.wordSource === 'string' ? prev.wordSource : ('lookup' as const)
+    const preservedTags = Array.isArray(prev.tags) ? prev.tags : params.tags ?? []
+    await updateDoc(ref, {
+      ...contentPayload,
+      ...legacyStripOnUpdate,
+      tags: preservedTags,
+      wordSource: mergedWordSource,
+      exposureScore:
+        typeof prev.exposureScore === 'number' && Number.isFinite(prev.exposureScore)
+          ? prev.exposureScore
+          : 0,
+      flagged: Boolean(prev.flagged),
+      lastSeenAt: prev.lastSeenAt ?? null,
+      lastAnsweredAt: prev.lastAnsweredAt ?? null,
+      lastCorrect: prev.lastCorrect === true || prev.lastCorrect === false ? prev.lastCorrect : null,
+      seenCount: typeof prev.seenCount === 'number' ? prev.seenCount : undefined,
+      meaningQuizStreak:
+        typeof prev.meaningQuizStreak === 'number' ? prev.meaningQuizStreak : undefined,
+      lastSessionSwipe:
+        prev.lastSessionSwipe === 'weak' || prev.lastSessionSwipe === 'strong'
+          ? prev.lastSessionSwipe
+          : undefined,
+      status: typeof prev.status === 'string' ? prev.status : 'learning',
+    })
     return { id: existing.docs[0].id }
   }
 
-  const ref = await addDoc(wordsCol, { ...payload, createdAt: serverTimestamp() })
+  const payloadNew = {
+    ...contentPayload,
+    status: 'learning',
+    exposureScore: 0,
+    lastSeenAt: null,
+    lastAnsweredAt: null,
+    lastCorrect: null,
+    flagged: false,
+    wordSource: 'lookup' as const,
+  }
+
+  const ref = await addDoc(wordsCol, { ...payloadNew, createdAt: serverTimestamp() })
   return { id: ref.id }
 }
 

@@ -1,26 +1,212 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { onAuthStateChanged } from 'firebase/auth'
 import type { QuizQuestion, VocabItem } from '../../shared/types'
-import { pickSessionBatchFive } from '../../shared/sessionPlanner'
-import { orderQuestionsBySwipeWeakFirst, type SwipeSignal } from '../../shared/sessionQuiz'
-import { getMatchGloss, shuffledCopy } from '../../shared/matchPhase'
+import { formatSessionBatchComposition, pickSessionBatchTwelve } from '../../shared/sessionPlanner'
 import type { SessionWordOutcome } from '../../shared/sessionOutcome'
+import { bucketFromWord, countDeckBuckets, type DeckBucketCounts } from '../../shared/learningBuckets'
+import type { LearningBucket } from '../../shared/types'
 import { auth } from '../lib/firebase'
 import { APP_HOME } from '../lib/routes'
 import { fetchMeaningQuestionsForBatch } from '../lib/quizClient'
-import { applySessionBatchOutcome, listVocabItems } from '../lib/vocab'
-import { DEFAULT_MAIN_LANGUAGE, getMainLanguageLabel, normalizeMainLanguageCode } from '../../shared/languages'
-import { getNativeGloss } from '../../shared/vocab'
+import { applySessionBatchOutcome, listVocabItems, markWordIntroduced } from '../lib/vocab'
 import {
   applyStreakAfterSessionComplete,
   ensureUserProfileDefaults,
   recordDailySessionCompletion,
 } from '../lib/userProfile'
+import { DEFAULT_TIMEZONE } from '../../shared/userProfile'
 
-type Phase = 'loading' | 'learn' | 'match' | 'mcq' | 'summary' | 'empty'
+type Phase = 'loading' | 'intro' | 'mcq' | 'summary' | 'empty'
+
+type QuizFetchStatus = 'idle' | 'pending' | 'ready' | 'error'
+
+function bucketRank(b: LearningBucket): number {
+  if (b === 'new') return 0
+  if (b === 'learning') return 1
+  if (b === 'familiar') return 2
+  return 3
+}
+
+function bucketDeltaText(before: number, after: number): string {
+  const d = after - before
+  if (d === 0) return '±0'
+  return d > 0 ? `+${d}` : `${d}`
+}
+
+const WEB_SUCCESS = 'var(--accent-2)'
+const WEB_DANGER = 'var(--danger)'
+
+function IconMcqCheck({ size, color }: { size: number; color: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden style={{ flexShrink: 0 }}>
+      <path
+        d="M5 13l4 4L19 7"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+function IconMcqClose({ size, color }: { size: number; color: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden style={{ flexShrink: 0 }}>
+      <path
+        d="M6 18L18 6M6 6l12 12"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+function McqStepWeb({
+  question,
+  quizSub,
+  quizPicked,
+  finishing,
+  onQuizPick,
+  onQuizContinue,
+}: {
+  question: QuizQuestion
+  quizSub: 'mcq' | 'feedback'
+  quizPicked: number | null
+  finishing: boolean
+  onQuizPick: (idx: number) => void
+  onQuizContinue: () => void
+}) {
+  const reviewing = quizSub === 'feedback'
+  const correctIdx = question.correctIndex
+  const pickedOk = quizPicked !== null && quizPicked === correctIdx
+
+  return (
+    <div style={{ display: 'grid', gap: 10 }}>
+      <p style={{ fontSize: 17, lineHeight: 1.45, margin: 0 }}>{question.questionText}</p>
+
+      {reviewing ? (
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            minHeight: 52,
+            borderRadius: 12,
+            padding: '0 14px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            backgroundColor: pickedOk
+              ? `color-mix(in srgb, ${WEB_SUCCESS} 17.5%, transparent)`
+              : `color-mix(in srgb, ${WEB_DANGER} 17.5%, transparent)`,
+          }}
+        >
+          {pickedOk ? (
+            <IconMcqCheck size={28} color={WEB_SUCCESS} />
+          ) : (
+            <IconMcqClose size={28} color={WEB_DANGER} />
+          )}
+          <span style={{ fontSize: 19, fontWeight: 800, color: pickedOk ? WEB_SUCCESS : WEB_DANGER }}>
+            {pickedOk ? 'Correct' : 'Not quite'}
+          </span>
+        </div>
+      ) : null}
+
+      <div style={{ display: 'grid', gap: 10 }}>
+        {question.options.map((opt, i) => {
+          const isCorrectRow = i === correctIdx
+          const isWrongPicked = reviewing && quizPicked === i && i !== correctIdx
+
+          let btnStyle: CSSProperties = {
+            width: '100%',
+            textAlign: 'left',
+            padding: '14px 16px',
+            fontSize: 15,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderStyle: 'solid',
+            borderColor: 'var(--border)',
+            background: 'color-mix(in srgb, var(--surface) 70%, transparent)',
+            color: 'var(--text)',
+            cursor: reviewing ? 'default' : 'pointer',
+          }
+
+          if (reviewing) {
+            if (isCorrectRow) {
+              btnStyle = {
+                ...btnStyle,
+                background: `color-mix(in srgb, ${WEB_SUCCESS} 20%, transparent)`,
+                borderColor: WEB_SUCCESS,
+                opacity: 1,
+              }
+            } else if (isWrongPicked) {
+              btnStyle = {
+                ...btnStyle,
+                background: `color-mix(in srgb, ${WEB_DANGER} 20%, transparent)`,
+                borderColor: WEB_DANGER,
+                opacity: 1,
+              }
+            } else {
+              btnStyle = {
+                ...btnStyle,
+                borderColor: 'transparent',
+                opacity: 0.6,
+              }
+            }
+          }
+
+          return (
+            <button
+              key={i}
+              type="button"
+              style={btnStyle}
+              onClick={() => onQuizPick(i)}
+              disabled={reviewing}
+            >
+              <span style={{ flex: 1 }}>{opt}</span>
+              {reviewing && isCorrectRow ? (
+                <IconMcqCheck size={20} color={WEB_SUCCESS} />
+              ) : reviewing && isWrongPicked ? (
+                <IconMcqClose size={20} color={WEB_DANGER} />
+              ) : null}
+            </button>
+          )
+        })}
+      </div>
+
+      {reviewing ? (
+        <>
+          <p className="muted" style={{ fontSize: 14, margin: 0 }}>
+            {question.explanation}
+          </p>
+          <button
+            type="button"
+            className="btn btnPrimary"
+            style={{ marginTop: 4, padding: '12px 20px', fontSize: 16 }}
+            onClick={() => void onQuizContinue()}
+            disabled={finishing}
+          >
+            {finishing ? 'Saving…' : 'Next'}
+          </button>
+        </>
+      ) : null}
+    </div>
+  )
+}
 
 export function SessionPage() {
+  const [sessionInstance, setSessionInstance] = useState(0)
+  return <SessionPageInner key={sessionInstance} onRequestNewSession={() => setSessionInstance((n) => n + 1)} />
+}
+
+function SessionPageInner({ onRequestNewSession }: { onRequestNewSession?: () => void }) {
   const navigate = useNavigate()
   const [userReady, setUserReady] = useState(false)
   const [initError, setInitError] = useState<string | null>(null)
@@ -29,9 +215,9 @@ export function SessionPage() {
   const itemsById = useMemo(() => new Map(batch.map((w) => [w.id, w])), [batch])
 
   const [phase, setPhase] = useState<Phase>('loading')
-  const [learnIndex, setLearnIndex] = useState(0)
-  const swipeByIdRef = useRef<Map<string, SwipeSignal>>(new Map())
-  const [weakSwipeCount, setWeakSwipeCount] = useState(0)
+  const [introIds, setIntroIds] = useState<string[]>([])
+  const [introIndex, setIntroIndex] = useState(0)
+  const [introSubmitting, setIntroSubmitting] = useState(false)
 
   const [mcqQuestions, setMcqQuestions] = useState<QuizQuestion[]>([])
   const [quizIdx, setQuizIdx] = useState(0)
@@ -39,23 +225,26 @@ export function SessionPage() {
   const [quizPicked, setQuizPicked] = useState<number | null>(null)
   const [mcqCorrectById, setMcqCorrectById] = useState<Map<string, boolean>>(new Map())
 
-  const [matchRows, setMatchRows] = useState<{ id: string; gloss: string }[]>([])
-  const [matchChips, setMatchChips] = useState<{ id: string; text: string }[]>([])
-  const [matchAssignments, setMatchAssignments] = useState<(string | null)[]>([])
-  const [selectedChipId, setSelectedChipId] = useState<string | null>(null)
-  const [matchChecked, setMatchChecked] = useState(false)
-  const [matchCorrectCount, setMatchCorrectCount] = useState(0)
-
   const [finishing, setFinishing] = useState(false)
   const [finishError, setFinishError] = useState<string | null>(null)
   const [streakAfter, setStreakAfter] = useState<number | null>(null)
-  const [mainLanguage, setMainLanguage] = useState(DEFAULT_MAIN_LANGUAGE)
+  const [deckBefore, setDeckBefore] = useState<DeckBucketCounts | null>(null)
+  const [deckAfter, setDeckAfter] = useState<DeckBucketCounts | null>(null)
+  const [streakAtSessionStart, setStreakAtSessionStart] = useState<number | null>(null)
+  const [postSessionVocabItems, setPostSessionVocabItems] = useState<VocabItem[] | null>(null)
+  const [sessionTimezone, setSessionTimezone] = useState(DEFAULT_TIMEZONE)
+
+  const [quizFetchStatus, setQuizFetchStatus] = useState<QuizFetchStatus>('idle')
+  const [quizFetchError, setQuizFetchError] = useState<string | null>(null)
+  const [compositionPreview, setCompositionPreview] = useState('')
+  const quizFetchGenRef = useRef(0)
 
   const batchSize = batch.length
-  const currentLearnWord = batch[learnIndex]
+  const currentIntroId = introIds[introIndex]
+  const currentIntroWord = currentIntroId ? itemsById.get(currentIntroId) : undefined
   const currentQuizQ = mcqQuestions[quizIdx]
 
-  const sessionInProgress = phase === 'learn' || phase === 'match' || phase === 'mcq'
+  const sessionInProgress = phase === 'intro' || phase === 'mcq'
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
@@ -63,23 +252,6 @@ export function SessionPage() {
       if (!u) setInitError('Please sign in to run a session.')
     })
     return () => unsub()
-  }, [])
-
-  useEffect(() => {
-    if (!auth.currentUser) return
-    void ensureUserProfileDefaults()
-      .then((p) => setMainLanguage(normalizeMainLanguageCode(p.mainLanguage)))
-      .catch(() => {})
-  }, [userReady])
-
-  useEffect(() => {
-    const reload = () => {
-      void ensureUserProfileDefaults()
-        .then((p) => setMainLanguage(normalizeMainLanguageCode(p.mainLanguage)))
-        .catch(() => {})
-    }
-    window.addEventListener('gmat-vocab-profile-updated', reload)
-    return () => window.removeEventListener('gmat-vocab-profile-updated', reload)
   }, [])
 
   useEffect(() => {
@@ -91,6 +263,42 @@ export function SessionPage() {
     return () => window.removeEventListener('beforeunload', onBeforeUnload)
   }, [sessionInProgress])
 
+  const runQuizFetchForBatch = useCallback((pickIds: string[], orderedLen: number) => {
+    quizFetchGenRef.current += 1
+    const gen = quizFetchGenRef.current
+    void fetchMeaningQuestionsForBatch(pickIds)
+      .then((questions) => {
+        if (gen !== quizFetchGenRef.current) return
+        if (questions.length !== orderedLen) {
+          setQuizFetchStatus('error')
+          setQuizFetchError('Could not prepare all session questions. Please try again.')
+          return
+        }
+        const byId = new Map(questions.map((q) => [q.itemId, q]))
+        const orderedQs = pickIds.map((id) => byId.get(id)).filter(Boolean) as QuizQuestion[]
+        if (orderedQs.length !== orderedLen) {
+          setQuizFetchStatus('error')
+          setQuizFetchError('Could not prepare all session questions. Please try again.')
+          return
+        }
+        setMcqQuestions(orderedQs)
+        setQuizFetchStatus('ready')
+      })
+      .catch((e) => {
+        if (gen !== quizFetchGenRef.current) return
+        setQuizFetchStatus('error')
+        setQuizFetchError(e instanceof Error ? e.message : 'Quiz failed')
+      })
+  }, [])
+
+  const retryQuizFetch = useCallback(() => {
+    const ids = batch.map((w) => w.id)
+    if (ids.length === 0) return
+    setQuizFetchStatus('pending')
+    setQuizFetchError(null)
+    runQuizFetchForBatch(ids, ids.length)
+  }, [batch, runQuizFetchForBatch])
+
   useEffect(() => {
     if (!userReady || !auth.currentUser) return
     let cancelled = false
@@ -100,31 +308,54 @@ export function SessionPage() {
       try {
         const all = await listVocabItems()
         if (cancelled) return
-        const picked = pickSessionBatchFive(all)
-        if (picked.length === 0) {
+        const profile = await ensureUserProfileDefaults()
+        const tz = profile.timezone || DEFAULT_TIMEZONE
+        const pick = pickSessionBatchTwelve(all, { nowMs: Date.now(), userTimezone: tz })
+        if (pick.ids.length === 0) {
           setBatch([])
           setPhase('empty')
+          setQuizFetchStatus('idle')
+          setPostSessionVocabItems(null)
+          setStreakAtSessionStart(null)
           setVocabLoading(false)
           return
         }
-        const ids = picked.map((w) => w.id)
-        const questions = await fetchMeaningQuestionsForBatch(ids)
-        if (cancelled) return
-        if (questions.length !== picked.length) {
-          throw new Error('Could not prepare all session questions. Please try again.')
+        const byIdAll = new Map(all.map((w) => [w.id, w]))
+        const ordered: VocabItem[] = []
+        for (const id of pick.ids) {
+          const w = byIdAll.get(id)
+          if (w) ordered.push(w)
         }
-        const byId = new Map(questions.map((q) => [q.itemId, q]))
-        const orderedQs = ids.map((id) => byId.get(id)).filter(Boolean) as QuizQuestion[]
-        setBatch(picked)
-        setMcqQuestions(orderedQs)
-        setPhase('learn')
-        setLearnIndex(0)
-        setWeakSwipeCount(0)
-        swipeByIdRef.current = new Map()
+        if (ordered.length === 0) {
+          setBatch([])
+          setPhase('empty')
+          setQuizFetchStatus('idle')
+          setPostSessionVocabItems(null)
+          setStreakAtSessionStart(null)
+          setVocabLoading(false)
+          return
+        }
+
+        setDeckBefore(countDeckBuckets(all))
+        setStreakAtSessionStart(profile.streakCurrent ?? null)
+        setSessionTimezone(tz)
+        setPostSessionVocabItems(null)
+        setBatch(ordered)
+        setMcqQuestions([])
+        setCompositionPreview(formatSessionBatchComposition(pick.slots))
+        const intros = pick.slots.filter((s) => s.role === 'new').map((s) => s.id)
+        setIntroIds(intros)
+        setIntroIndex(0)
         setMcqCorrectById(new Map())
         setQuizIdx(0)
         setQuizSub('mcq')
         setQuizPicked(null)
+        setDeckAfter(null)
+        setQuizFetchStatus('pending')
+        setQuizFetchError(null)
+        setPhase(intros.length > 0 ? 'intro' : 'mcq')
+
+        runQuizFetchForBatch(pick.ids, ordered.length)
       } catch (e) {
         if (!cancelled) {
           setInitError(e instanceof Error ? e.message : 'Failed to load vocabulary')
@@ -135,55 +366,9 @@ export function SessionPage() {
     })()
     return () => {
       cancelled = true
+      quizFetchGenRef.current += 1
     }
-  }, [userReady])
-
-  useEffect(() => {
-    if (phase !== 'match' || batch.length === 0) return
-    const rows = shuffledCopy(batch.map((w) => ({ id: w.id, gloss: getMatchGloss(w) })))
-    const chips = shuffledCopy(batch.map((w) => ({ id: w.id, text: w.text })))
-    setMatchRows(rows)
-    setMatchChips(chips)
-    setMatchAssignments(rows.map(() => null))
-    setSelectedChipId(null)
-    setMatchChecked(false)
-    setMatchCorrectCount(0)
-  }, [phase, batch])
-
-  const goMatch = useCallback(() => setPhase('match'), [])
-
-  const goMcq = useCallback(() => {
-    const swipeMap = swipeByIdRef.current
-    setMcqQuestions((prev) => orderQuestionsBySwipeWeakFirst(prev, swipeMap))
-    setQuizIdx(0)
-    setQuizSub('mcq')
-    setQuizPicked(null)
-    setMcqCorrectById(new Map())
-    setPhase('mcq')
-  }, [])
-
-  const onLearnChoice = (signal: SwipeSignal) => {
-    const w = batch[learnIndex]
-    if (!w) return
-    swipeByIdRef.current.set(w.id, signal)
-    if (signal === 'weak') setWeakSwipeCount((c) => c + 1)
-    if (learnIndex + 1 < batch.length) {
-      setLearnIndex((i) => i + 1)
-    } else {
-      goMatch()
-    }
-  }
-
-  const finishMatchAndCheck = () => {
-    let correct = 0
-    for (let i = 0; i < matchRows.length; i++) {
-      const rowId = matchRows[i]!.id
-      const assigned = matchAssignments[i]
-      if (assigned === rowId) correct++
-    }
-    setMatchCorrectCount(correct)
-    setMatchChecked(true)
-  }
+  }, [userReady, runQuizFetchForBatch])
 
   const finishSession = useCallback(async () => {
     setFinishing(true)
@@ -191,13 +376,17 @@ export function SessionPage() {
     try {
       const outcomes: SessionWordOutcome[] = batch.map((w) => ({
         id: w.id,
-        swipe: swipeByIdRef.current.get(w.id) ?? 'strong',
+        swipe: 'strong',
         mcqCorrect: mcqCorrectById.get(w.id) ?? false,
       }))
       await applySessionBatchOutcome(itemsById, outcomes)
       const profile = await applyStreakAfterSessionComplete()
       await recordDailySessionCompletion('daily_vocab')
       setStreakAfter(profile.streakCurrent)
+
+      const allAfter = await listVocabItems()
+      setPostSessionVocabItems(allAfter)
+      setDeckAfter(countDeckBuckets(allAfter))
       setPhase('summary')
     } catch (e) {
       setFinishError(e instanceof Error ? e.message : 'Could not save session')
@@ -230,21 +419,48 @@ export function SessionPage() {
     }
   }
 
-  const mcqCorrectTotal = useMemo(() => {
-    let n = 0
-    for (const w of batch) {
-      if (mcqCorrectById.get(w.id)) n++
+  const onIntroGotIt = async () => {
+    const w = currentIntroWord
+    if (!w || introSubmitting) return
+    setIntroSubmitting(true)
+    try {
+      await markWordIntroduced(w.id)
+      if (introIndex + 1 < introIds.length) {
+        setIntroIndex((i) => i + 1)
+      } else {
+        setPhase('mcq')
+      }
+    } catch (e) {
+      setInitError(e instanceof Error ? e.message : 'Could not save intro')
+    } finally {
+      setIntroSubmitting(false)
     }
-    return n
-  }, [batch, mcqCorrectById])
+  }
 
-  const stillNeedWork = useMemo(() => {
-    let n = 0
+  const movedUpWords = useMemo(() => {
+    if (!postSessionVocabItems?.length) return []
+    const byId = new Map(postSessionVocabItems.map((w) => [w.id, w]))
+    const out: VocabItem[] = []
     for (const w of batch) {
-      if (!mcqCorrectById.get(w.id)) n++
+      const w1 = byId.get(w.id)
+      if (!w1) continue
+      if (bucketRank(bucketFromWord(w1)) > bucketRank(bucketFromWord(w))) out.push(w1)
     }
-    return n
-  }, [batch, mcqCorrectById])
+    return out
+  }, [batch, postSessionVocabItems])
+
+  const canStartAnotherSession = useMemo(() => {
+    if (!postSessionVocabItems?.length) return false
+    return (
+      pickSessionBatchTwelve(postSessionVocabItems, {
+        nowMs: Date.now(),
+        userTimezone: sessionTimezone,
+      }).ids.length > 0
+    )
+  }, [postSessionVocabItems, sessionTimezone])
+
+  const streakIncreased =
+    streakAfter != null && streakAtSessionStart != null && streakAfter > streakAtSessionStart
 
   function confirmLeave() {
     if (!sessionInProgress) {
@@ -259,12 +475,12 @@ export function SessionPage() {
   const headerRight =
     phase === 'summary'
       ? 'Done'
-      : phase === 'learn'
-        ? `${learnIndex + 1} / ${batchSize}`
-        : phase === 'match'
-          ? 'Match'
+      : phase === 'intro' && introIds.length > 0
+        ? `${introIndex + 1} / ${introIds.length}`
+        : phase === 'mcq' && quizFetchStatus === 'ready' && mcqQuestions.length > 0
+          ? `${quizIdx + 1} / ${mcqQuestions.length}`
           : phase === 'mcq'
-            ? `${quizIdx + 1} / ${mcqQuestions.length}`
+            ? 'Quiz'
             : ''
 
   if (!userReady) {
@@ -337,110 +553,14 @@ export function SessionPage() {
       ) : null}
 
       <div className="container" style={{ flex: 1, paddingTop: 20, paddingBottom: 32, maxWidth: 560 }}>
-        {phase === 'learn' && currentLearnWord ? (
-          <LearnCardWeb mainLanguage={mainLanguage} word={currentLearnWord} onChoice={onLearnChoice} />
-        ) : null}
-
-        {phase === 'match' ? (
-          <div style={{ display: 'grid', gap: 16 }}>
-            <div className="muted" style={{ fontSize: 12, fontWeight: 700, letterSpacing: 0.6 }}>
-              MATCH
-            </div>
-            <p style={{ margin: 0 }}>Tap a word, then tap the blank it fits.</p>
-            {matchRows.map((row, idx) => {
-              const assignedId = matchAssignments[idx]
-              const assignedWord = assignedId ? itemsById.get(assignedId) : undefined
-              const showOk = matchChecked && assignedId === row.id
-              const showBad = matchChecked && assignedId !== null && assignedId !== row.id
-              return (
-                <button
-                  key={row.id}
-                  type="button"
-                  className="btn"
-                  onClick={() => {
-                    if (matchChecked) return
-                    if (selectedChipId) {
-                      setMatchAssignments((prev) => {
-                        const next = [...prev]
-                        const oldIdx = next.findIndex((x, i) => i !== idx && x === selectedChipId)
-                        if (oldIdx >= 0) next[oldIdx] = null
-                        next[idx] = selectedChipId
-                        return next
-                      })
-                      setSelectedChipId(null)
-                    } else if (assignedId) {
-                      setMatchAssignments((prev) => {
-                        const next = [...prev]
-                        next[idx] = null
-                        return next
-                      })
-                    }
-                  }}
-                  style={{
-                    textAlign: 'left',
-                    borderColor: showOk ? 'var(--success, #22c55e)' : showBad ? 'var(--danger)' : undefined,
-                  }}
-                >
-                  <strong>{assignedWord ? assignedWord.text : '_____'}</strong>
-                  {': '}
-                  {row.gloss}
-                </button>
-              )
-            })}
-            <div className="muted" style={{ fontSize: 12, fontWeight: 700, letterSpacing: 0.6 }}>
-              WORD BANK
-            </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {matchChips.map((c) => {
-                const placed = matchAssignments.includes(c.id)
-                const selected = selectedChipId === c.id
-                if (placed) return null
-                return (
-                  <button
-                    key={c.id}
-                    type="button"
-                    className="btn"
-                    onClick={() => {
-                      if (matchChecked) return
-                      setSelectedChipId((prev) => (prev === c.id ? null : c.id))
-                    }}
-                    style={{
-                      borderRadius: 20,
-                      background: selected ? 'var(--accent-gradient-end)' : undefined,
-                      color: selected ? '#fff' : undefined,
-                    }}
-                  >
-                    {c.text}
-                  </button>
-                )
-              })}
-            </div>
-            {!matchChecked ? (
-              <button
-                type="button"
-                className="btn btnPrimary"
-                disabled={!matchAssignments.every((a) => a !== null)}
-                onClick={finishMatchAndCheck}
-              >
-                {matchAssignments.every((a) => a !== null) ? 'Check answers' : 'Fill all blanks first'}
-              </button>
-            ) : (
-              <div style={{ display: 'grid', gap: 12 }}>
-                <p style={{ margin: 0 }}>
-                  {matchCorrectCount === matchRows.length ? (
-                    <span style={{ color: 'var(--success, #22c55e)', fontWeight: 700 }}>Perfect match.</span>
-                  ) : (
-                    <span>
-                      <strong>{matchCorrectCount}</strong> of {matchRows.length} correct
-                    </span>
-                  )}
-                </p>
-                <button type="button" className="btn btnPrimary" onClick={goMcq}>
-                  Continue to quiz
-                </button>
-              </div>
-            )}
-          </div>
+        {phase === 'intro' && currentIntroWord ? (
+          <IntroCardWeb
+            word={currentIntroWord}
+            newWordCurrent={introIndex + 1}
+            newWordTotal={introIds.length}
+            onGotIt={() => void onIntroGotIt()}
+            busy={introSubmitting}
+          />
         ) : null}
 
         {phase === 'mcq' ? (
@@ -448,93 +568,167 @@ export function SessionPage() {
             <div className="muted" style={{ fontSize: 12, fontWeight: 700, letterSpacing: 0.6 }}>
               QUIZ
             </div>
-            {!currentQuizQ ? (
+            {quizFetchStatus === 'pending' ? (
+              <div style={{ display: 'grid', gap: 12, padding: '8px 0' }}>
+                <p style={{ margin: 0, fontSize: 17, fontWeight: 800, color: 'var(--text)' }}>
+                  Preparing your {batchSize} words
+                </p>
+                <p className="muted" style={{ margin: 0, fontSize: 15, lineHeight: 1.45 }}>
+                  {compositionPreview}
+                </p>
+                <div className="sessionPrepShell" aria-hidden style={{ marginTop: 8 }}>
+                  <div className="lookupSkeleton" style={{ width: '58%' }} />
+                  <div className="lookupSkeleton" style={{ width: '100%' }} />
+                </div>
+                <p className="muted" style={{ margin: 0, fontSize: 14 }}>
+                  Building your quiz…
+                </p>
+              </div>
+            ) : quizFetchStatus === 'error' ? (
+              <div style={{ display: 'grid', gap: 12 }}>
+                <p style={{ margin: 0, fontSize: 15, color: 'var(--danger)' }}>
+                  {quizFetchError ?? 'Quiz could not be loaded.'}
+                </p>
+                <button type="button" className="btn btnPrimary" style={{ justifySelf: 'start' }} onClick={retryQuizFetch}>
+                  Retry
+                </button>
+              </div>
+            ) : quizFetchStatus === 'ready' && currentQuizQ ? (
+              <McqStepWeb
+                question={currentQuizQ}
+                quizSub={quizSub}
+                quizPicked={quizPicked}
+                finishing={finishing}
+                onQuizPick={onQuizPick}
+                onQuizContinue={() => void onQuizContinue()}
+              />
+            ) : quizFetchStatus === 'ready' ? (
               <p className="muted">No quiz questions.</p>
-            ) : (
-              <>
-                {quizSub === 'mcq' ? (
-                  <>
-                    <p style={{ fontSize: 17, lineHeight: 1.45, margin: 0 }}>{currentQuizQ.questionText}</p>
-                    <div style={{ display: 'grid', gap: 10, marginTop: 8 }}>
-                      {currentQuizQ.options.map((opt, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          className="btn"
-                          style={{
-                            textAlign: 'left',
-                            padding: '14px 16px',
-                            fontSize: 15,
-                          }}
-                          onClick={() => onQuizPick(i)}
-                          disabled={quizSub !== 'mcq'}
-                        >
-                          {opt}
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <p style={{ fontSize: 15, margin: 0 }}>
-                      {quizPicked === currentQuizQ.correctIndex ? (
-                        <span style={{ color: 'var(--success, #22c55e)', fontWeight: 700 }}>Correct.</span>
-                      ) : (
-                        <span>
-                          Correct: <strong>{currentQuizQ.options[currentQuizQ.correctIndex]}</strong>
-                        </span>
-                      )}
-                    </p>
-                    <p className="muted" style={{ fontSize: 14, marginTop: 8 }}>
-                      {currentQuizQ.explanation}
-                    </p>
-                    <button
-                      type="button"
-                      className="btn btnPrimary"
-                      style={{ marginTop: 12, padding: '12px 20px', fontSize: 16 }}
-                      onClick={() => void onQuizContinue()}
-                      disabled={finishing}
-                    >
-                      {finishing ? 'Saving…' : 'Continue'}
-                    </button>
-                  </>
-                )}
-              </>
-            )}
+            ) : null}
           </div>
         ) : null}
 
         {phase === 'summary' ? (
-          <div className="sessionStepFade" style={{ display: 'grid', gap: 16, justifyItems: 'start' }}>
-            <div className="sessionCompleteGlow" aria-hidden>
-              ✨
-            </div>
+          <div className="sessionStepFade" style={{ display: 'grid', gap: 20, justifyItems: 'stretch', width: '100%' }}>
             <h1 style={{ margin: 0, fontSize: 26, fontWeight: 800 }}>Session complete</h1>
-            <p className="muted" style={{ margin: 0, fontSize: 16, lineHeight: 1.6 }}>
-              {batchSize} words reviewed
-              <br />
-              {weakSwipeCount} felt unfamiliar
-              <br />
-              {matchCorrectCount}/{batchSize} match correct
-              <br />
-              {mcqCorrectTotal}/{batchSize} quiz correct
-              <br />
-              {stillNeedWork} still need work
-            </p>
-            {finishError ? <p style={{ color: 'var(--danger)' }}>{finishError}</p> : null}
-            {streakAfter !== null ? (
-              <p style={{ fontSize: 16 }}>
-                Current streak: <strong>{streakAfter}</strong> day{streakAfter === 1 ? '' : 's'}
-              </p>
+
+            {deckBefore && deckAfter ? (
+              <div style={{ display: 'grid', gap: 12 }}>
+                <div style={{ fontSize: 13, fontWeight: 700 }}>Your deck</div>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(132px, 1fr))',
+                    gap: 10,
+                  }}
+                >
+                  {(
+                    [
+                      ['New', deckBefore.new, deckAfter.new],
+                      ['Learning', deckBefore.learning, deckAfter.learning],
+                      ['Familiar', deckBefore.familiar, deckAfter.familiar],
+                      ['Mastered', deckBefore.mastered, deckAfter.mastered],
+                    ] as const
+                  ).map(([label, before, after]) => {
+                    const delta = after - before
+                    const deltaColor =
+                      delta > 0 ? 'var(--accent-2)' : delta < 0 ? 'var(--danger)' : 'var(--muted)'
+                    return (
+                      <div
+                        key={label}
+                        style={{
+                          padding: 12,
+                          borderRadius: 12,
+                          border: '1px solid var(--border)',
+                          background: 'var(--surface)',
+                        }}
+                      >
+                        <div className="muted" style={{ fontSize: 11, fontWeight: 700, marginBottom: 8 }}>
+                          {label}
+                        </div>
+                        <div style={{ fontSize: 14, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+                          <span style={{ fontVariantNumeric: 'tabular-nums' }}>{before}</span>
+                          <span className="muted"> → </span>
+                          <span style={{ fontVariantNumeric: 'tabular-nums' }}>{after}</span>
+                        </div>
+                        <div style={{ fontSize: 13, fontWeight: 700, marginTop: 6, color: deltaColor, fontVariantNumeric: 'tabular-nums' }}>
+                          {bucketDeltaText(before, after)}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
             ) : null}
-            <button
-              type="button"
-              className="btn btnPrimary"
-              style={{ justifySelf: 'start', padding: '12px 20px', fontSize: 16 }}
-              onClick={() => navigate(APP_HOME)}
-            >
-              End session
-            </button>
+
+            <div style={{ display: 'grid', gap: 8 }}>
+              <div style={{ fontSize: 15, fontWeight: 800 }}>
+                {movedUpWords.length > 0
+                  ? `${movedUpWords.length} word${movedUpWords.length === 1 ? '' : 's'} moved up`
+                  : 'Promotions'}
+              </div>
+              {movedUpWords.length === 0 ? (
+                <p className="muted" style={{ margin: 0, fontSize: 14, lineHeight: 1.45 }}>
+                  No promotions this session — keep practicing.
+                </p>
+              ) : (
+                <div style={{ display: 'grid', gap: 6 }}>
+                  {movedUpWords.map((w) => (
+                    <Link
+                      key={w.id}
+                      to={`/words/${encodeURIComponent(w.id)}`}
+                      style={{
+                        padding: '10px 12px',
+                        borderRadius: 10,
+                        border: '1px solid var(--border)',
+                        background: 'var(--surface)',
+                        fontSize: 16,
+                        fontWeight: 700,
+                        color: 'var(--accent-gradient-end)',
+                        textDecoration: 'none',
+                      }}
+                    >
+                      {w.text}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {finishError ? <p style={{ color: 'var(--danger)' }}>{finishError}</p> : null}
+
+            {streakIncreased && streakAfter !== null ? (
+              <div
+                style={{
+                  justifySelf: 'start',
+                  padding: '6px 10px',
+                  borderRadius: 999,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  fontVariantNumeric: 'tabular-nums',
+                  background: 'color-mix(in srgb, var(--accent-gradient-end) 15%, transparent)',
+                  color: 'var(--accent-gradient-end)',
+                }}
+              >
+                Streak: {streakAfter} days
+              </div>
+            ) : null}
+
+            <div style={{ display: 'grid', gap: 10 }}>
+              <button
+                type="button"
+                className="btn btnPrimary"
+                style={{ padding: '12px 20px', fontSize: 16 }}
+                onClick={() => navigate(APP_HOME)}
+              >
+                Back to Today
+              </button>
+              {canStartAnotherSession && onRequestNewSession ? (
+                <button type="button" className="btn" style={{ padding: '12px 20px', fontSize: 16 }} onClick={onRequestNewSession}>
+                  Start another session
+                </button>
+              ) : null}
+            </div>
           </div>
         ) : null}
       </div>
@@ -542,154 +736,106 @@ export function SessionPage() {
   )
 }
 
-function LearnCardWeb({
-  mainLanguage,
+function IntroCardWeb({
   word,
-  onChoice,
+  newWordCurrent,
+  newWordTotal,
+  onGotIt,
+  busy,
 }: {
-  mainLanguage: string
   word: VocabItem
-  onChoice: (s: SwipeSignal) => void
+  newWordCurrent?: number
+  newWordTotal?: number
+  onGotIt: () => void
+  busy: boolean
 }) {
-  const example = word.exampleSentence?.trim()
-  const nativeGloss = getNativeGloss(word, mainLanguage)
-  const languageTitle = useMemo(() => {
-    const full = getMainLanguageLabel(mainLanguage)
-    const cut = full.indexOf(' (')
-    return cut >= 0 ? full.slice(0, cut) : full
-  }, [mainLanguage])
-  const typeLabel = word.type === 'phrase' ? 'PHRASE' : 'WORD'
-  const simpleLine = (word.simpleDefinition || word.definition || '').trim()
-  const longDef =
-    word.definition && word.simpleDefinition && word.definition.trim() !== word.simpleDefinition.trim()
-      ? word.definition.trim()
-      : null
+  const def = (word.definition || '').trim()
+  const simple = (word.simpleDefinition || word.definition || '').trim()
+  const hook = (word.memoryHook || '').trim()
+  const showProgress =
+    typeof newWordCurrent === 'number' &&
+    typeof newWordTotal === 'number' &&
+    newWordTotal > 1 &&
+    newWordCurrent >= 1
 
   return (
-    <div style={{ display: 'grid', gap: 18 }}>
-      <div className="muted" style={{ fontSize: 12, fontWeight: 700, letterSpacing: 0.6 }}>
-        LEARN
+    <div className="sessionStepFade" style={{ display: 'grid', gap: 0 }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          gap: 12,
+          flexWrap: 'wrap',
+        }}
+      >
+        <span
+          style={{
+            display: 'inline-block',
+            padding: '3px 6px',
+            borderRadius: 6,
+            fontSize: 11,
+            fontWeight: 800,
+            letterSpacing: '0.06em',
+            textTransform: 'uppercase',
+            color: '#fff',
+            background: 'linear-gradient(135deg, var(--accent-gradient-start), var(--accent-gradient-end))',
+          }}
+        >
+          NEW WORD
+        </span>
+        {showProgress ? (
+          <span className="muted" style={{ fontSize: 12, fontWeight: 600, marginLeft: 'auto', textAlign: 'right' }}>
+            New word {newWordCurrent} of {newWordTotal}
+          </span>
+        ) : null}
       </div>
-      <p style={{ margin: 0, fontSize: 14, color: 'var(--muted)' }}>I know this → · ← I don&apos;t know</p>
-      <div className="learnFlashZone">
-        <div className="learnFlashAmbient" />
-        <div className="learnFlashPremium" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 0 }}>
-          <div>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: 14,
-                fontSize: 10,
-                fontWeight: 800,
-                letterSpacing: '0.1em',
-                color: 'var(--muted)',
-              }}
-            >
-              <span>{typeLabel}</span>
-              <span>FLASHCARD</span>
+
+      <p className="muted" style={{ margin: '10px 0 22px', fontSize: 13, lineHeight: 1.45 }}>
+        First time learning this — no test yet
+      </p>
+
+      <h2 style={{ margin: '0 0 20px', fontSize: 32, fontWeight: 800, lineHeight: 1.15, color: 'var(--text)' }}>
+        {word.text}
+      </h2>
+
+      <div style={{ display: 'grid', gap: 18 }}>
+        {def ? (
+          <div style={{ display: 'grid', gap: 6 }}>
+            <div className="muted" style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.04em' }}>
+              DEFINITION
             </div>
-            <h2 className="learnFlashWord" style={{ margin: 0, fontSize: 28, letterSpacing: '-0.02em' }}>
-              {word.text}
-            </h2>
-            <div style={{ height: 1, background: 'var(--border)', margin: '16px 0', opacity: 0.85 }} />
+            <p style={{ margin: 0, fontSize: 15, lineHeight: 1.5 }}>{def}</p>
           </div>
-          {simpleLine ? (
-            <div style={{ marginBottom: 12 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', marginBottom: 6, letterSpacing: '0.05em' }}>MEANING</div>
-              <p style={{ margin: 0, fontSize: 16, lineHeight: 1.5 }}>{simpleLine}</p>
+        ) : null}
+        {simple && simple !== def ? (
+          <div style={{ display: 'grid', gap: 6 }}>
+            <div className="muted" style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.04em' }}>
+              SIMPLE
             </div>
-          ) : null}
-          {longDef ? (
-            <div style={{ marginBottom: 12 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', marginBottom: 6, letterSpacing: '0.05em' }}>
-                FULL DEFINITION
-              </div>
-              <p style={{ margin: 0, fontSize: 15, lineHeight: 1.45 }}>{longDef}</p>
-            </div>
-          ) : null}
-          {nativeGloss ? (
-            <div style={{ marginBottom: 12 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', marginBottom: 6, letterSpacing: '0.05em' }}>{languageTitle}</div>
-              <p className="muted" style={{ margin: 0, fontSize: 15, lineHeight: 1.5, fontStyle: 'italic' }}>
-                {nativeGloss}
-              </p>
-            </div>
-          ) : null}
-          {example ? (
-            <blockquote
-              style={{
-                margin: '4px 0 12px',
-                padding: '10px 12px',
-                borderLeft: '3px solid var(--accent-gradient-end)',
-                borderRadius: 10,
-                background: 'color-mix(in srgb, var(--surface-2) 84%, transparent)',
-                color: 'var(--muted)',
-                fontSize: 14,
-                lineHeight: 1.5,
-                fontStyle: 'italic',
-              }}
-            >
-              &quot;{example}&quot;
-            </blockquote>
-          ) : null}
-          {(word.synonyms?.length ?? 0) > 0 ? (
-            <div style={{ marginBottom: 12 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', marginBottom: 8, letterSpacing: '0.05em' }}>SYNONYMS</div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {(word.synonyms ?? []).map((syn, idx) => (
-                  <span
-                    key={`${syn}-${idx}`}
-                    style={{
-                      borderRadius: 999,
-                      border: '1px solid var(--border)',
-                      padding: '5px 10px',
-                      fontSize: 13,
-                    }}
-                  >
-                    {syn}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ) : null}
-          {word.nuanceNote ? (
-            <p style={{ margin: '0 0 8px', fontSize: 14, lineHeight: 1.5 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', display: 'block', marginBottom: 4 }}>NUANCE</span>
-              {word.nuanceNote}
-            </p>
-          ) : null}
-          {word.gmatUsageNote ? (
-            <p style={{ margin: '0 0 8px', fontSize: 14, lineHeight: 1.5 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', display: 'block', marginBottom: 4 }}>GMAT USAGE</span>
-              {word.gmatUsageNote}
-            </p>
-          ) : null}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              marginTop: 16,
-              paddingTop: 14,
-              borderTop: '1px solid var(--border)',
-              fontSize: 12,
-              fontWeight: 700,
-            }}
-          >
-            <span style={{ color: 'var(--danger)' }}>← Don&apos;t know</span>
-            <span style={{ color: 'var(--success, #22c55e)' }}>Know →</span>
+            <p style={{ margin: 0, fontSize: 15, lineHeight: 1.5 }}>{simple}</p>
           </div>
-        </div>
+        ) : null}
+        {hook ? (
+          <div style={{ display: 'grid', gap: 6 }}>
+            <div className="muted" style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.04em' }}>
+              MEMORY HOOK
+            </div>
+            <p style={{ margin: 0, fontSize: 15, lineHeight: 1.5 }}>{hook}</p>
+          </div>
+        ) : null}
       </div>
-      <div style={{ display: 'grid', gap: 10, gridTemplateColumns: '1fr 1fr' }}>
-        <button type="button" className="btn" onClick={() => onChoice('weak')}>
-          Don&apos;t know
-        </button>
-        <button type="button" className="btn btnPrimary" onClick={() => onChoice('strong')}>
-          I know this
-        </button>
-      </div>
+
+      <button
+        type="button"
+        className="btn btnPrimary"
+        style={{ marginTop: 20, padding: '14px 20px', fontSize: 16, justifySelf: 'stretch' }}
+        onClick={onGotIt}
+        disabled={busy}
+      >
+        {busy ? 'Saving…' : 'Got it'}
+      </button>
     </div>
   )
 }

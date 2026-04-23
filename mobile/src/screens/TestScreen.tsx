@@ -10,8 +10,9 @@ import {
   isLearnDarkUi,
   useGlassFonts,
 } from '../components/GlassUi'
+import { MASTERED_MIN_SCORE } from '@shared/exposureScore'
 import { generateQuiz } from '../lib/api'
-import { recordWordExposure } from '../lib/vocab'
+import { applyQuizAnswerExposure } from '../lib/vocab'
 import type { AppTheme } from '../theme'
 
 type Phase = 'idle' | 'running' | 'finished'
@@ -51,18 +52,9 @@ export function TestScreen({ theme, items }: { theme: AppTheme; items: VocabItem
   const [error, setError] = useState<string | null>(null)
 
   const candidateItems = useMemo(() => {
-    const primary = items.filter((i) => i.status === 'learning')
-    if (primary.length >= count) return shuffle(primary).slice(0, count)
-    const secondary = items.filter((i) => i.status === 'mastered')
-    return shuffle([...primary, ...secondary]).slice(0, count)
+    const active = items.filter((i) => i.exposureScore < MASTERED_MIN_SCORE)
+    return shuffle(active).slice(0, count)
   }, [items, count])
-
-  useEffect(() => {
-    if (phase !== 'running' || questions.length === 0) return
-    const q = questions[currentIndex]
-    if (!q?.itemId) return
-    void recordWordExposure(q.itemId).catch(() => {})
-  }, [phase, currentIndex, questions])
 
   useEffect(() => {
     if (phase !== 'running') return
@@ -107,6 +99,8 @@ export function TestScreen({ theme, items }: { theme: AppTheme; items: VocabItem
 
   function onContinueAfterFeedback() {
     if (quizPicked === null || !current) return
+    const correct = quizPicked === current.correctIndex
+    void applyQuizAnswerExposure(current.itemId, correct).catch(() => {})
     const nextAnswers = [...answers]
     nextAnswers[currentIndex] = quizPicked
     setAnswers(nextAnswers)

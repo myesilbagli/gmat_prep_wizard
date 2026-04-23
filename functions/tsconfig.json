@@ -4,11 +4,18 @@
     "module": "commonjs",
     "lib": ["ES2022"],
     "outDir": "lib",
-    "rootDir": "src",
+    "rootDir": "..",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true
   },
-  "include": ["src"]
+  "include": [
+    "src/**/*.ts",
+    "../shared/types.ts",
+    "../shared/wordGeneration.ts",
+    "../shared/parseOpenAiJson.ts",
+    "../shared/generateGmCardPrompt.ts",
+    "../shared/stackPackTypes.ts"
+  ]
 }
 

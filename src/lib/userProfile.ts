@@ -26,7 +26,10 @@ export async function saveUserProfilePatch(
       UserProfileDoc,
       | 'timezone'
       | 'mainLanguage'
+      | 'examDateIso'
       | 'examTarget'
+      | 'onboardingCompletedAt'
+      | 'onboardingFirstStackId'
       | 'streakCurrent'
       | 'streakLongest'
       | 'sessionCount'
@@ -55,7 +58,11 @@ export async function ensureUserProfileDefaults(): Promise<UserProfileDoc> {
     return {
       timezone: typeof d.timezone === 'string' && d.timezone ? d.timezone : DEFAULT_TIMEZONE,
       mainLanguage: normalizeMainLanguageCode(d.mainLanguage),
+      examDateIso: typeof d.examDateIso === 'string' && d.examDateIso ? d.examDateIso : null,
       examTarget: d.examTarget ?? null,
+      onboardingCompletedAt: d.onboardingCompletedAt ?? null,
+      onboardingFirstStackId:
+        typeof d.onboardingFirstStackId === 'string' ? d.onboardingFirstStackId : null,
       streakCurrent: typeof d.streakCurrent === 'number' ? d.streakCurrent : 0,
       streakLongest: typeof d.streakLongest === 'number' ? d.streakLongest : 0,
       sessionCount: typeof d.sessionCount === 'number' ? d.sessionCount : 0,
@@ -65,7 +72,10 @@ export async function ensureUserProfileDefaults(): Promise<UserProfileDoc> {
   const initial: UserProfileDoc = {
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || DEFAULT_TIMEZONE,
     mainLanguage: DEFAULT_MAIN_LANGUAGE,
+    examDateIso: null,
     examTarget: null,
+    onboardingCompletedAt: null,
+    onboardingFirstStackId: null,
     streakCurrent: 0,
     streakLongest: 0,
     sessionCount: 0,

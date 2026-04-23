@@ -1,17 +1,21 @@
 import { useEffect, useMemo, useState } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
 import { useSearchParams } from 'react-router-dom'
+import { bucketFromWord } from '../../shared/learningBuckets'
+import { pickParagraphWords } from '../../shared/paragraphPicker'
 import { DEFAULT_MAIN_LANGUAGE, normalizeMainLanguageCode } from '../../shared/languages'
+import type { VocabItem } from '../../shared/types'
+import { normalizeGeneratedResultFromApi } from '../../shared/wordGeneration'
 import { getNativeGloss } from '../../shared/vocab'
-import type { VocabItem, VocabStatus } from '../lib/vocab'
 import {
+  applyParagraphExposure,
+  deleteVocabItem,
   listVocabItems,
   recordWordExposure,
   toggleVocabFlagged,
-  updateVocabStatus,
-  deleteVocabItem,
 } from '../lib/vocab'
 import { auth } from '../lib/firebase'
+import { saveWord } from '../lib/words'
 import { ensureUserProfileDefaults } from '../lib/userProfile'
 import {
   IconChevronLeft,
@@ -21,9 +25,7 @@ import {
   IconTrash,
 } from '../components/Icons'
 
-type Filter = 'all' | 'fresh' | 'learning' | 'mastered' | 'flagged'
-type KindFilter = 'all' | 'word' | 'phrase'
-type TopLearnMode = 'deck' | 'paragraph'
+type Filter = 'all' | 'new' | 'learning' | 'familiar' | 'mastered'
 
 type ParagraphPart =
   | { kind: 'text'; value: string }
@@ -36,10 +38,8 @@ export function LearnPage() {
   const [items, setItems] = useState<VocabItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [filter, setFilter] = useState<Filter>('all')
-  const [kindFilter, setKindFilter] = useState<KindFilter>('all')
+  const [filter, setFilter] = useState<Filter>('learning')
   const [query, setQuery] = useState('')
-  const [topMode, setTopMode] = useState<TopLearnMode>('deck')
   const [studyOpen, setStudyOpen] = useState(false)
   const [studyIndex, setStudyIndex] = useState(0)
   const [studyShowAnswer, setStudyShowAnswer] = useState(false)
@@ -50,6 +50,7 @@ export function LearnPage() {
     | { status: 'ready'; parts: ParagraphPart[]; picked: VocabItem[] }
     | { status: 'error'; message: string }
   >({ status: 'idle' })
+  const [regeneratingId, setRegeneratingId] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -97,7 +98,7 @@ export function LearnPage() {
 
   useEffect(() => {
     const f = searchParams.get('filter')
-    if (f === 'learning' || f === 'mastered' || f === 'flagged' || f === 'fresh') {
+    if (f === 'learning' || f === 'mastered' || f === 'all' || f === 'new' || f === 'familiar') {
       setFilter(f)
     }
   }, [searchParams])
@@ -105,34 +106,14 @@ export function LearnPage() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     return items.filter((item) => {
-      if (filter === 'fresh') {
-        if (item.status !== 'learning') return false
-        if ((item.seenCount ?? 0) > 0) return false
-      }
-      if (filter === 'learning') {
-        if (item.status !== 'learning') return false
-        if ((item.seenCount ?? 0) === 0) return false
-      }
-      if (filter === 'mastered' && item.status !== 'mastered') return false
-      if (filter === 'flagged' && !item.flagged) return false
-      if (kindFilter === 'word' && item.type !== 'word') return false
-      if (kindFilter === 'phrase' && item.type !== 'phrase') return false
+      if (filter !== 'all' && bucketFromWord(item) !== filter) return false
       if (q && !item.text.toLowerCase().includes(q)) return false
       return true
     })
-  }, [items, filter, kindFilter, query])
+  }, [items, filter, query])
 
-  // Count based on the filter toggle only (independent from search query).
   const wordsInFilterCount = useMemo(() => {
-    return items.filter((item) => {
-      if (filter === 'fresh')
-        return item.status === 'learning' && (item.seenCount ?? 0) === 0
-      if (filter === 'learning')
-        return item.status === 'learning' && (item.seenCount ?? 0) > 0
-      if (filter === 'mastered') return item.status === 'mastered'
-      if (filter === 'flagged') return item.flagged
-      return true
-    }).length
+    return items.filter((item) => filter === 'all' || bucketFromWord(item) === filter).length
   }, [items, filter])
 
   const studyItem =
@@ -173,18 +154,37 @@ export function LearnPage() {
 
   useEffect(() => {
     setParaState({ status: 'idle' })
-  }, [filter, kindFilter, query])
+  }, [filter, query])
 
-  async function handleStatusChange(id: string, status: VocabStatus) {
-    setItems((prev) =>
-      prev.map((it) => (it.id === id ? { ...it, status } : it)),
-    )
+  async function handleRegenerate(item: VocabItem) {
+    setError(null)
+    setRegeneratingId(item.id)
     try {
-      await updateVocabStatus({ id, status })
-    } catch {
-      // best-effort: reload list on failure
+      const token = await auth.currentUser?.getIdToken()
+      if (!token) throw new Error('Please sign in first.')
+      const baseUrl = (import.meta.env.VITE_FUNCTIONS_BASE_URL as string | undefined) ?? ''
+      if (!baseUrl) throw new Error('Missing VITE_FUNCTIONS_BASE_URL')
+      const res = await fetch(`${baseUrl}/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ text: item.text.trim(), mainLanguage }),
+      })
+      if (!res.ok) {
+        const t = await res.text().catch(() => '')
+        throw new Error(t || `Request failed (${res.status})`)
+      }
+      const raw = await res.json()
+      const result = normalizeGeneratedResultFromApi(raw)
+      await saveWord({ text: item.text, type: item.type, result, mainLanguage })
       const next = await listVocabItems()
       setItems(next)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Regenerate failed')
+    } finally {
+      setRegeneratingId(null)
     }
   }
 
@@ -203,13 +203,12 @@ export function LearnPage() {
   async function generateParagraph() {
     setParaState({ status: 'loading' })
     try {
-      const learningInFilter = filtered.filter((it) => it.status === 'learning')
-      const picked = learningInFilter.slice(0, Math.min(5, learningInFilter.length))
+      const picked = pickParagraphWords(items, Date.now(), 5)
       if (!picked.length) {
         setParaState({
           status: 'error',
           message:
-            'No Learning items in this filter. Adjust filters or mark words as Learning.',
+            'No eligible words yet. Study a few sessions first so words have exposure (score above 0).',
         })
         return
       }
@@ -251,9 +250,9 @@ export function LearnPage() {
         throw new Error('Bad response from server')
       }
       setParaState({ status: 'ready', parts: json.parts, picked })
-      for (const p of picked) {
-        void recordWordExposure(p.id).catch(() => {})
-      }
+      await applyParagraphExposure(picked.map((p) => p.id))
+      const next = await listVocabItems()
+      setItems(next)
     } catch (e) {
       setParaState({
         status: 'error',
@@ -296,60 +295,12 @@ export function LearnPage() {
       `}</style>
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, letterSpacing: -0.3 }}>
-          Study library
+          Learn
         </h1>
         <p className="muted" style={{ margin: '8px 0 0', fontSize: 15 }}>
-          {topMode === 'deck'
-            ? 'Browse and manage saved vocabulary. Open Study on a card for a focused flashcard flow.'
-            : 'Read a formal paragraph with your Learning items highlighted.'}
+          Browse saved vocabulary. Mastery is automatic from your exposure score (20+ = Mastered). Open
+          Study on a card for a focused flashcard flow.
         </p>
-      </div>
-
-      <div
-        style={{
-          display: 'flex',
-          gap: 6,
-          marginBottom: 16,
-          padding: 4,
-          borderRadius: 14,
-          border: '1px solid var(--border)',
-          background: 'rgba(255,255,255,0.04)',
-        }}
-      >
-        <button
-          type="button"
-          className="btn"
-          onClick={() => setTopMode('deck')}
-          style={{
-            flex: 1,
-            padding: '12px 16px',
-            borderRadius: 10,
-            border: 'none',
-            fontWeight: 700,
-            fontSize: 14,
-            background: topMode === 'deck' ? 'rgba(99, 102, 241, 0.22)' : 'transparent',
-            color: topMode === 'deck' ? 'var(--text)' : 'var(--muted)',
-          }}
-        >
-          Deck
-        </button>
-        <button
-          type="button"
-          className="btn"
-          onClick={() => setTopMode('paragraph')}
-          style={{
-            flex: 1,
-            padding: '12px 16px',
-            borderRadius: 10,
-            border: 'none',
-            fontWeight: 700,
-            fontSize: 14,
-            background: topMode === 'paragraph' ? 'rgba(99, 102, 241, 0.22)' : 'transparent',
-            color: topMode === 'paragraph' ? 'var(--text)' : 'var(--muted)',
-          }}
-        >
-          Paragraph
-        </button>
       </div>
 
       <div
@@ -401,9 +352,9 @@ export function LearnPage() {
               onClick={() => setFilter('all')}
             />
             <FilterChip
-              label="Do Not Know"
-              active={filter === 'fresh'}
-              onClick={() => setFilter('fresh')}
+              label="New"
+              active={filter === 'new'}
+              onClick={() => setFilter('new')}
             />
             <FilterChip
               label="Learning"
@@ -411,15 +362,14 @@ export function LearnPage() {
               onClick={() => setFilter('learning')}
             />
             <FilterChip
+              label="Familiar"
+              active={filter === 'familiar'}
+              onClick={() => setFilter('familiar')}
+            />
+            <FilterChip
               label="Mastered"
               active={filter === 'mastered'}
               onClick={() => setFilter('mastered')}
-            />
-            <FilterChip
-              label="Flagged"
-              active={filter === 'flagged'}
-              onClick={() => setFilter('flagged')}
-              icon={<IconFlag style={{ marginRight: 4 }} />}
             />
             {!loading ? (
               <span className="muted" style={{ fontSize: 12, marginLeft: 4 }}>
@@ -427,106 +377,84 @@ export function LearnPage() {
               </span>
             ) : null}
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
-            <span className="muted" style={{ fontSize: 11, fontWeight: 700 }}>
-              Type:
-            </span>
-            <FilterChip
-              label="All types"
-              active={kindFilter === 'all'}
-              onClick={() => setKindFilter('all')}
-            />
-            <FilterChip
-              label="Words"
-              active={kindFilter === 'word'}
-              onClick={() => setKindFilter('word')}
-            />
-            <FilterChip
-              label="Phrases"
-              active={kindFilter === 'phrase'}
-              onClick={() => setKindFilter('phrase')}
-            />
-          </div>
         </div>
       </div>
 
       {loading && <div className="muted">Loading items…</div>}
       {error && <div style={{ color: 'var(--danger)' }}>{error}</div>}
 
-      {topMode === 'paragraph' ? (
-        <div
-          className="card"
-          style={{ padding: 18, marginTop: 8, overflow: 'visible' }}
-        >
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-            <div style={{ fontWeight: 800, fontSize: 16 }}>Immersion reading</div>
-            <span className="muted" style={{ fontSize: 12 }}>
-              Up to 5 Learning items from your current filter, in list order
-            </span>
+      <div style={{ display: 'grid', gap: 10 }}>
+        {filtered.map((item, index) => (
+          <VocabCard
+            key={item.id}
+            item={item}
+            mainLanguage={mainLanguage}
+            onToggleFlagged={handleToggleFlagged}
+            onRegenerate={handleRegenerate}
+            regenerating={regeneratingId === item.id}
+            onStudy={() => {
+              setStudyIndex(index)
+              setStudyShowAnswer(false)
+              setStudyOpen(true)
+            }}
+          />
+        ))}
+        {!loading && !error && filtered.length === 0 && (
+          <div className="muted" style={{ fontSize: 13 }}>
+            No items match this filter.
           </div>
+        )}
+      </div>
 
-          <div style={{ marginTop: 10, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+      <div
+        className="card"
+        style={{ padding: 18, marginTop: 8, overflow: 'visible' }}
+      >
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ fontWeight: 800, fontSize: 16 }}>Reading practice</div>
+          <span className="muted" style={{ fontSize: 12 }}>
+            Up to five words picked by exposure score (must have been seen in study at least once).
+          </span>
+        </div>
+
+        <div style={{ marginTop: 10, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            className="btn btnPrimary"
+            onClick={() => void generateParagraph()}
+            disabled={paraState.status === 'loading' || loading}
+          >
+            {paraState.status === 'loading' ? 'Generating…' : 'Generate paragraph'}
+          </button>
+          {paraState.status === 'ready' && (
             <button
               type="button"
-              className="btn btnPrimary"
-              onClick={() => void generateParagraph()}
-              disabled={paraState.status === 'loading' || loading}
+              className="btn"
+              onClick={() => setParaState({ status: 'idle' })}
             >
-              {paraState.status === 'loading' ? 'Generating…' : 'Generate paragraph'}
+              Clear
             </button>
-            {paraState.status === 'ready' && (
-              <button
-                type="button"
-                className="btn"
-                onClick={() => setParaState({ status: 'idle' })}
-              >
-                Clear
-              </button>
-            )}
+          )}
+        </div>
+
+        {paraState.status === 'error' && (
+          <div style={{ marginTop: 10, color: 'var(--danger)' }}>
+            {paraState.message}
           </div>
+        )}
 
-          {paraState.status === 'error' && (
-            <div style={{ marginTop: 10, color: 'var(--danger)' }}>
-              {paraState.message}
-            </div>
-          )}
+        {paraState.status === 'loading' && <ParagraphGeneratingLoading />}
 
-          {paraState.status === 'loading' && <ParagraphGeneratingLoading />}
+        {paraState.status === 'ready' && (
+          <ParagraphText parts={paraState.parts} picked={paraState.picked} />
+        )}
 
-          {paraState.status === 'ready' && (
-            <ParagraphText parts={paraState.parts} picked={paraState.picked} />
-          )}
-
-          {paraState.status === 'idle' && (
-            <div className="muted" style={{ marginTop: 10, fontSize: 13 }}>
-              Generate a GMAT-style paragraph from your filtered Learning set. Hover bold targets for
-              meanings.
-            </div>
-          )}
-        </div>
-      ) : (
-        <div style={{ display: 'grid', gap: 10 }}>
-          {filtered.map((item, index) => (
-            <VocabCard
-              key={item.id}
-              item={item}
-              mainLanguage={mainLanguage}
-              onChangeStatus={handleStatusChange}
-              onToggleFlagged={handleToggleFlagged}
-              onStudy={() => {
-                setStudyIndex(index)
-                setStudyShowAnswer(false)
-                setStudyOpen(true)
-              }}
-            />
-          ))}
-          {!loading && !error && filtered.length === 0 && (
-            <div className="muted" style={{ fontSize: 13 }}>
-              No items match this filter.
-            </div>
-          )}
-        </div>
-      )}
+        {paraState.status === 'idle' && (
+          <div className="muted" style={{ marginTop: 10, fontSize: 13 }}>
+            Generate a paragraph in context. Hover bold targets for meanings.
+          </div>
+        )}
+      </div>
 
       {studyOpen && studyItem ? (
         <div
@@ -583,7 +511,6 @@ export function LearnPage() {
                 )
                 setStudyShowAnswer(false)
               }}
-              onChangeStatus={handleStatusChange}
               onToggleFlagged={handleToggleFlagged}
             />
           </div>
@@ -714,8 +641,9 @@ function FilterChip(props: {
 function VocabCard(props: {
   item: VocabItem
   mainLanguage: string
-  onChangeStatus: (id: string, status: VocabStatus) => void
   onToggleFlagged: (id: string, flagged: boolean) => void
+  onRegenerate: (item: VocabItem) => void | Promise<void>
+  regenerating?: boolean
   onStudy?: () => void
 }) {
   const { item, mainLanguage } = props
@@ -786,6 +714,23 @@ function VocabCard(props: {
           <button
             type="button"
             className="btn"
+            disabled={props.regenerating}
+            onClick={() => void props.onRegenerate(item)}
+            style={{
+              padding: '8px 10px',
+              border: '1px solid var(--border)',
+              borderRadius: 10,
+              color: 'var(--text)',
+              fontSize: 12,
+              fontWeight: 700,
+            }}
+            aria-label="Regenerate card"
+          >
+            {props.regenerating ? '…' : 'AI'}
+          </button>
+          <button
+            type="button"
+            className="btn"
             onClick={() => {
               const ok = window.confirm(
                 `Delete "${item.text}" from your library? This cannot be undone.`,
@@ -827,16 +772,13 @@ function VocabCard(props: {
           marginTop: 8,
         }}
       >
-        <StatusChip
-          label="Learning"
-          active={item.status === 'learning'}
-          onClick={() => props.onChangeStatus(item.id, 'learning')}
-        />
-        <StatusChip
-          label="Mastered"
-          active={item.status === 'mastered'}
-          onClick={() => props.onChangeStatus(item.id, 'mastered')}
-        />
+        <span
+          className="muted"
+          style={{ fontSize: 12, fontWeight: 600 }}
+        >
+          Exposure {item.exposureScore} ·{' '}
+          {bucketFromWord(item).charAt(0).toUpperCase() + bucketFromWord(item).slice(1)}
+        </span>
         {props.onStudy ? (
           <button
             type="button"
@@ -871,13 +813,28 @@ function VocabCard(props: {
           {item.definition && (
             <DetailRow label="Definition" value={item.definition} />
           )}
-          {item.exampleSentence && (
+          {item.examples?.length === 2 ? (
+            <>
+              <DetailRow label="Example (academic)" value={item.examples[0]} />
+              <DetailRow label="Example (argument)" value={item.examples[1]} />
+            </>
+          ) : item.exampleSentence ? (
             <DetailRow label="Example" value={item.exampleSentence} />
-          )}
+          ) : null}
           {item.synonyms.length > 0 && (
             <DetailRow label="Synonyms" value={item.synonyms.join(', ')} />
           )}
+          {item.wordTags && item.wordTags.length > 0 && (
+            <DetailRow label="Tags" value={item.wordTags.join(', ')} />
+          )}
+          {item.contrastWord?.word && item.contrastWord.explanation ? (
+            <DetailRow
+              label="Contrast"
+              value={`${item.contrastWord.word} — ${item.contrastWord.explanation}`}
+            />
+          ) : null}
           {item.nuanceNote && <DetailRow label="Nuance" value={item.nuanceNote} />}
+          {item.memoryHook ? <DetailRow label="Memory hook" value={item.memoryHook} /> : null}
           {item.gmatUsageNote && (
             <DetailRow label="GMAT usage" value={item.gmatUsageNote} />
           )}
@@ -885,14 +842,6 @@ function VocabCard(props: {
       )}
     </div>
   )
-}
-
-function flashStatusBtnClass(status: VocabStatus, current: VocabStatus) {
-  const active = current === status
-  if (active) return 'learnFlashStatusBtn learnFlashStatusBtn--active'
-  if (status === 'learning') return 'learnFlashStatusBtn learnFlashStatusBtn--risk'
-  if (status === 'mastered') return 'learnFlashStatusBtn learnFlashStatusBtn--safe'
-  return 'learnFlashStatusBtn'
 }
 
 function FlashcardView(props: {
@@ -904,7 +853,6 @@ function FlashcardView(props: {
   onToggleAnswer: () => void
   onNext: () => void
   onPrev: () => void
-  onChangeStatus: (id: string, status: VocabStatus) => void
   onToggleFlagged: (id: string, flagged: boolean) => void
 }) {
   const { item, mainLanguage } = props
@@ -921,9 +869,13 @@ function FlashcardView(props: {
   const showFullDefinitionInDetail = Boolean(full && full !== primaryDef)
   const hasExtras =
     Boolean(item.exampleSentence) ||
+    (item.examples?.length ?? 0) > 0 ||
     (item.synonyms?.length ?? 0) > 0 ||
     Boolean(item.nuanceNote) ||
-    Boolean(item.gmatUsageNote)
+    Boolean(item.gmatUsageNote) ||
+    Boolean(item.memoryHook) ||
+    (item.wordTags?.length ?? 0) > 0 ||
+    Boolean(item.contrastWord?.word)
 
   const progressPct = props.total > 0 ? ((props.index + 1) / props.total) * 100 : 0
 
@@ -1013,13 +965,30 @@ function FlashcardView(props: {
                       {showFullDefinitionInDetail && (
                         <DetailRow label="Full definition" value={full} />
                       )}
-                      {item.exampleSentence && (
+                      {item.examples?.length === 2 ? (
+                        <>
+                          <DetailRow label="Example (academic)" value={item.examples[0]} />
+                          <DetailRow label="Example (argument)" value={item.examples[1]} />
+                        </>
+                      ) : item.exampleSentence ? (
                         <DetailRow label="Example" value={item.exampleSentence} />
-                      )}
+                      ) : null}
                       {item.synonyms.length > 0 && (
                         <DetailRow label="Synonyms" value={item.synonyms.join(', ')} />
                       )}
+                      {item.wordTags && item.wordTags.length > 0 && (
+                        <DetailRow label="Tags" value={item.wordTags.join(', ')} />
+                      )}
+                      {item.contrastWord?.word && item.contrastWord.explanation ? (
+                        <DetailRow
+                          label="Contrast"
+                          value={`${item.contrastWord.word} — ${item.contrastWord.explanation}`}
+                        />
+                      ) : null}
                       {item.nuanceNote && <DetailRow label="Nuance" value={item.nuanceNote} />}
+                      {item.memoryHook ? (
+                        <DetailRow label="Memory hook" value={item.memoryHook} />
+                      ) : null}
                       {item.gmatUsageNote && (
                         <DetailRow label="GMAT usage" value={item.gmatUsageNote} />
                       )}
@@ -1031,22 +1000,10 @@ function FlashcardView(props: {
           ) : null}
         </div>
 
-        <div className="learnFlashStatusRow">
-          <button
-            type="button"
-            className={flashStatusBtnClass('learning', item.status)}
-            onClick={() => props.onChangeStatus(item.id, 'learning')}
-          >
-            Learning
-          </button>
-          <button
-            type="button"
-            className={flashStatusBtnClass('mastered', item.status)}
-            onClick={() => props.onChangeStatus(item.id, 'mastered')}
-          >
-            Mastered
-          </button>
-        </div>
+        <p className="muted" style={{ fontSize: 12, marginTop: 8, textAlign: 'center' }}>
+          Exposure {item.exposureScore} ·{' '}
+          {bucketFromWord(item).charAt(0).toUpperCase() + bucketFromWord(item).slice(1)}
+        </p>
       </article>
 
       <div className="learnFlashNavRow">
@@ -1061,33 +1018,6 @@ function FlashcardView(props: {
         </button>
       </div>
     </div>
-  )
-}
-
-function StatusChip(props: {
-  label: string
-  active: boolean
-  onClick: () => void
-}) {
-  return (
-    <button
-      type="button"
-      onClick={props.onClick}
-      className="btn"
-      style={{
-        padding: '6px 10px',
-        borderRadius: 999,
-        border: props.active
-          ? '1px solid var(--accent-gradient-end)'
-          : '1px solid var(--border)',
-        background: props.active
-          ? 'rgba(99, 102, 241, 0.18)'
-          : 'rgba(255,255,255,0.04)',
-        fontSize: 12,
-      }}
-    >
-      {props.label}
-    </button>
   )
 }
 
