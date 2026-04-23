@@ -28,6 +28,7 @@ import { SessionScreen } from './screens/SessionScreen'
 import { computeDashboardStats, TodayScreen } from './screens/TodayScreen'
 import { LearnScreen } from './screens/LearnScreen'
 import { WordStackBrowseScreen } from './screens/WordStackBrowseScreen'
+import { UserStackDetailScreen } from './screens/UserStackDetailScreen'
 import { WordStackDetailScreen } from './screens/WordStackDetailScreen'
 import { SignInScreen } from './screens/SignInScreen'
 import { SignUpScreen } from './screens/SignUpScreen'
@@ -136,7 +137,11 @@ function AuthNavigator() {
   )
 }
 
-type LearnFlow = { screen: 'main' } | { screen: 'stacks' } | { screen: 'detail'; stackId: string }
+type LearnFlow =
+  | { screen: 'main' }
+  | { screen: 'stacks' }
+  | { screen: 'detail'; stackId: string }
+  | { screen: 'userStack'; userStackId: string }
 
 function MainTabs({
   sessionLaunchKey = 0,
@@ -337,12 +342,20 @@ function MainTabs({
                     items={items}
                     onReload={reloadItems}
                     onOpenWordStacks={() => setLearnFlow({ screen: 'stacks' })}
+                    onOpenUserStackDetail={(userStackId) => setLearnFlow({ screen: 'userStack', userStackId })}
                   />
                 ) : learnFlow.screen === 'stacks' ? (
                   <WordStackBrowseScreen
                     theme={theme}
                     onBack={() => setLearnFlow({ screen: 'main' })}
                     onSelectStack={(stackId) => setLearnFlow({ screen: 'detail', stackId })}
+                  />
+                ) : learnFlow.screen === 'userStack' ? (
+                  <UserStackDetailScreen
+                    theme={theme}
+                    userStackId={learnFlow.userStackId}
+                    onBack={() => setLearnFlow({ screen: 'main' })}
+                    onReload={reloadItems}
                   />
                 ) : (
                   <WordStackDetailScreen

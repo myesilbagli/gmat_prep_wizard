@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ActivityIndicator, Alert, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { bucketFromWord } from '@shared/learningBuckets'
 import { pickParagraphWords } from '@shared/paragraphPicker'
 import { FREE_MAX_SAVED_WORDS, WORD_STACK_CATALOG, canAccessStack } from '@shared/freemium'
-import type { GeneratedResult, VocabItem } from '@shared/types'
+import type { GeneratedResult, UserStack, VocabItem } from '@shared/types'
 import { getNativeGloss } from '@shared/vocab'
 import { BlurView } from 'expo-blur'
 import { Ionicons, MaterialIcons } from '@expo/vector-icons'
@@ -18,8 +18,10 @@ import {
   useGlassFonts,
 } from '../components/GlassUi'
 import { LearnFlashcardModal } from '../components/LearnFlashcardModal'
+import { CreateUserStackModal } from '../components/CreateUserStackModal'
 import { StackAssignmentSheet, type PendingStackSave } from '../components/StackAssignmentSheet'
 import { generateParagraph, generateWord } from '../lib/api'
+import { listUserStacks } from '../lib/userStacks'
 import { saveWord } from '../lib/words'
 import { useSubscription } from '../context/SubscriptionContext'
 import {
@@ -63,12 +65,14 @@ export function LearnScreen({
   items,
   onReload,
   onOpenWordStacks,
+  onOpenUserStackDetail,
 }: {
   theme: AppTheme
   mainLanguage: string
   items: VocabItem[]
   onReload: () => Promise<void>
   onOpenWordStacks: () => void
+  onOpenUserStackDetail: (userStackId: string) => void
 }) {
   const { fontHeadlineSm, fontBody, fontLabel, fontLabelBold } = useGlassFonts()
   const insets = useSafeAreaInsets()
@@ -98,6 +102,23 @@ export function LearnScreen({
     null,
   )
   const [stackSaving, setStackSaving] = useState(false)
+  const [myStacks, setMyStacks] = useState<UserStack[]>([])
+  const [myStacksLoading, setMyStacksLoading] = useState(false)
+  const [createStackOpen, setCreateStackOpen] = useState(false)
+
+  const reloadMyStacks = useCallback(async () => {
+    setMyStacksLoading(true)
+    try {
+      const list = await listUserStacks()
+      setMyStacks(list)
+    } finally {
+      setMyStacksLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void reloadMyStacks()
+  }, [reloadMyStacks])
   const genCanGenerate = genText.trim().length > 0
   const genModalOpen = genState.status !== 'idle'
 
@@ -176,6 +197,7 @@ export function LearnScreen({
         setGenText('')
       }
       await onReload()
+      await reloadMyStacks()
       if (src === 'regenerate') {
         Alert.alert('Card updated', 'This word was regenerated with the latest format.')
       }
@@ -403,6 +425,79 @@ export function LearnScreen({
               )
             })}
           </ScrollView>
+        </View>
+
+        {/* My stacks (user-created) */}
+        <View style={{ marginTop: 22 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+            <Text
+              style={{
+                fontFamily: fontHeadlineSm,
+                fontSize: 10,
+                fontWeight: '800',
+                letterSpacing: 2,
+                color: theme.learnAccent,
+                textTransform: 'uppercase',
+              }}
+            >
+              My stacks
+            </Text>
+            <Pressable onPress={() => setCreateStackOpen(true)} hitSlop={8}>
+              <Text style={{ fontFamily: fontLabelBold, fontSize: 13, color: theme.learnAccent }}>+ New stack</Text>
+            </Pressable>
+          </View>
+          {myStacksLoading ? (
+            <View style={{ paddingVertical: 16, alignItems: 'center' }}>
+              <ActivityIndicator color={theme.learnAccent} />
+            </View>
+          ) : myStacks.length === 0 ? (
+            <View
+              style={{
+                padding: 18,
+                borderRadius: 16,
+                borderWidth: 1,
+                borderColor: theme.learnGlassBorder,
+                backgroundColor: theme.surface2,
+                ...glassScreenShadow(theme),
+              }}
+            >
+              <Text style={{ fontFamily: fontBody, fontSize: 14, color: theme.learnOnSurfaceVariant, textAlign: 'center' }}>
+                Create your own word stack to group related words. They'll show up here.
+              </Text>
+              <Pressable onPress={() => setCreateStackOpen(true)} style={{ marginTop: 14, alignSelf: 'center', paddingVertical: 8 }}>
+                <Text style={{ fontFamily: fontLabelBold, fontSize: 15, color: theme.learnAccent }}>+ Create your first stack</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 8 }}>
+              {myStacks.map((s) => (
+                <Pressable
+                  key={s.id}
+                  onPress={() => onOpenUserStackDetail(s.id)}
+                  style={({ pressed }) => ({
+                    width: 168,
+                    padding: 14,
+                    borderRadius: 16,
+                    borderWidth: 1,
+                    borderColor: theme.learnGlassBorder,
+                    backgroundColor: theme.surface2,
+                    opacity: pressed ? 0.92 : 1,
+                    ...glassScreenShadow(theme),
+                  })}
+                >
+                  <Text
+                    numberOfLines={2}
+                    style={{ fontFamily: fontHeadlineSm, fontSize: 14, fontWeight: '900', color: theme.learnOnSurface }}
+                  >
+                    {s.name}
+                  </Text>
+                  <Text style={{ fontFamily: fontBody, fontSize: 12, color: theme.learnOnSurfaceVariant, marginTop: 8 }}>
+                    {s.wordCount} word{s.wordCount === 1 ? '' : 's'}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          )}
         </View>
 
         <View style={{ marginTop: 22, marginBottom: 22 }}>
@@ -723,6 +818,13 @@ export function LearnScreen({
         saving={stackSaving}
         onCancel={() => setStackAssignPending(null)}
         onConfirm={handleStackAssignConfirm}
+      />
+
+      <CreateUserStackModal
+        theme={theme}
+        visible={createStackOpen}
+        onClose={() => setCreateStackOpen(false)}
+        onCreated={() => void reloadMyStacks()}
       />
     </GlassScreenRoot>
   )
