@@ -1,5 +1,4 @@
 import {
-  addDoc,
   collection,
   deleteField,
   doc,
@@ -7,8 +6,8 @@ import {
   getDocs,
   orderBy,
   query,
+  runTransaction,
   serverTimestamp,
-  updateDoc,
   where,
 } from 'firebase/firestore'
 import type { GeneratedResult } from '@shared/types'
@@ -20,6 +19,13 @@ function requireUserId(): string {
   const uid = auth.currentUser?.uid
   if (!uid) throw new Error('You must be signed in.')
   return uid
+}
+
+const MAX_USER_STACKS_PER_WORD = 10
+
+function normalizeUserStackIdsInput(ids: string[] | undefined): string[] {
+  const u = [...new Set((ids ?? []).map((x) => String(x).trim()).filter(Boolean))]
+  return u.slice(0, MAX_USER_STACKS_PER_WORD)
 }
 
 export async function saveWordFromStackImport(params: {
@@ -47,6 +53,8 @@ export async function saveWord(params: {
   source?: 'gpt' | 'stack'
   stackId?: string
   stackPosition?: number
+  /** User-created stacks; omit on update to preserve existing membership. */
+  userStackIds?: string[]
 }) {
   const uid = requireUserId()
   const normalizedText = params.text.trim().replace(/\s+/g, ' ')
@@ -55,10 +63,10 @@ export async function saveWord(params: {
   const textLower = normalizedText.toLowerCase()
   const wordsCol = collection(db, 'users', uid, 'words')
 
-  const existing = await getDocs(query(wordsCol, where('textLower', '==', textLower)))
+  const existingSnap = await getDocs(query(wordsCol, where('textLower', '==', textLower)))
   const existingTranslations =
-    !existing.empty
-      ? (existing.docs[0].data() as { translations?: Record<string, string> }).translations
+    !existingSnap.empty
+      ? (existingSnap.docs[0].data() as { translations?: Record<string, string> }).translations
       : undefined
   const translations = mergeTranslationsForSave(
     existingTranslations,
@@ -110,59 +118,108 @@ export async function saveWord(params: {
     updatedAt: serverTimestamp(),
   }
 
-  if (!existing.empty) {
-    const prev = existing.docs[0].data() as Record<string, unknown>
-    const ref = doc(db, 'users', uid, 'words', existing.docs[0].id)
-    const mergedWordSource =
-      params.source === 'stack' ? 'word_stack' : (prev.wordSource as string) || wordSource
-    const preservedTags = Array.isArray(prev.tags) ? prev.tags : []
-    await updateDoc(ref, {
+  const existingId = existingSnap.empty ? null : existingSnap.docs[0].id
+
+  return runTransaction(db, async (transaction) => {
+    const wordRef = existingId
+      ? doc(db, 'users', uid, 'words', existingId)
+      : doc(wordsCol)
+
+    let prevUserStackIds: string[] = []
+    let prevData: Record<string, unknown> | null = null
+    if (existingId) {
+      const wSnap = await transaction.get(wordRef)
+      if (!wSnap.exists()) throw new Error('Word no longer exists.')
+      prevData = wSnap.data() as Record<string, unknown>
+      prevUserStackIds = Array.isArray(prevData.userStackIds)
+        ? prevData.userStackIds.map((x: unknown) => String(x).trim()).filter(Boolean)
+        : []
+    }
+
+    const nextUserStackIds =
+      params.userStackIds !== undefined
+        ? normalizeUserStackIdsInput(params.userStackIds)
+        : prevUserStackIds
+
+    const removed = prevUserStackIds.filter((id) => !nextUserStackIds.includes(id))
+    const added = nextUserStackIds.filter((id) => !prevUserStackIds.includes(id))
+
+    for (const sid of removed) {
+      const sref = doc(db, 'users', uid, 'myStacks', sid)
+      const ss = await transaction.get(sref)
+      if (ss.exists()) {
+        const wc =
+          typeof (ss.data() as { wordCount?: unknown }).wordCount === 'number'
+            ? Math.max(0, Math.floor((ss.data() as { wordCount: number }).wordCount))
+            : 0
+        transaction.update(sref, { wordCount: Math.max(0, wc - 1), updatedAt: serverTimestamp() })
+      }
+    }
+    for (const sid of added) {
+      const sref = doc(db, 'users', uid, 'myStacks', sid)
+      const ss = await transaction.get(sref)
+      if (!ss.exists()) throw new Error(`Stack not found: ${sid}`)
+      const wc =
+        typeof (ss.data() as { wordCount?: unknown }).wordCount === 'number'
+          ? Math.max(0, Math.floor((ss.data() as { wordCount: number }).wordCount))
+          : 0
+      transaction.update(sref, { wordCount: wc + 1, updatedAt: serverTimestamp() })
+    }
+
+    if (existingId && prevData) {
+      const prev = prevData
+      const mergedWordSource =
+        params.source === 'stack' ? 'word_stack' : (prev.wordSource as string) || wordSource
+      const preservedTags = Array.isArray(prev.tags) ? prev.tags : []
+      transaction.update(wordRef, {
+        ...contentPayload,
+        ...legacyStripOnUpdate,
+        wordSource: mergedWordSource,
+        ...(params.stackId != null ? { stackId: params.stackId } : prev.stackId != null ? { stackId: prev.stackId } : {}),
+        ...(params.stackPosition != null
+          ? { stackPosition: params.stackPosition }
+          : prev.stackPosition != null
+            ? { stackPosition: prev.stackPosition }
+            : {}),
+        userStackIds: nextUserStackIds,
+        exposureScore:
+          typeof prev.exposureScore === 'number' && Number.isFinite(prev.exposureScore)
+            ? prev.exposureScore
+            : 0,
+        flagged: Boolean(prev.flagged),
+        lastSeenAt: prev.lastSeenAt ?? null,
+        lastAnsweredAt: prev.lastAnsweredAt ?? null,
+        lastCorrect: prev.lastCorrect === true || prev.lastCorrect === false ? prev.lastCorrect : null,
+        seenCount: typeof prev.seenCount === 'number' ? prev.seenCount : undefined,
+        meaningQuizStreak:
+          typeof prev.meaningQuizStreak === 'number' ? prev.meaningQuizStreak : undefined,
+        lastSessionSwipe:
+          prev.lastSessionSwipe === 'weak' || prev.lastSessionSwipe === 'strong'
+            ? prev.lastSessionSwipe
+            : undefined,
+        status: typeof prev.status === 'string' ? prev.status : 'learning',
+        tags: preservedTags,
+      })
+      return { id: existingId }
+    }
+
+    transaction.set(wordRef, {
       ...contentPayload,
-      ...legacyStripOnUpdate,
-      wordSource: mergedWordSource,
-      ...(params.stackId != null ? { stackId: params.stackId } : prev.stackId != null ? { stackId: prev.stackId } : {}),
-      ...(params.stackPosition != null
-        ? { stackPosition: params.stackPosition }
-        : prev.stackPosition != null
-          ? { stackPosition: prev.stackPosition }
-          : {}),
-      exposureScore:
-        typeof prev.exposureScore === 'number' && Number.isFinite(prev.exposureScore)
-          ? prev.exposureScore
-          : 0,
-      flagged: Boolean(prev.flagged),
-      lastSeenAt: prev.lastSeenAt ?? null,
-      lastAnsweredAt: prev.lastAnsweredAt ?? null,
-      lastCorrect: prev.lastCorrect === true || prev.lastCorrect === false ? prev.lastCorrect : null,
-      seenCount: typeof prev.seenCount === 'number' ? prev.seenCount : undefined,
-      meaningQuizStreak:
-        typeof prev.meaningQuizStreak === 'number' ? prev.meaningQuizStreak : undefined,
-      lastSessionSwipe:
-        prev.lastSessionSwipe === 'weak' || prev.lastSessionSwipe === 'strong'
-          ? prev.lastSessionSwipe
-          : undefined,
-      status: typeof prev.status === 'string' ? prev.status : 'learning',
-      tags: preservedTags,
+      status: 'learning',
+      exposureScore: 0,
+      lastSeenAt: null,
+      lastAnsweredAt: null,
+      lastCorrect: null,
+      flagged: false,
+      wordSource,
+      ...(params.stackId != null ? { stackId: params.stackId } : {}),
+      ...(params.stackPosition != null ? { stackPosition: params.stackPosition } : {}),
+      userStackIds: nextUserStackIds,
+      tags: [],
+      createdAt: serverTimestamp(),
     })
-    return { id: existing.docs[0].id }
-  }
-
-  const payloadNew = {
-    ...contentPayload,
-    status: 'learning',
-    exposureScore: 0,
-    lastSeenAt: null,
-    lastAnsweredAt: null,
-    lastCorrect: null,
-    flagged: false,
-    wordSource,
-    ...(params.stackId != null ? { stackId: params.stackId } : {}),
-    ...(params.stackPosition != null ? { stackPosition: params.stackPosition } : {}),
-    tags: [],
-  }
-
-  const ref = await addDoc(wordsCol, { ...payloadNew, createdAt: serverTimestamp() })
-  return { id: ref.id }
+    return { id: wordRef.id }
+  })
 }
 
 export async function getWord(wordId: string) {

@@ -1,6 +1,5 @@
 import {
   collection,
-  deleteDoc,
   doc,
   getDocs,
   orderBy,
@@ -85,8 +84,27 @@ export async function toggleVocabFlagged(params: { id: string; flagged: boolean 
 
 export async function deleteVocabItem(id: string) {
   const uid = requireUserId()
-  const ref = doc(db, 'users', uid, 'words', id)
-  await deleteDoc(ref)
+  const wordRef = doc(db, 'users', uid, 'words', id)
+  await runTransaction(db, async (transaction) => {
+    const wordSnap = await transaction.get(wordRef)
+    if (!wordSnap.exists()) return
+    const data = wordSnap.data() as Record<string, unknown>
+    const stackIds: string[] = Array.isArray(data.userStackIds)
+      ? data.userStackIds.map((x: unknown) => String(x).trim()).filter(Boolean)
+      : []
+    for (const sid of stackIds) {
+      const sref = doc(db, 'users', uid, 'myStacks', sid)
+      const ss = await transaction.get(sref)
+      if (ss.exists()) {
+        const wc =
+          typeof (ss.data() as { wordCount?: unknown }).wordCount === 'number'
+            ? Math.max(0, Math.floor((ss.data() as { wordCount: number }).wordCount))
+            : 0
+        transaction.update(sref, { wordCount: Math.max(0, wc - 1), updatedAt: serverTimestamp() })
+      }
+    }
+    transaction.delete(wordRef)
+  })
 }
 
 /** Flashcard / passive “shown” (+1 exposure). */
