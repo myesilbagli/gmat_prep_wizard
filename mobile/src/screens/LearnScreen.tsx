@@ -18,6 +18,7 @@ import {
   useGlassFonts,
 } from '../components/GlassUi'
 import { LearnFlashcardModal } from '../components/LearnFlashcardModal'
+import { StackAssignmentSheet, type PendingStackSave } from '../components/StackAssignmentSheet'
 import { generateParagraph, generateWord } from '../lib/api'
 import { saveWord } from '../lib/words'
 import { useSubscription } from '../context/SubscriptionContext'
@@ -92,8 +93,11 @@ export function LearnScreen({
     | { status: 'ready'; result: GeneratedResult }
     | { status: 'error'; message: string }
   >({ status: 'idle' })
-  const [genSaving, setGenSaving] = useState(false)
   const [genSaved, setGenSaved] = useState(false)
+  const [stackAssignPending, setStackAssignPending] = useState<(PendingStackSave & { source: 'quick' | 'regenerate' }) | null>(
+    null,
+  )
+  const [stackSaving, setStackSaving] = useState(false)
   const genCanGenerate = genText.trim().length > 0
   const genModalOpen = genState.status !== 'idle'
 
@@ -143,11 +147,42 @@ export function LearnScreen({
   async function regenerateWord(item: VocabItem) {
     try {
       const result = await generateWord(item.text.trim(), mainLanguage)
-      await saveWord({ text: item.text, result, mainLanguage })
-      await onReload()
-      Alert.alert('Card updated', 'This word was regenerated with the latest format.')
+      setStackAssignPending({
+        text: item.text.trim(),
+        result,
+        mainLanguage,
+        source: 'regenerate',
+      })
     } catch (e) {
       Alert.alert('Regenerate failed', e instanceof Error ? e.message : 'Unknown error')
+    }
+  }
+
+  async function handleStackAssignConfirm(opts: { deckOnly: boolean; selectedStackIds: string[] }) {
+    if (!stackAssignPending) return
+    setStackSaving(true)
+    try {
+      await saveWord({
+        text: stackAssignPending.text,
+        result: stackAssignPending.result,
+        mainLanguage: stackAssignPending.mainLanguage,
+        userStackIds: opts.deckOnly ? [] : opts.selectedStackIds,
+      })
+      const src = stackAssignPending.source
+      setStackAssignPending(null)
+      if (src === 'quick') {
+        setGenSaved(true)
+        setGenState({ status: 'idle' })
+        setGenText('')
+      }
+      await onReload()
+      if (src === 'regenerate') {
+        Alert.alert('Card updated', 'This word was regenerated with the latest format.')
+      }
+    } catch (e) {
+      Alert.alert('Save failed', e instanceof Error ? e.message : 'Unknown error')
+    } finally {
+      setStackSaving(false)
     }
   }
 
@@ -200,7 +235,7 @@ export function LearnScreen({
     setGenState({ status: 'idle' })
   }
 
-  async function onSaveGenerated() {
+  function onSaveGenerated() {
     if (genState.status !== 'ready') return
     const trimmed = genText.trim()
     const key = trimmed.toLowerCase()
@@ -209,16 +244,12 @@ export function LearnScreen({
       openPaywall()
       return
     }
-    setGenSaving(true)
-    try {
-      await saveWord({ text: trimmed, result: genState.result, mainLanguage })
-      setGenSaved(true)
-      await onReload()
-    } catch (e) {
-      setGenState({ status: 'error', message: e instanceof Error ? e.message : 'Save failed' })
-    } finally {
-      setGenSaving(false)
-    }
+    setStackAssignPending({
+      text: trimmed,
+      result: genState.result,
+      mainLanguage,
+      source: 'quick',
+    })
   }
 
   return (
@@ -662,19 +693,19 @@ export function LearnScreen({
                       </Text>
                     </Pressable>
                     <Pressable
-                      onPress={() => void onSaveGenerated()}
-                      disabled={genSaving || genSaved}
+                      onPress={() => onSaveGenerated()}
+                      disabled={stackSaving || genSaved}
                       style={({ pressed }) => ({
                         flex: 1,
                         paddingVertical: 14,
                         borderRadius: 14,
                         backgroundColor: genSaved ? theme.success : theme.learnAccent,
                         alignItems: 'center',
-                        opacity: genSaving ? 0.7 : pressed ? 0.92 : 1,
+                        opacity: stackSaving ? 0.7 : pressed ? 0.92 : 1,
                       })}
                     >
                       <Text style={{ fontFamily: fontLabelBold, fontSize: 15, fontWeight: '900', color: genSaved ? '#fff' : theme.learnPillActiveText }}>
-                        {genSaving ? 'Saving…' : genSaved ? 'Saved' : 'Save to deck'}
+                        {stackSaving ? 'Saving…' : genSaved ? 'Saved' : 'Save to deck'}
                       </Text>
                     </Pressable>
                   </View>
@@ -684,6 +715,15 @@ export function LearnScreen({
           </View>
         </View>
       </Modal>
+
+      <StackAssignmentSheet
+        theme={theme}
+        visible={stackAssignPending != null}
+        pending={stackAssignPending}
+        saving={stackSaving}
+        onCancel={() => setStackAssignPending(null)}
+        onConfirm={handleStackAssignConfirm}
+      />
     </GlassScreenRoot>
   )
 }

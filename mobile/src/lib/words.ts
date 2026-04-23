@@ -21,7 +21,8 @@ function requireUserId(): string {
   return uid
 }
 
-const MAX_USER_STACKS_PER_WORD = 10
+/** Max user stacks a single word can belong to (enforced client + server-side normalize). */
+export const MAX_USER_STACKS_PER_WORD = 10
 
 function normalizeUserStackIdsInput(ids: string[] | undefined): string[] {
   const u = [...new Set((ids ?? []).map((x) => String(x).trim()).filter(Boolean))]
