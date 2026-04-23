@@ -4,7 +4,7 @@ import { bucketFromWord } from '@shared/learningBuckets'
 import type { UserStack, VocabItem } from '@shared/types'
 import { MaterialIcons } from '@expo/vector-icons'
 import { GlassScreenRoot, glassScreenShadow, useGlassFonts } from '../components/GlassUi'
-import { deleteUserStack, getUserStack, listWordsInUserStack } from '../lib/userStacks'
+import { deleteUserStack, getUserStack, listWordsInUserStack, removeWordFromUserStack } from '../lib/userStacks'
 import type { AppTheme } from '../theme'
 
 export function UserStackDetailScreen({
@@ -85,6 +85,16 @@ export function UserStackDetailScreen({
           ),
       },
     ])
+  }
+
+  async function removeWordFromStack(wordId: string) {
+    try {
+      await removeWordFromUserStack(wordId, userStackId)
+      await load()
+      await onReload()
+    } catch (e) {
+      Alert.alert('Could not update', e instanceof Error ? e.message : 'Unknown error.')
+    }
   }
 
   async function runDeleteStack() {
@@ -203,7 +213,22 @@ export function UserStackDetailScreen({
                     <Text style={{ fontFamily: fontHeadlineSm, fontSize: 16, fontWeight: '800', color: theme.learnOnSurface, flex: 1 }}>
                       {item.text}
                     </Text>
-                    <Text style={{ fontFamily: fontLabel, fontSize: 12, color: theme.learnOutline }}>{label}</Text>
+                    <Text style={{ fontFamily: fontLabel, fontSize: 12, color: theme.learnOutline, marginRight: 8 }}>{label}</Text>
+                    <Pressable
+                      hitSlop={10}
+                      onPress={() =>
+                        Alert.alert(item.text, undefined, [
+                          { text: 'Cancel', style: 'cancel' },
+                          {
+                            text: 'Remove from this stack',
+                            style: 'destructive',
+                            onPress: () => void removeWordFromStack(item.id),
+                          },
+                        ])
+                      }
+                    >
+                      <MaterialIcons name="more-vert" size={22} color={theme.learnOutline} />
+                    </Pressable>
                   </View>
                 </View>
               )

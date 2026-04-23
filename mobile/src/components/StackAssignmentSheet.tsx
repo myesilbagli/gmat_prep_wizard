@@ -31,13 +31,26 @@ type Props = {
   theme: AppTheme
   visible: boolean
   pending: PendingStackSave | null
+  /** Edit membership for an existing saved word (no new card write). */
+  membershipEdit?: { wordId: string; initialIds: string[] } | null
   saving: boolean
   onCancel: () => void
-  /** Persist word with stack membership; deck-only means pass empty userStackIds. */
+  /** New save from Quick Capture / regenerate. */
   onConfirm: (opts: { deckOnly: boolean; selectedStackIds: string[] }) => Promise<void>
+  /** Existing word: replace userStackIds. */
+  onConfirmMembership?: (opts: { deckOnly: boolean; selectedStackIds: string[] }) => Promise<void>
 }
 
-export function StackAssignmentSheet({ theme, visible, pending, saving, onCancel, onConfirm }: Props) {
+export function StackAssignmentSheet({
+  theme,
+  visible,
+  pending,
+  membershipEdit = null,
+  saving,
+  onCancel,
+  onConfirm,
+  onConfirmMembership,
+}: Props) {
   const insets = useSafeAreaInsets()
   const { height: windowHeight } = useWindowDimensions()
   const { fontBody, fontHeadline, fontLabel, fontLabelBold } = useGlassFonts()
@@ -66,14 +79,26 @@ export function StackAssignmentSheet({ theme, visible, pending, saving, onCancel
   }, [])
 
   useEffect(() => {
-    if (!visible || !pending) return
-    setDeckOnly(true)
-    setSelectedIds(new Set())
-    setInlineCreateOpen(false)
-    setInlineName('')
-    setCreateError(null)
-    void refreshStacks()
-  }, [visible, pending, refreshStacks])
+    if (!visible) return
+    if (membershipEdit) {
+      const ids = membershipEdit.initialIds
+      setDeckOnly(ids.length === 0)
+      setSelectedIds(new Set(ids))
+      setInlineCreateOpen(false)
+      setInlineName('')
+      setCreateError(null)
+      void refreshStacks()
+      return
+    }
+    if (pending) {
+      setDeckOnly(true)
+      setSelectedIds(new Set())
+      setInlineCreateOpen(false)
+      setInlineName('')
+      setCreateError(null)
+      void refreshStacks()
+    }
+  }, [visible, pending, membershipEdit, refreshStacks])
 
   function toggleDeckOnly(next: boolean) {
     setDeckOnly(next)
@@ -122,8 +147,12 @@ export function StackAssignmentSheet({ theme, visible, pending, saving, onCancel
   }
 
   async function handleConfirm() {
-    if (!pending) return
     const ids = deckOnly ? [] : Array.from(selectedIds)
+    if (membershipEdit) {
+      await onConfirmMembership?.({ deckOnly, selectedStackIds: ids })
+      return
+    }
+    if (!pending) return
     await onConfirm({ deckOnly, selectedStackIds: ids })
   }
 
@@ -134,7 +163,7 @@ export function StackAssignmentSheet({ theme, visible, pending, saving, onCancel
   const sheetMaxHeight = Math.round(windowHeight * 0.88)
 
   return (
-    <Modal visible={visible && pending != null} animationType="slide" transparent onRequestClose={() => !saving && onCancel()}>
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={() => !saving && onCancel()}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <Pressable
           style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'flex-end' }}
@@ -153,7 +182,7 @@ export function StackAssignmentSheet({ theme, visible, pending, saving, onCancel
             >
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Text style={{ fontFamily: fontHeadline, fontSize: 18, fontWeight: '800', color: theme.learnOnSurface }}>
-                  Save to deck
+                  {membershipEdit ? 'Stacks for this word' : 'Save to deck'}
                 </Text>
                 <Pressable onPress={() => !saving && !creatingStack && onCancel()} hitSlop={12} disabled={saving}>
                   <MaterialIcons name="close" size={26} color={theme.learnOutline} />

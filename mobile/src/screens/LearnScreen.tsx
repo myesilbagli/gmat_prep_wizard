@@ -21,7 +21,7 @@ import { LearnFlashcardModal } from '../components/LearnFlashcardModal'
 import { CreateUserStackModal } from '../components/CreateUserStackModal'
 import { StackAssignmentSheet, type PendingStackSave } from '../components/StackAssignmentSheet'
 import { generateParagraph, generateWord } from '../lib/api'
-import { listUserStacks } from '../lib/userStacks'
+import { listUserStacks, replaceWordUserStackMembership } from '../lib/userStacks'
 import { saveWord } from '../lib/words'
 import { useSubscription } from '../context/SubscriptionContext'
 import {
@@ -101,6 +101,7 @@ export function LearnScreen({
   const [stackAssignPending, setStackAssignPending] = useState<(PendingStackSave & { source: 'quick' | 'regenerate' }) | null>(
     null,
   )
+  const [membershipEdit, setMembershipEdit] = useState<{ wordId: string; initialIds: string[] } | null>(null)
   const [stackSaving, setStackSaving] = useState(false)
   const [myStacks, setMyStacks] = useState<UserStack[]>([])
   const [myStacksLoading, setMyStacksLoading] = useState(false)
@@ -176,6 +177,22 @@ export function LearnScreen({
       })
     } catch (e) {
       Alert.alert('Regenerate failed', e instanceof Error ? e.message : 'Unknown error')
+    }
+  }
+
+  async function handleMembershipConfirm(opts: { deckOnly: boolean; selectedStackIds: string[] }) {
+    if (!membershipEdit) return
+    setStackSaving(true)
+    try {
+      const next = opts.deckOnly ? [] : opts.selectedStackIds
+      await replaceWordUserStackMembership(membershipEdit.wordId, next)
+      setMembershipEdit(null)
+      await onReload()
+      await reloadMyStacks()
+    } catch (e) {
+      Alert.alert('Update failed', e instanceof Error ? e.message : 'Unknown error.')
+    } finally {
+      setStackSaving(false)
     }
   }
 
@@ -692,6 +709,10 @@ export function LearnScreen({
         onToggleFlag={(item) => void toggleFlag(item.id, !item.flagged)}
         onSync={(item) => void onSyncExposure(item.id)}
         onRegenerate={(item) => void regenerateWord(item)}
+        onAddToStacks={(item) => {
+          setActionsFor(null)
+          setMembershipEdit({ wordId: item.id, initialIds: item.userStackIds ?? [] })
+        }}
         onDelete={(item) => {
           setActionsFor(null)
           confirmDelete(item)
@@ -813,11 +834,16 @@ export function LearnScreen({
 
       <StackAssignmentSheet
         theme={theme}
-        visible={stackAssignPending != null}
+        visible={stackAssignPending != null || membershipEdit != null}
         pending={stackAssignPending}
+        membershipEdit={membershipEdit}
         saving={stackSaving}
-        onCancel={() => setStackAssignPending(null)}
+        onCancel={() => {
+          setStackAssignPending(null)
+          setMembershipEdit(null)
+        }}
         onConfirm={handleStackAssignConfirm}
+        onConfirmMembership={handleMembershipConfirm}
       />
 
       <CreateUserStackModal
@@ -968,6 +994,7 @@ function WordActionsSheet({
   onToggleFlag,
   onSync,
   onRegenerate,
+  onAddToStacks,
   onDelete,
 }: {
   visible: boolean
@@ -980,6 +1007,7 @@ function WordActionsSheet({
   onToggleFlag: (item: VocabItem) => void
   onSync: (item: VocabItem) => void
   onRegenerate: (item: VocabItem) => void
+  onAddToStacks: (item: VocabItem) => void
   onDelete: (item: VocabItem) => void
 }) {
   if (!item) return null
@@ -1036,6 +1064,15 @@ function WordActionsSheet({
           <ActionRow label={item.flagged ? 'Remove flag' : 'Flag for review'} onPress={() => { onClose(); onToggleFlag(item) }} theme={theme} fontBody={fontBody} />
           <ActionRow label="Add exposure (review)" onPress={() => { onClose(); onSync(item) }} theme={theme} fontBody={fontBody} />
           <ActionRow label="Regenerate card" onPress={() => { onClose(); onRegenerate(item) }} theme={theme} fontBody={fontBody} />
+          <ActionRow
+            label="Add to stacks…"
+            onPress={() => {
+              onClose()
+              onAddToStacks(item)
+            }}
+            theme={theme}
+            fontBody={fontBody}
+          />
           <View style={{ height: 1, backgroundColor: theme.learnGlassBorder, marginVertical: 4 }} />
           <ActionRow
             label="Remove from deck…"
