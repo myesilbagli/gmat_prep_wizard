@@ -43,6 +43,16 @@ export type VocabStatus = 'learning' | 'mastered'
 
 export type WordSource = 'lookup' | 'word_stack' | 'onboarding'
 
+/** User-created stack metadata under `users/{uid}/myStacks/{id}`. */
+export type UserStack = {
+  id: string
+  name: string
+  description: string | null
+  wordCount: number
+  createdAt: unknown
+  updatedAt: unknown
+}
+
 export type VocabItem = {
   id: string
   text: string
@@ -88,6 +98,8 @@ export type VocabItem = {
   wordSource?: WordSource
   stackId?: string | null
   stackPosition?: number | null
+  /** User-created stack membership; canonical `stackId` is separate. */
+  userStackIds?: string[]
   createdAt?: unknown
   updatedAt?: unknown
 }
