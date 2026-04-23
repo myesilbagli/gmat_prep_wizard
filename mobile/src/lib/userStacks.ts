@@ -4,6 +4,7 @@ import {
   deleteDoc,
   doc,
   documentId,
+  getDoc,
   getDocs,
   limit,
   orderBy,
@@ -36,6 +37,14 @@ function myStacksCol(uid: string) {
 
 function wordsCol(uid: string) {
   return collection(db, 'users', uid, 'words')
+}
+
+export async function getUserStack(stackId: string): Promise<UserStack | null> {
+  const uid = requireUserId()
+  const ref = doc(db, 'users', uid, 'myStacks', stackId)
+  const snap = await getDoc(ref)
+  if (!snap.exists()) return null
+  return normalizeUserStackDoc({ id: snap.id, ...snap.data() })
 }
 
 export async function listUserStacks(): Promise<UserStack[]> {
