@@ -27,19 +27,40 @@ export async function generateWord(text: string, mainLanguage?: string): Promise
   return normalizeGeneratedResultFromApi(await res.json())
 }
 
-export async function generateParagraph(items: VocabItem[]) {
+export type GenerateParagraphOptions = {
+  domain?: string
+  difficulty?: string
+  lengthHint?: string
+  theme?: string
+  focusedIndex?: number
+  totalPassages?: number
+}
+
+export async function generateParagraph(items: VocabItem[], options?: GenerateParagraphOptions) {
+  const payload: Record<string, unknown> = {
+    items: items.map((it) => ({
+      text: it.text,
+      type: it.type,
+      definition: it.definition,
+      simpleDefinition: it.simpleDefinition,
+    })),
+  }
+  if (options?.domain?.trim()) payload.domain = options.domain.trim()
+  if (options?.difficulty?.trim()) payload.difficulty = options.difficulty.trim()
+  if (options?.lengthHint?.trim()) payload.lengthHint = options.lengthHint.trim()
+  if (options?.theme?.trim()) payload.theme = options.theme.trim()
+  if (typeof options?.focusedIndex === 'number' && Number.isInteger(options.focusedIndex)) {
+    payload.focusedIndex = options.focusedIndex
+  }
+  if (typeof options?.totalPassages === 'number' && Number.isInteger(options.totalPassages)) {
+    payload.totalPassages = options.totalPassages
+  }
+
   const baseUrl = requireFunctionsBaseUrl()
   const res = await fetch(`${baseUrl}/generateParagraph`, {
     method: 'POST',
     headers: await authHeaders(),
-    body: JSON.stringify({
-      items: items.map((it) => ({
-        text: it.text,
-        type: it.type,
-        definition: it.definition,
-        simpleDefinition: it.simpleDefinition,
-      })),
-    }),
+    body: JSON.stringify(payload),
   })
   if (!res.ok) {
     const err = await res.text().catch(() => '')

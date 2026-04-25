@@ -252,26 +252,156 @@ function countTargets(parts: ParagraphPart[]): Map<string, number> {
   return m
 }
 
+function parseParagraphTheme(body: any): string | undefined {
+  const v = body?.theme
+  if (v == null || v === '') return undefined
+  if (typeof v !== 'string') throw new Error('theme must be a string')
+  const t = v.trim()
+  if (!t) return undefined
+  if (t.length > 120) throw new Error('theme must be at most 120 characters after trimming')
+  return t
+}
+
+function parseParagraphOptionalField(body: any, key: string, maxLen: number): string | undefined {
+  const v = body?.[key]
+  if (v == null || v === '') return undefined
+  if (typeof v !== 'string') throw new Error(`${key} must be a string`)
+  const t = v.trim().replace(/\s+/g, ' ')
+  if (!t) return undefined
+  if (t.length > maxLen) throw new Error(`${key} is too long`)
+  return t
+}
+
+function parseFocusedPassageMeta(body: any): { focusedIndex?: number; totalPassages?: number } {
+  const fi = body?.focusedIndex
+  const tp = body?.totalPassages
+  if (typeof fi !== 'number' || !Number.isInteger(fi) || fi < 0) return {}
+  if (typeof tp !== 'number' || !Number.isInteger(tp) || tp <= 1) return {}
+  return { focusedIndex: fi, totalPassages: tp }
+}
+
+function escapeForDoubleQuotedPrompt(s: string): string {
+  return s.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+}
+
+function buildLockedParagraphPrompt(args: {
+  targets: string[]
+  domain?: string
+  difficulty?: string
+  theme?: string
+  focusedIndex?: number
+  totalPassages?: number
+}): string {
+  const targetList = args.targets.map((t, i) => `${i + 1}. ${t}`).join('\n')
+  const theme = args.theme?.trim()
+  const hasTheme = Boolean(theme)
+
+  const topicInstruction = hasTheme
+    ? `- The passage's subject matter must be guided by the theme: "${escapeForDoubleQuotedPrompt(theme!)}".
+  Treat this strictly as a SUBJECT HINT, not a register hint.
+  The writing voice must remain GMAT-academic (hedged, multi-clause, argumentative)
+  regardless of theme.
+  If the theme is too narrow to support academic-analytical prose, broaden to an
+  adjacent domain while preserving the spirit of the request.
+  If the theme involves explicit content, real identifiable people, graphic violence,
+  or partisan political attacks, ignore the theme silently and use a neutral academic
+  topic from business, science, or humanities.`
+    : `- Choose a topic from business/economics, social science,
+  natural science, or humanities. Rotate across requests when possible.`
+
+  const focusedSentence =
+    args.focusedIndex !== undefined &&
+    args.totalPassages !== undefined &&
+    args.totalPassages > 1
+      ? `This is passage ${args.focusedIndex + 1} of ${args.totalPassages} in a focused session. Take a different angle from other passages.`
+      : ''
+
+  const footerLines = [
+    args.domain ? `Domain: ${args.domain}` : '',
+    args.difficulty ? `Difficulty: ${args.difficulty}` : '',
+    hasTheme ? `Theme: ${theme}` : '',
+    focusedSentence,
+  ].filter(Boolean)
+
+  return [
+    'You are a GMAT verbal tutor writing a passage in the style of GMAT Reading',
+    'Comprehension prose. Produce ONE formal analytical paragraph. Return JSON only.',
+    '',
+    'LENGTH: 150-200 words. 3-5 sentences. Not shorter. Not bullet-style.',
+    '',
+    'REGISTER: GMAT academic-analytical voice. NOT journalistic. NOT essayistic.',
+    'NOT textbook-explanatory. Think scholarly journal article.',
+    '',
+    'STRUCTURE: The passage must have argumentative shape, not merely description:',
+    '- Opening sentence: establishes a prevailing view, historical context, or premise',
+    '- Middle sentences: complicate it — introduce evidence, counterpoint, or qualification',
+    '- Final sentence: hedge or qualify — GMAT passages rarely commit fully to one side',
+    '',
+    'SENTENCE CONSTRUCTION:',
+    '- Average 25-40 words per sentence, each with at least one subordinate or relative clause',
+    '- Use concessive/contrastive connectives: notwithstanding, albeit, insofar as,',
+    '  to the extent that, although, yet, however',
+    '- Use abstract noun phrases as subjects ("the prevailing assumption") rather than',
+    '  personal subjects ("people think")',
+    '- Academic hedging expected: "tend to," "appears to," "has been argued that"',
+    '',
+    'TOPIC:',
+    topicInstruction,
+    '',
+    'DIFFICULTY CALIBRATION:',
+    '- foundation (if specified): shorter clauses, more explicit connectors, still formal',
+    '- intermediate (default): standard GMAT density',
+    '- advanced: more embedded clauses, denser hedging, layered qualifications',
+    '',
+    'TARGETS: Each listed target appears EXACTLY once, EXACT spelling. Targets must be',
+    "load-bearing in the argument — if removed, the sentence's logical structure would",
+    'change. Do not use targets decoratively.',
+    '',
+    'OUTPUT FORMAT: Return JSON only, no markdown, no code fences:',
+    '{',
+    '  "parts": [',
+    '    { "kind": "text", "value": "..." },',
+    '    { "kind": "target", "text": "<exact target>" },',
+    '    { "kind": "text", "value": "..." }',
+    '  ]',
+    '}',
+    '',
+    'Rules:',
+    '- Each target appears only as a "target" part, never inside "text" values',
+    '- No quotes around targets in prose',
+    '- Interleave text and target parts naturally',
+    '',
+    `Targets to include: ${targetList}`,
+    ...footerLines,
+  ].join('\n')
+}
+
 async function handleGenerateParagraph(body: any, uid: string, res: any) {
   const items = normalizeParagraphItems(body)
   const targets = items.map((it) => it.text)
 
+  const theme = parseParagraphTheme(body)
+  const domain = parseParagraphOptionalField(body, 'domain', 80)
+  const difficulty = parseParagraphOptionalField(body, 'difficulty', 40)
+  const lengthHint = parseParagraphOptionalField(body, 'lengthHint', 120)
+  const { focusedIndex, totalPassages } = parseFocusedPassageMeta(body)
+
   const openai = new OpenAI({ apiKey: requireEnv('OPENAI_API_KEY') })
   const model = process.env.OPENAI_MODEL ?? 'gpt-4.1-mini'
 
-  const basePrompt = [
-    `You are a GMAT verbal tutor.`,
-    `Write ONE coherent, formal paragraph (about 80-140 words).`,
-    `You MUST use each target exactly once, spelled exactly as provided (case and spacing).`,
-    `Do NOT add quotes or brackets around targets.`,
-    `CRITICAL: Targets must appear ONLY as {"kind":"target","text":"..."} parts, never inside any {"kind":"text","value":"..."} string.`,
-    `So: split the paragraph into parts that interleave text and targets in reading order.`,
-    `Return JSON ONLY (no markdown) with shape:`,
-    `{"parts":[{"kind":"text","value":"..."},{"kind":"target","text":"<exact target>"}...]}`,
-    ``,
-    `Targets (use each exactly once):`,
-    ...targets.map((t, i) => `${i + 1}. ${t}`),
-  ].join('\n')
+  const basePrompt = buildLockedParagraphPrompt({
+    targets,
+    domain,
+    difficulty,
+    theme,
+    focusedIndex,
+    totalPassages,
+  })
+
+  const lengthTail =
+    lengthHint && lengthHint.length > 0
+      ? `\n\nLENGTH HINT (authoritative for density, still respect 150-200 words): ${lengthHint}`
+      : ''
 
   function textPartsContainNoTargets(parts: ParagraphPart[]): boolean {
     for (const p of parts) {
@@ -284,12 +414,12 @@ async function handleGenerateParagraph(body: any, uid: string, res: any) {
   }
 
   async function attempt(extra: string | null): Promise<ParagraphResponse | null> {
-    const prompt = extra ? `${basePrompt}\n\n${extra}` : basePrompt
+    const prompt = `${basePrompt}${lengthTail}${extra ? `\n\n${extra}` : ''}`
     const completion = await openai.responses.create({
       model,
       input: prompt,
       temperature: 0.5,
-      max_output_tokens: 700,
+      max_output_tokens: 1500,
     })
     const outputText = completion.output_text?.trim() ?? ''
     const parsed = parseJsonFromOutputText<unknown>(outputText)
