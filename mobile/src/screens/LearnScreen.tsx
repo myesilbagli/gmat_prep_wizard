@@ -2,14 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ActivityIndicator, Alert, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { bucketFromWord } from '@shared/learningBuckets'
-import { pickParagraphWords } from '@shared/paragraphPicker'
 import { FREE_MAX_SAVED_WORDS, WORD_STACK_CATALOG, canAccessStack } from '@shared/freemium'
 import type { GeneratedResult, UserStack, VocabItem } from '@shared/types'
 import { getNativeGloss } from '@shared/vocab'
 import { BlurView } from 'expo-blur'
 import { Ionicons, MaterialIcons } from '@expo/vector-icons'
 import {
-  GlassPanel,
   GlassScreenRoot,
   GlassSearchField,
   GlassTitleHeader,
@@ -20,23 +18,14 @@ import {
 import { LearnFlashcardModal } from '../components/LearnFlashcardModal'
 import { CreateUserStackModal } from '../components/CreateUserStackModal'
 import { StackAssignmentSheet, type PendingStackSave } from '../components/StackAssignmentSheet'
-import { generateParagraph, generateWord } from '../lib/api'
+import { generateWord } from '../lib/api'
 import { listUserStacks, replaceWordUserStackMembership } from '../lib/userStacks'
 import { saveWord } from '../lib/words'
 import { useSubscription } from '../context/SubscriptionContext'
-import {
-  applyParagraphExposure,
-  deleteVocabItem,
-  recordWordExposure,
-  toggleVocabFlagged,
-} from '../lib/vocab'
+import { deleteVocabItem, recordWordExposure, toggleVocabFlagged } from '../lib/vocab'
 import type { AppTheme } from '../theme'
 
 type UiListFilter = 'all' | 'new' | 'learning' | 'familiar' | 'mastered'
-
-type ParagraphPart =
-  | { kind: 'text'; value: string }
-  | { kind: 'target'; text: string }
 
 const FILTER_PILLS: { key: UiListFilter; label: string }[] = [
   { key: 'all', label: 'All' },
@@ -85,9 +74,6 @@ export function LearnScreen({
   const [filter, setFilter] = useState<UiListFilter>('learning')
   const [flashOpen, setFlashOpen] = useState(false)
   const [flashStartIndex, setFlashStartIndex] = useState(0)
-  const [paraParts, setParaParts] = useState<ParagraphPart[] | null>(null)
-  const [paraLoading, setParaLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [actionsFor, setActionsFor] = useState<VocabItem | null>(null)
 
   const [genText, setGenText] = useState('')
@@ -120,6 +106,7 @@ export function LearnScreen({
   useEffect(() => {
     void reloadMyStacks()
   }, [reloadMyStacks])
+
   const genCanGenerate = genText.trim().length > 0
   const genModalOpen = genState.status !== 'idle'
 
@@ -131,10 +118,6 @@ export function LearnScreen({
       return true
     })
   }, [items, filter, query])
-
-  useEffect(() => {
-    setParaParts(null)
-  }, [filter, query])
 
   async function toggleFlag(id: string, flagged: boolean) {
     await toggleVocabFlagged({ id, flagged })
@@ -231,31 +214,7 @@ export function LearnScreen({
     setFlashOpen(true)
   }
 
-  async function onGenerateParagraph() {
-    setParaLoading(true)
-    setError(null)
-    try {
-      const picked = pickParagraphWords(items, Date.now(), 5)
-      if (!picked.length) {
-        throw new Error(
-          'No eligible words yet. Complete a few sessions so words have exposure (score above 0) before paragraph practice.',
-        )
-      }
-      const resp = await generateParagraph(picked)
-      if (!resp.parts?.length) throw new Error('Empty paragraph response.')
-      setParaParts(resp.parts)
-      await applyParagraphExposure(picked.map((p) => p.id))
-      await onReload()
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to generate paragraph')
-    } finally {
-      setParaLoading(false)
-    }
-  }
-
   const searchPh = items.length >= 100 ? `Search ${items.length}+ words...` : `Search ${items.length} words...`
-
-  const targetHighlightBg = learnDark ? 'rgba(189, 194, 255, 0.22)' : 'rgba(99, 102, 241, 0.18)'
 
   async function onGenerateWord() {
     if (!genCanGenerate) return
@@ -289,6 +248,8 @@ export function LearnScreen({
       mainLanguage,
       source: 'quick',
     })
+    // Close Quick Capture modal so StackAssignmentSheet Modal can appear (nested RN Modals).
+    setGenState({ status: 'idle' })
   }
 
   return (
@@ -596,97 +557,6 @@ export function LearnScreen({
             ))
           )}
         </View>
-
-        <GlassPanel theme={theme} learnDark={learnDark} leftAccent={theme.learnTertiary}>
-          <Text
-            style={{
-              fontFamily: fontHeadlineSm,
-              fontSize: 13,
-              fontWeight: '800',
-              color: theme.learnOnSurface,
-              marginBottom: 6,
-            }}
-          >
-            Reading practice
-          </Text>
-          <Text
-            style={{
-              fontFamily: fontBody,
-              fontSize: 14,
-              lineHeight: 21,
-              color: theme.learnOnSurfaceVariant,
-              marginBottom: 14,
-            }}
-          >
-            Picks up to five words that benefit from reading in context (by exposure score). Words must have been seen in study at least once.
-          </Text>
-          <Pressable
-            onPress={() => void onGenerateParagraph()}
-            disabled={paraLoading}
-            style={{
-              backgroundColor: theme.learnPillActiveBg,
-              paddingVertical: 14,
-              paddingHorizontal: 20,
-              borderRadius: 999,
-              opacity: paraLoading ? 0.7 : 1,
-              alignSelf: 'flex-start',
-            }}
-          >
-            <Text
-              style={{
-                fontFamily: fontLabelBold,
-                color: theme.learnPillActiveText,
-                fontSize: 14,
-                fontWeight: '700',
-              }}
-            >
-              {paraLoading ? 'Generating…' : 'Generate paragraph'}
-            </Text>
-          </Pressable>
-          {error ? (
-            <Text style={{ fontFamily: fontBody, color: theme.danger, marginTop: 12, fontSize: 14 }}>{error}</Text>
-          ) : null}
-          {paraParts && paraParts.length > 0 ? (
-            <Text
-              style={{
-                fontFamily: fontBody,
-                fontSize: 17,
-                lineHeight: 28,
-                color: theme.learnOnSurface,
-                marginTop: 20,
-              }}
-            >
-              {paraParts.map((p, i) =>
-                p.kind === 'text' ? (
-                  <Text key={i}>{p.value}</Text>
-                ) : (
-                  <Text
-                    key={i}
-                    style={{
-                      backgroundColor: targetHighlightBg,
-                      fontWeight: '800',
-                      color: theme.learnOnSurface,
-                    }}
-                  >
-                    {p.text}
-                  </Text>
-                ),
-              )}
-            </Text>
-          ) : !error && !paraLoading ? (
-            <Text
-              style={{
-                fontFamily: fontBody,
-                fontSize: 15,
-                lineHeight: 22,
-                color: theme.learnOnSurfaceVariant,
-                marginTop: 16,
-              }}
-            >
-              Generate a paragraph to practice reading your vocabulary in context.
-            </Text>
-          ) : null}
-        </GlassPanel>
       </ScrollView>
 
       <LearnFlashcardModal
@@ -839,8 +709,13 @@ export function LearnScreen({
         membershipEdit={membershipEdit}
         saving={stackSaving}
         onCancel={() => {
+          const p = stackAssignPending
           setStackAssignPending(null)
           setMembershipEdit(null)
+          if (p?.source === 'quick') {
+            setGenState({ status: 'ready', result: p.result })
+            setGenText(p.text)
+          }
         }}
         onConfirm={handleStackAssignConfirm}
         onConfirmMembership={handleMembershipConfirm}
