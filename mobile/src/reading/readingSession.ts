@@ -23,7 +23,10 @@ export type ReadingPassageEntry = {
   difficulty?: string
 }
 
-/** Shared state for Practice → Reading → Review (in-memory only in v1). */
+/**
+ * Shared state for Practice → Reading → Review.
+ * v1: in-memory only (lost if the OS kills the app); no AsyncStorage — see product spec.
+ */
 export type ReadingSession = {
   config: ReadingSessionConfig
   totalPassages: number

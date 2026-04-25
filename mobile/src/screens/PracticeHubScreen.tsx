@@ -6,11 +6,13 @@ import type { AppTheme } from '../theme'
 
 type Props = {
   theme: AppTheme
+  /** When false, Reading is disabled (no saved words to draw from). */
+  hasSavedWords: boolean
   onSelectDrill: () => void
   onSelectReading: () => void
 }
 
-export function PracticeHubScreen({ theme, onSelectDrill, onSelectReading }: Props) {
+export function PracticeHubScreen({ theme, hasSavedWords, onSelectDrill, onSelectReading }: Props) {
   const { fontHeadline, fontHeadlineSm, fontBody, fontLabelBold } = useGlassFonts()
 
   return (
@@ -73,10 +75,14 @@ export function PracticeHubScreen({ theme, onSelectDrill, onSelectReading }: Pro
             fontLabelBold={fontLabelBold}
             icon="menu-book"
             title="Reading"
-            description="Apply your vocabulary in GMAT-style passages."
-            cta="Start reading"
+            description={
+              hasSavedWords
+                ? 'Apply your vocabulary in GMAT-style passages.'
+                : 'Save words to your deck first — reading practice needs a vocabulary pool.'
+            }
+            cta={hasSavedWords ? 'Start reading' : 'Save words first'}
             onPress={onSelectReading}
-            disabled={false}
+            disabled={!hasSavedWords}
           />
           <ModeCard
             theme={theme}

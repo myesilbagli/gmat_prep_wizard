@@ -27,6 +27,7 @@ export async function generateWord(text: string, mainLanguage?: string): Promise
   return normalizeGeneratedResultFromApi(await res.json())
 }
 
+/** Optional fields for POST /generateParagraph; theme is capped at 120 chars server-side. */
 export type GenerateParagraphOptions = {
   domain?: string
   difficulty?: string

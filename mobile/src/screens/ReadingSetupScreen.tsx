@@ -130,6 +130,7 @@ export function ReadingSetupScreen({ theme, items, onBackToHub, onStart }: Props
         <Text style={{ fontFamily: fontLabelBold, fontSize: 12, letterSpacing: 1.2, color: theme.learnOnSurfaceVariant, marginBottom: 8 }}>
           THEME (optional)
         </Text>
+        {/* Client max 120 matches server: longer themes are rejected with HTTP 400 (do not truncate silently). */}
         <TextInput
           value={themeDraft}
           onChangeText={setThemeDraft}
@@ -235,6 +236,8 @@ function ChoiceRow({
       }}
       accessibilityRole="radio"
       accessibilityState={{ selected }}
+      accessibilityLabel={title}
+      accessibilityHint={description}
     >
       <Text style={{ fontFamily: fontHeadlineSm, fontSize: 16, fontWeight: '800', color: theme.learnOnSurface }}>{title}</Text>
       <Text style={{ fontFamily: fontBody, fontSize: 13, lineHeight: 19, color: theme.learnOnSurfaceVariant, marginTop: 4 }}>

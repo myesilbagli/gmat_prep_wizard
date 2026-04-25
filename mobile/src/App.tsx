@@ -400,6 +400,7 @@ function MainTabs({
                 practiceFlow.screen === 'hub' ? (
                   <PracticeHubScreen
                     theme={theme}
+                    hasSavedWords={items.length > 0}
                     onSelectDrill={() => setPracticeFlow({ screen: 'drill' })}
                     onSelectReading={() => setPracticeFlow({ screen: 'readingSetup' })}
                   />
@@ -426,12 +427,16 @@ function MainTabs({
                 ) : practiceFlow.screen === 'reading' && readingSession ? (
                   <ReadingScreen
                     theme={theme}
+                    mainLanguage={mainLanguage}
+                    items={items}
                     session={readingSession}
+                    setReadingSession={setReadingSession}
+                    onReloadItems={reloadItems}
                     onAbandonToSetup={() => {
                       setReadingSession(null)
                       setPracticeFlow({ screen: 'readingSetup' })
                     }}
-                    onDoneReading={() => setPracticeFlow({ screen: 'review' })}
+                    onRequestReview={() => setPracticeFlow({ screen: 'review' })}
                   />
                 ) : practiceFlow.screen === 'review' && readingSession ? (
                   <ReadingReviewScreen
