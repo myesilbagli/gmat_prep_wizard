@@ -36,7 +36,18 @@ const MODE_OPTIONS: {
   },
 ]
 
-export function TestScreen({ theme, items }: { theme: AppTheme; items: VocabItem[] }) {
+export function TestScreen({
+  theme,
+  items,
+  drillMode = false,
+  onBackToPracticeHub,
+}: {
+  theme: AppTheme
+  items: VocabItem[]
+  /** When true, show Drill framing and optional back to Practice hub. */
+  drillMode?: boolean
+  onBackToPracticeHub?: () => void
+}) {
   const { fontHeadline, fontHeadlineSm, fontBody, fontLabelBold } = useGlassFonts()
   const learnDark = isLearnDarkUi(theme)
 
@@ -128,6 +139,20 @@ export function TestScreen({ theme, items }: { theme: AppTheme; items: VocabItem
       >
         {phase === 'idle' ? (
           <>
+            {drillMode && onBackToPracticeHub ? (
+              <Pressable
+                onPress={onBackToPracticeHub}
+                hitSlop={12}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4, marginBottom: 8 }}
+                accessibilityRole="button"
+                accessibilityLabel="Back to Practice modes"
+              >
+                <MaterialIcons name="arrow-back" size={22} color={theme.learnAccent} />
+                <Text style={{ fontFamily: fontLabelBold, fontSize: 15, fontWeight: '700', color: theme.learnAccent }}>
+                  Practice
+                </Text>
+              </Pressable>
+            ) : null}
             <Text
               style={{
                 fontFamily: fontHeadline,
@@ -136,10 +161,10 @@ export function TestScreen({ theme, items }: { theme: AppTheme; items: VocabItem
                 letterSpacing: -0.5,
                 color: theme.learnOnSurface,
                 textAlign: 'center',
-                marginTop: 8,
+                marginTop: drillMode ? 0 : 8,
               }}
             >
-              Practice
+              {drillMode ? 'Drill' : 'Practice'}
             </Text>
             <Text
               style={{
@@ -152,7 +177,9 @@ export function TestScreen({ theme, items }: { theme: AppTheme; items: VocabItem
                 paddingHorizontal: 8,
               }}
             >
-              Configure your session for focused verbal work. Your saved deck powers each question.
+              {drillMode
+                ? 'Quick MCQ drill to warm up on individual words. Your saved deck powers each question.'
+                : 'Configure your session for focused verbal work. Your saved deck powers each question.'}
             </Text>
 
             <View

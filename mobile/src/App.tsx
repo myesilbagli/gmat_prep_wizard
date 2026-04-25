@@ -32,6 +32,8 @@ import { UserStackDetailScreen } from './screens/UserStackDetailScreen'
 import { WordStackDetailScreen } from './screens/WordStackDetailScreen'
 import { SignInScreen } from './screens/SignInScreen'
 import { SignUpScreen } from './screens/SignUpScreen'
+import { GlassScreenRoot, useGlassFonts } from './components/GlassUi'
+import { PracticeHubScreen } from './screens/PracticeHubScreen'
 import { TestScreen } from './screens/TestScreen'
 import { WelcomeScreen } from './screens/WelcomeScreen'
 import type { AppTheme } from './theme'
@@ -143,6 +145,49 @@ type LearnFlow =
   | { screen: 'detail'; stackId: string }
   | { screen: 'userStack'; userStackId: string }
 
+type PracticeFlow =
+  | { screen: 'hub' }
+  | { screen: 'drill' }
+  | { screen: 'readingSetup' }
+  | { screen: 'reading' }
+  | { screen: 'review' }
+
+function PracticeReadingSetupPlaceholder({ theme, onBack }: { theme: AppTheme; onBack: () => void }) {
+  const { fontHeadline, fontBody, fontLabelBold } = useGlassFonts()
+  return (
+    <GlassScreenRoot theme={theme}>
+      <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 12 }}>
+        <Pressable
+          onPress={onBack}
+          hitSlop={12}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 16 }}
+          accessibilityRole="button"
+          accessibilityLabel="Back to Practice modes"
+        >
+          <MaterialIcons name="arrow-back" size={22} color={theme.learnAccent} />
+          <Text style={{ fontFamily: fontLabelBold, fontSize: 15, fontWeight: '700', color: theme.learnAccent }}>
+            Practice
+          </Text>
+        </Pressable>
+        <Text
+          style={{
+            fontFamily: fontHeadline,
+            fontSize: 24,
+            fontWeight: '800',
+            color: theme.learnOnSurface,
+            marginBottom: 10,
+          }}
+        >
+          Reading setup
+        </Text>
+        <Text style={{ fontFamily: fontBody, fontSize: 15, lineHeight: 22, color: theme.learnOnSurfaceVariant }}>
+          Configure length, word pool, and optional theme — full flow loads in the next screen of this build.
+        </Text>
+      </View>
+    </GlassScreenRoot>
+  )
+}
+
 function MainTabs({
   sessionLaunchKey = 0,
   onRequestOnboardingReplay,
@@ -153,8 +198,9 @@ function MainTabs({
   const insets = useSafeAreaInsets()
   const { theme, colorScheme, setColorScheme } = useAppTheme()
   const { isPro, loading: subLoading, openPaywall } = useSubscription()
-  const [tab, setTab] = useState<'today' | 'learn' | 'test'>('today')
+  const [tab, setTab] = useState<'today' | 'learn' | 'practice'>('today')
   const [learnFlow, setLearnFlow] = useState<LearnFlow>({ screen: 'main' })
+  const [practiceFlow, setPracticeFlow] = useState<PracticeFlow>({ screen: 'hub' })
   const [sessionOpen, setSessionOpen] = useState(false)
   const [sessionRemountKey, setSessionRemountKey] = useState(0)
   const [profileOpen, setProfileOpen] = useState(false)
@@ -183,6 +229,10 @@ function MainTabs({
 
   useEffect(() => {
     if (tab !== 'learn') setLearnFlow({ screen: 'main' })
+  }, [tab])
+
+  useEffect(() => {
+    if (tab !== 'practice') setPracticeFlow({ screen: 'hub' })
   }, [tab])
 
   useEffect(() => {
@@ -368,8 +418,23 @@ function MainTabs({
                   />
                 )
               ) : null}
-              {tab === 'test' ? (
-                <TestScreen theme={theme} items={items} />
+              {tab === 'practice' ? (
+                practiceFlow.screen === 'hub' ? (
+                  <PracticeHubScreen
+                    theme={theme}
+                    onSelectDrill={() => setPracticeFlow({ screen: 'drill' })}
+                    onSelectReading={() => setPracticeFlow({ screen: 'readingSetup' })}
+                  />
+                ) : practiceFlow.screen === 'drill' ? (
+                  <TestScreen
+                    theme={theme}
+                    items={items}
+                    drillMode
+                    onBackToPracticeHub={() => setPracticeFlow({ screen: 'hub' })}
+                  />
+                ) : practiceFlow.screen === 'readingSetup' ? (
+                  <PracticeReadingSetupPlaceholder theme={theme} onBack={() => setPracticeFlow({ screen: 'hub' })} />
+                ) : null
               ) : null}
             </View>
             <View
@@ -397,9 +462,9 @@ function MainTabs({
                 muted={theme.muted}
               />
               <TabButton
-                label="Test"
-                active={tab === 'test'}
-                onPress={() => setTab('test')}
+                label="Practice"
+                active={tab === 'practice'}
+                onPress={() => setTab('practice')}
                 color={theme.primary}
                 muted={theme.muted}
               />
