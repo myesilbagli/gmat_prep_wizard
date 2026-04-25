@@ -32,8 +32,11 @@ import { UserStackDetailScreen } from './screens/UserStackDetailScreen'
 import { WordStackDetailScreen } from './screens/WordStackDetailScreen'
 import { SignInScreen } from './screens/SignInScreen'
 import { SignUpScreen } from './screens/SignUpScreen'
-import { GlassScreenRoot, useGlassFonts } from './components/GlassUi'
+import { createReadingSession, type ReadingSession } from './reading/readingSession'
 import { PracticeHubScreen } from './screens/PracticeHubScreen'
+import { ReadingReviewScreen } from './screens/ReadingReviewScreen'
+import { ReadingScreen } from './screens/ReadingScreen'
+import { ReadingSetupScreen } from './screens/ReadingSetupScreen'
 import { TestScreen } from './screens/TestScreen'
 import { WelcomeScreen } from './screens/WelcomeScreen'
 import type { AppTheme } from './theme'
@@ -152,42 +155,6 @@ type PracticeFlow =
   | { screen: 'reading' }
   | { screen: 'review' }
 
-function PracticeReadingSetupPlaceholder({ theme, onBack }: { theme: AppTheme; onBack: () => void }) {
-  const { fontHeadline, fontBody, fontLabelBold } = useGlassFonts()
-  return (
-    <GlassScreenRoot theme={theme}>
-      <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 12 }}>
-        <Pressable
-          onPress={onBack}
-          hitSlop={12}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 16 }}
-          accessibilityRole="button"
-          accessibilityLabel="Back to Practice modes"
-        >
-          <MaterialIcons name="arrow-back" size={22} color={theme.learnAccent} />
-          <Text style={{ fontFamily: fontLabelBold, fontSize: 15, fontWeight: '700', color: theme.learnAccent }}>
-            Practice
-          </Text>
-        </Pressable>
-        <Text
-          style={{
-            fontFamily: fontHeadline,
-            fontSize: 24,
-            fontWeight: '800',
-            color: theme.learnOnSurface,
-            marginBottom: 10,
-          }}
-        >
-          Reading setup
-        </Text>
-        <Text style={{ fontFamily: fontBody, fontSize: 15, lineHeight: 22, color: theme.learnOnSurfaceVariant }}>
-          Configure length, word pool, and optional theme — full flow loads in the next screen of this build.
-        </Text>
-      </View>
-    </GlassScreenRoot>
-  )
-}
-
 function MainTabs({
   sessionLaunchKey = 0,
   onRequestOnboardingReplay,
@@ -201,6 +168,7 @@ function MainTabs({
   const [tab, setTab] = useState<'today' | 'learn' | 'practice'>('today')
   const [learnFlow, setLearnFlow] = useState<LearnFlow>({ screen: 'main' })
   const [practiceFlow, setPracticeFlow] = useState<PracticeFlow>({ screen: 'hub' })
+  const [readingSession, setReadingSession] = useState<ReadingSession | null>(null)
   const [sessionOpen, setSessionOpen] = useState(false)
   const [sessionRemountKey, setSessionRemountKey] = useState(0)
   const [profileOpen, setProfileOpen] = useState(false)
@@ -232,8 +200,18 @@ function MainTabs({
   }, [tab])
 
   useEffect(() => {
-    if (tab !== 'practice') setPracticeFlow({ screen: 'hub' })
+    if (tab !== 'practice') {
+      setPracticeFlow({ screen: 'hub' })
+      setReadingSession(null)
+    }
   }, [tab])
+
+  useEffect(() => {
+    if (tab !== 'practice') return
+    if ((practiceFlow.screen === 'reading' || practiceFlow.screen === 'review') && !readingSession) {
+      setPracticeFlow({ screen: 'readingSetup' })
+    }
+  }, [tab, practiceFlow.screen, readingSession])
 
   useEffect(() => {
     let cancelled = false
@@ -433,7 +411,49 @@ function MainTabs({
                     onBackToPracticeHub={() => setPracticeFlow({ screen: 'hub' })}
                   />
                 ) : practiceFlow.screen === 'readingSetup' ? (
-                  <PracticeReadingSetupPlaceholder theme={theme} onBack={() => setPracticeFlow({ screen: 'hub' })} />
+                  <ReadingSetupScreen
+                    theme={theme}
+                    items={items}
+                    onBackToHub={() => {
+                      setReadingSession(null)
+                      setPracticeFlow({ screen: 'hub' })
+                    }}
+                    onStart={(config) => {
+                      setReadingSession(createReadingSession(config))
+                      setPracticeFlow({ screen: 'reading' })
+                    }}
+                  />
+                ) : practiceFlow.screen === 'reading' && readingSession ? (
+                  <ReadingScreen
+                    theme={theme}
+                    session={readingSession}
+                    onAbandonToSetup={() => {
+                      setReadingSession(null)
+                      setPracticeFlow({ screen: 'readingSetup' })
+                    }}
+                    onDoneReading={() => setPracticeFlow({ screen: 'review' })}
+                  />
+                ) : practiceFlow.screen === 'review' && readingSession ? (
+                  <ReadingReviewScreen
+                    theme={theme}
+                    session={readingSession}
+                    onBackToPracticeHub={() => {
+                      setReadingSession(null)
+                      setPracticeFlow({ screen: 'hub' })
+                    }}
+                    onAnotherRound={() => {
+                      setReadingSession(null)
+                      setPracticeFlow({ screen: 'readingSetup' })
+                    }}
+                    onContinueFocused={() => {
+                      setReadingSession((s) =>
+                        s && s.config.length === 'focused' && s.currentIndex < s.totalPassages - 1
+                          ? { ...s, currentIndex: s.currentIndex + 1 }
+                          : s,
+                      )
+                      setPracticeFlow({ screen: 'reading' })
+                    }}
+                  />
                 ) : null
               ) : null}
             </View>
