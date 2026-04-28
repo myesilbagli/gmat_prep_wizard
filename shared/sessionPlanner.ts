@@ -222,4 +222,148 @@ export function pickSessionBatchTwelve(
   return { ids, slots }
 }
 
+/** Daily session batch (10 words, mobile). Same slot structure as `SessionBatchTwelve`. */
+export type SessionBatchTen = {
+  ids: string[]
+  slots: { id: string; role: SessionSlotRole }[]
+}
+
+/**
+ * Daily session: up to 10 words. Target composition 2 new / 5 learning / 2 familiar / 1 review.
+ * Same ranking functions and deficit logic as `pickSessionBatchTwelve`; only caps and total size differ.
+ */
+export function pickSessionBatchTen(
+  items: VocabItem[],
+  args: { nowMs: number; userTimezone: string },
+): SessionBatchTen {
+  const { nowMs, userTimezone } = args
+  const todayKey = formatDateKeyInTimezone(new Date(nowMs), userTimezone)
+
+  const daysSinceLastSeenMs = (w: VocabItem): number => {
+    const ms = timestampToMillis(w.lastSeenAt)
+    if (ms == null) return 999
+    return Math.floor((nowMs - ms) / MS_PER_DAY)
+  }
+
+  const lastSeenIsToday = (w: VocabItem): boolean => {
+    const ms = timestampToMillis(w.lastSeenAt)
+    if (ms == null) return false
+    return formatDateKeyInTimezone(new Date(ms), userTimezone) === todayKey
+  }
+
+  const learningRank = (w: VocabItem): number => {
+    let p = 0
+    if (w.lastCorrect === false) p += 40
+    p += 25 - w.exposureScore
+    p += Math.min(daysSinceLastSeenMs(w), 14)
+    if (lastSeenIsToday(w)) p -= 30
+    return p
+  }
+
+  const newRank = (w: VocabItem): number => {
+    const c = timestampToMillis(w.createdAt) ?? 0
+    return -c
+  }
+
+  const reviewRank = (w: VocabItem): number => daysSinceLastSeenMs(w)
+
+  const familiarRank = (w: VocabItem): number => w.exposureScore
+
+  const poolNew = items.filter((w) => bucketFromWord(w) === 'new')
+  const poolLearning = items.filter((w) => bucketFromWord(w) === 'learning')
+  const poolFamiliar = items.filter((w) => bucketFromWord(w) === 'familiar')
+  const poolReview = items.filter((w) => {
+    const b = bucketFromWord(w)
+    return (b === 'familiar' || b === 'mastered') && daysSinceLastSeenMs(w) >= 10
+  })
+
+  const pickedIds = new Set<string>()
+  const slots: { id: string; role: SessionSlotRole }[] = []
+
+  const pushPick = (w: VocabItem, role: SessionSlotRole): boolean => {
+    if (pickedIds.has(w.id)) return false
+    if (slots.length >= 10) return false
+    pickedIds.add(w.id)
+    slots.push({ id: w.id, role })
+    return true
+  }
+
+  const pickN = (pool: VocabItem[], role: SessionSlotRole, n: number, rank: (w: VocabItem) => number): number => {
+    const sorted = [...pool]
+      .filter((w) => !pickedIds.has(w.id))
+      .sort((a, b) => {
+        const ra = rank(a)
+        const rb = rank(b)
+        if (rb !== ra) return rb - ra
+        return a.id.localeCompare(b.id)
+      })
+    let taken = 0
+    for (const w of sorted) {
+      if (taken >= n) break
+      if (pushPick(w, role)) taken++
+    }
+    return taken
+  }
+
+  const countRole = (r: SessionSlotRole) => slots.filter((s) => s.role === r).length
+
+  const NEW_CAP = 2
+  const LEARN_CAP = 5
+  const FAM_CAP = 2
+  const REV_CAP = 1
+
+  pickN(poolReview, 'review', REV_CAP, reviewRank)
+  pickN(poolNew, 'new', NEW_CAP, newRank)
+  pickN(poolFamiliar, 'familiar', FAM_CAP, familiarRank)
+  pickN(poolLearning, 'learning', LEARN_CAP, learningRank)
+
+  const deficitNew = NEW_CAP - countRole('new')
+  if (deficitNew > 0) {
+    let left = deficitNew
+    left -= pickN(poolLearning, 'learning', left, learningRank)
+    if (left > 0) pickN(poolFamiliar, 'learning', left, learningRank)
+  }
+
+  const deficitLearn = LEARN_CAP - countRole('learning')
+  if (deficitLearn > 0) {
+    let left = deficitLearn
+    left -= pickN(
+      poolNew.filter((w) => !pickedIds.has(w.id)),
+      'learning',
+      left,
+      learningRank,
+    )
+    if (left > 0) pickN(poolFamiliar, 'learning', left, learningRank)
+  }
+
+  const deficitRev = REV_CAP - countRole('review')
+  if (deficitRev > 0) {
+    pickN(poolFamiliar, 'familiar', deficitRev, familiarRank)
+  }
+
+  const rankTopUp = (w: VocabItem): number => learningRank(w)
+
+  while (slots.length < 10) {
+    const rest = items.filter((w) => !pickedIds.has(w.id))
+    if (rest.length === 0) break
+    rest.sort((a, b) => {
+      const ra = rankTopUp(a)
+      const rb = rankTopUp(b)
+      if (rb !== ra) return rb - ra
+      return a.id.localeCompare(b.id)
+    })
+    const w = rest[0]!
+    const b = bucketFromWord(w)
+    const role: SessionSlotRole =
+      b === 'new' ? 'new' : b === 'familiar' ? 'familiar' : b === 'mastered' ? 'review' : 'learning'
+    if (!pushPick(w, role)) break
+  }
+
+  const newIds = slots.filter((s) => s.role === 'new').map((s) => s.id)
+  const restIds = slots.filter((s) => s.role !== 'new').map((s) => s.id)
+  const ids = [...newIds, ...restIds]
+
+  return { ids, slots }
+}
+
 export { DEFAULT_BATCH as SESSION_BATCH_SIZE }
