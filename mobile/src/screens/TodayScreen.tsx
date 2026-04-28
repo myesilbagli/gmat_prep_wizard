@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { MaterialIcons } from '@expo/vector-icons'
 import { daysUntilExam, resolveExamDateIso } from '@shared/examDate'
 import { countDeckBuckets } from '@shared/learningBuckets'
-import { formatSessionBatchComposition, pickSessionBatchTwelve } from '@shared/sessionPlanner'
+import { formatSessionBatchComposition, pickSessionBatchTen } from '@shared/sessionPlanner'
 import { DEFAULT_TIMEZONE } from '@shared/userProfile'
 import type { VocabItem } from '@shared/types'
 import { GlassScreenRoot, glassScreenShadow, isLearnDarkUi, useGlassFonts } from '../components/GlassUi'
@@ -352,7 +352,7 @@ function ActiveDeckCard({
 export function computeDashboardStats(items: VocabItem[], timeZone?: string) {
   const tz =
     (timeZone && timeZone.trim()) || Intl.DateTimeFormat().resolvedOptions().timeZone || DEFAULT_TIMEZONE
-  const batch = pickSessionBatchTwelve(items, { nowMs: Date.now(), userTimezone: tz })
+  const batch = pickSessionBatchTen(items, { nowMs: Date.now(), userTimezone: tz })
   const bc = countDeckBuckets(items)
   return {
     total: items.length,

@@ -13,7 +13,7 @@ import { MaterialIcons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as Haptics from 'expo-haptics'
 import type { LearningBucket, QuizQuestion, VocabItem } from '@shared/types'
-import { formatSessionBatchComposition, pickSessionBatchTwelve } from '@shared/sessionPlanner'
+import { formatSessionBatchComposition, pickSessionBatchTen } from '@shared/sessionPlanner'
 import type { SessionWordOutcome } from '@shared/sessionOutcome'
 import { bucketFromWord, countDeckBuckets, type DeckBucketCounts } from '@shared/learningBuckets'
 import { DEFAULT_TIMEZONE } from '@shared/userProfile'
@@ -296,7 +296,7 @@ export function SessionScreen({
         if (cancelled) return
         const profile = await ensureUserProfileDefaults()
         const tz = profile.timezone || DEFAULT_TIMEZONE
-        const pick = pickSessionBatchTwelve(all, { nowMs: Date.now(), userTimezone: tz })
+        const pick = pickSessionBatchTen(all, { nowMs: Date.now(), userTimezone: tz })
         if (pick.ids.length === 0) {
           setBatch([])
           setPhase('empty')
@@ -451,7 +451,7 @@ export function SessionScreen({
   const canStartAnotherSession = useMemo(() => {
     if (!postSessionVocabItems?.length) return false
     return (
-      pickSessionBatchTwelve(postSessionVocabItems, {
+      pickSessionBatchTen(postSessionVocabItems, {
         nowMs: Date.now(),
         userTimezone: sessionTimezone,
       }).ids.length > 0
