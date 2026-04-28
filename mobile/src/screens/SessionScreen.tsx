@@ -29,6 +29,7 @@ import {
 } from '../lib/userProfile'
 import { applySessionBatchOutcome, listVocabItems, markWordIntroduced } from '../lib/vocab'
 import { PrimaryButton } from '../components/UI'
+import { SessionIntroCard } from '../components/SessionIntroCard'
 import { LearnFlashcardModal } from '../components/LearnFlashcardModal'
 import type { AppTheme } from '../theme'
 
@@ -552,11 +553,12 @@ export function SessionScreen({
           }}
         >
           {initError ? <Text style={{ color: theme.danger, marginBottom: 8 }}>{initError}</Text> : null}
-          <IntroCardMobile
+          <SessionIntroCard
             theme={theme}
             word={currentIntroWord}
-            newWordCurrent={introIndex + 1}
-            newWordTotal={introIds.length}
+            sessionSlotRole={introRoleById.get(currentIntroWord.id)!}
+            introCurrent={introIndex + 1}
+            introTotal={introIds.length}
             onGotIt={() => void onIntroGotIt()}
             busy={introSubmitting}
           />
@@ -732,109 +734,5 @@ export function SessionScreen({
         theme={theme}
       />
     </View>
-  )
-}
-
-function IntroCardMobile({
-  theme,
-  word,
-  newWordCurrent,
-  newWordTotal,
-  onGotIt,
-  busy,
-}: {
-  theme: AppTheme
-  word: VocabItem
-  /** 1-based index among new-word intros */
-  newWordCurrent?: number
-  newWordTotal?: number
-  onGotIt: () => void
-  busy: boolean
-}) {
-  const def = (word.definition || '').trim()
-  const simple = (word.simpleDefinition || word.definition || '').trim()
-  const hook = (word.memoryHook || '').trim()
-  const showProgress =
-    typeof newWordCurrent === 'number' &&
-    typeof newWordTotal === 'number' &&
-    newWordTotal > 1 &&
-    newWordCurrent >= 1
-
-  const pillTextColor = '#ffffff'
-
-  return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 24 }}>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-        <View style={{ flexShrink: 1 }}>
-          <View
-            style={{
-              alignSelf: 'flex-start',
-              paddingHorizontal: 6,
-              paddingVertical: 3,
-              borderRadius: 6,
-              backgroundColor: theme.primary,
-            }}
-          >
-            <Text
-              style={{
-                color: pillTextColor,
-                fontSize: 11,
-                fontWeight: '800',
-                letterSpacing: 0.75,
-                textTransform: 'uppercase',
-              }}
-            >
-              NEW WORD
-            </Text>
-          </View>
-        </View>
-        {showProgress ? (
-          <Text style={{ color: theme.muted, fontSize: 12, fontWeight: '600', textAlign: 'right', marginTop: 2 }}>
-            New word {newWordCurrent} of {newWordTotal}
-          </Text>
-        ) : null}
-      </View>
-
-      <Text
-        style={{
-          color: theme.muted,
-          fontSize: 13,
-          lineHeight: 18,
-          marginTop: 10,
-          marginBottom: 22,
-        }}
-      >
-        First time learning this — no test yet
-      </Text>
-
-      <Text style={{ color: theme.text, fontSize: 34, fontWeight: '800', lineHeight: 40, marginBottom: 20 }}>
-        {word.text}
-      </Text>
-
-      <View style={{ gap: 18 }}>
-        {def ? (
-          <View style={{ gap: 6 }}>
-            <Text style={{ color: theme.muted, fontSize: 11, fontWeight: '700', letterSpacing: 0.4 }}>DEFINITION</Text>
-            <Text style={{ color: theme.text, fontSize: 15, lineHeight: 22 }}>{def}</Text>
-          </View>
-        ) : null}
-        {simple && simple !== def ? (
-          <View style={{ gap: 6 }}>
-            <Text style={{ color: theme.muted, fontSize: 11, fontWeight: '700', letterSpacing: 0.4 }}>SIMPLE</Text>
-            <Text style={{ color: theme.text, fontSize: 15, lineHeight: 22 }}>{simple}</Text>
-          </View>
-        ) : null}
-        {hook ? (
-          <View style={{ gap: 6 }}>
-            <Text style={{ color: theme.muted, fontSize: 11, fontWeight: '700', letterSpacing: 0.4 }}>MEMORY HOOK</Text>
-            <Text style={{ color: theme.text, fontSize: 15, lineHeight: 22 }}>{hook}</Text>
-          </View>
-        ) : null}
-      </View>
-
-      <View style={{ marginTop: 20 }}>
-        <PrimaryButton theme={theme} label={busy ? 'Saving…' : 'Got it'} onPress={onGotIt} disabled={busy} />
-      </View>
-    </ScrollView>
   )
 }
