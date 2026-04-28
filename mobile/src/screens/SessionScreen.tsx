@@ -13,7 +13,11 @@ import { MaterialIcons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as Haptics from 'expo-haptics'
 import type { LearningBucket, QuizQuestion, VocabItem } from '@shared/types'
-import { formatSessionBatchComposition, pickSessionBatchTen } from '@shared/sessionPlanner'
+import {
+  formatSessionBatchComposition,
+  pickSessionBatchTen,
+  type SessionSlotRole,
+} from '@shared/sessionPlanner'
 import type { SessionWordOutcome } from '@shared/sessionOutcome'
 import { bucketFromWord, countDeckBuckets, type DeckBucketCounts } from '@shared/learningBuckets'
 import { DEFAULT_TIMEZONE } from '@shared/userProfile'
@@ -217,6 +221,7 @@ export function SessionScreen({
 
   const [phase, setPhase] = useState<Phase>('loading')
   const [introIds, setIntroIds] = useState<string[]>([])
+  const [introRoleById, setIntroRoleById] = useState<Map<string, SessionSlotRole>>(() => new Map())
   const [introIndex, setIntroIndex] = useState(0)
   const [introSubmitting, setIntroSubmitting] = useState(false)
 
@@ -329,8 +334,8 @@ export function SessionScreen({
         setBatch(ordered)
         setMcqQuestions([])
         setCompositionPreview(formatSessionBatchComposition(pick.slots))
-        const intros = pick.slots.filter((s) => s.role === 'new').map((s) => s.id)
-        setIntroIds(intros)
+        setIntroIds([...pick.ids])
+        setIntroRoleById(new Map(pick.slots.map((s) => [s.id, s.role])))
         setIntroIndex(0)
         setMcqCorrectById(new Map())
         setQuizIdx(0)
@@ -339,7 +344,7 @@ export function SessionScreen({
         setDeckAfter(null)
         setQuizFetchStatus('pending')
         setQuizFetchError(null)
-        setPhase(intros.length > 0 ? 'intro' : 'mcq')
+        setPhase('intro')
 
         runQuizFetchForBatch(pick.ids, ordered.length)
       } catch (e) {
@@ -412,7 +417,9 @@ export function SessionScreen({
     if (!w || introSubmitting) return
     setIntroSubmitting(true)
     try {
-      await markWordIntroduced(w.id)
+      if (introRoleById.get(w.id) === 'new') {
+        await markWordIntroduced(w.id)
+      }
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
       if (introIndex + 1 < introIds.length) {
         setIntroIndex((i) => i + 1)
@@ -424,7 +431,7 @@ export function SessionScreen({
     } finally {
       setIntroSubmitting(false)
     }
-  }, [currentIntroWord, introIds.length, introIndex, introSubmitting])
+  }, [currentIntroWord, introIds.length, introIndex, introSubmitting, introRoleById])
 
   useEffect(() => {
     stepAnim.setValue(0)
