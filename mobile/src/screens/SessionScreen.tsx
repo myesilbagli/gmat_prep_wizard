@@ -5,13 +5,11 @@ import {
   Easing,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   View,
   type ViewStyle,
 } from 'react-native'
 import { MaterialIcons } from '@expo/vector-icons'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as Haptics from 'expo-haptics'
 import type { LearningBucket, QuizQuestion, VocabItem } from '@shared/types'
 import {
@@ -31,8 +29,9 @@ import {
 import { applySessionBatchOutcome, listVocabItems, markWordIntroduced } from '../lib/vocab'
 import { PrimaryButton } from '../components/UI'
 import { SessionIntroCard } from '../components/SessionIntroCard'
+import { SessionHeader } from '../components/SessionHeader'
 import { LearnFlashcardModal } from '../components/LearnFlashcardModal'
-import { radius, spacing, typography, type AppTheme } from '../theme'
+import { spacing, type AppTheme } from '../theme'
 
 type Phase = 'loading' | 'intro' | 'mcq' | 'summary' | 'empty'
 
@@ -58,53 +57,6 @@ function hexAlpha(hex: string, alpha: number): string {
   const g = parseInt(h.slice(2, 4), 16)
   const b = parseInt(h.slice(4, 6), 16)
   return `rgba(${r},${g},${b},${alpha})`
-}
-
-const PROGRESS_DASH_TRACK = 48
-
-function SessionProgressDash({
-  theme,
-  current,
-  total,
-}: {
-  theme: AppTheme
-  current: number
-  total: number
-}) {
-  const safeTotal = Math.max(total, 1)
-  const safeCurrent = Math.min(Math.max(current, 0), safeTotal)
-  const fillWidth = Math.max(2, Math.round((PROGRESS_DASH_TRACK * safeCurrent) / safeTotal))
-  return (
-    <View style={{ alignItems: 'center', gap: spacing.xs }}>
-      <Text
-        style={{
-          ...typography.label,
-          fontWeight: '600',
-          color: theme.textSecondary,
-        }}
-      >
-        {current} / {total}
-      </Text>
-      <View
-        style={{
-          width: PROGRESS_DASH_TRACK,
-          height: 2,
-          borderRadius: radius.full,
-          backgroundColor: theme.border,
-          overflow: 'hidden',
-        }}
-      >
-        <View
-          style={{
-            width: fillWidth,
-            height: 2,
-            borderRadius: radius.full,
-            backgroundColor: theme.primary,
-          }}
-        />
-      </View>
-    </View>
-  )
 }
 
 function McqStepMobile({
@@ -262,7 +214,6 @@ export function SessionScreen({
   /** Same entry path as Today → Start session; parent remounts session when returning true from start flow. */
   onRequestNewSession?: () => void | Promise<void>
 }) {
-  const insets = useSafeAreaInsets()
   const [initError, setInitError] = useState<string | null>(null)
   const [vocabLoading, setVocabLoading] = useState(true)
   const [batch, setBatch] = useState<VocabItem[]>([])
@@ -553,94 +504,31 @@ export function SessionScreen({
     )
   }
 
-  const headerCenter =
-    phase === 'summary'
-      ? 'Done'
-      : phase === 'intro' && introIds.length > 0
-        ? `${introIndex + 1} / ${introIds.length}`
-        : phase === 'mcq' && quizFetchStatus === 'ready' && mcqQuestions.length > 0
-          ? `${quizIdx + 1} / ${mcqQuestions.length}`
-          : phase === 'mcq'
-            ? 'Quiz'
-            : ''
+  let headerCurrent: number | undefined
+  let headerTotal: number | undefined
+  let headerCenterLabel: string | undefined
 
-  const introCounterCurrent = introIds.length > 0 ? introIndex + 1 : 0
-  const showProgressDash =
-    phase === 'intro' && introIds.length > 1 && introCounterCurrent > 0
+  if (phase === 'intro' && introIds.length > 0) {
+    headerCurrent = introIndex + 1
+    headerTotal = introIds.length
+  } else if (phase === 'mcq' && quizFetchStatus === 'ready' && mcqQuestions.length > 0) {
+    headerCurrent = quizIdx + 1
+    headerTotal = mcqQuestions.length
+  } else if (phase === 'mcq') {
+    headerCenterLabel = 'Quiz'
+  } else if (phase === 'summary') {
+    headerCenterLabel = 'Done'
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.learnScreenBg }}>
-      <View style={{ paddingTop: insets.top }}>
-        <View
-          style={{
-            height: 48,
-            paddingHorizontal: spacing.lg,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            borderBottomWidth: StyleSheet.hairlineWidth,
-            borderBottomColor: theme.border,
-            position: 'relative',
-          }}
-        >
-          <Pressable
-            onPress={onClose}
-            hitSlop={12}
-            accessibilityRole="button"
-            accessibilityLabel="Close session"
-          >
-            <MaterialIcons name="close" size={22} color={theme.primary} />
-          </Pressable>
-
-          <View
-            pointerEvents="none"
-            style={{
-              position: 'absolute',
-              left: 0,
-              right: 0,
-              top: 0,
-              bottom: 0,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {showProgressDash ? (
-              <SessionProgressDash
-                theme={theme}
-                current={introCounterCurrent}
-                total={introIds.length}
-              />
-            ) : headerCenter ? (
-              <Text
-                style={{
-                  ...typography.label,
-                  fontWeight: '600',
-                  color: theme.textSecondary,
-                }}
-              >
-                {headerCenter}
-              </Text>
-            ) : null}
-          </View>
-
-          <Pressable
-            onPress={onClose}
-            hitSlop={12}
-            accessibilityRole="button"
-            accessibilityLabel="Exit session"
-          >
-            <Text
-              style={{
-                ...typography.label,
-                fontWeight: '600',
-                color: theme.primary,
-              }}
-            >
-              Exit
-            </Text>
-          </Pressable>
-        </View>
-      </View>
+      <SessionHeader
+        theme={theme}
+        onClose={onClose}
+        current={headerCurrent}
+        total={headerTotal}
+        centerLabel={headerCenterLabel}
+      />
 
       {phase === 'intro' && currentIntroWord ? (
         <Animated.View
