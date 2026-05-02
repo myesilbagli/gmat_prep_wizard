@@ -6,17 +6,18 @@ import {
   GlassPanel,
   GlassPrimaryCta,
   GlassScreenRoot,
-  GlassQuizOption,
   isLearnDarkUi,
   useGlassFonts,
 } from '../components/GlassUi'
 import { MASTERED_MIN_SCORE } from '@shared/exposureScore'
+import { bucketFromWord } from '@shared/learningBuckets'
 import { generateQuiz } from '../lib/api'
 import { applyQuizAnswerExposure } from '../lib/vocab'
+import { QuizQuestionCard } from '../components/QuizQuestionCard'
+import { SessionHeader } from '../components/SessionHeader'
 import type { AppTheme } from '../theme'
 
 type Phase = 'idle' | 'running' | 'finished'
-type RunSub = 'mcq' | 'feedback'
 
 const MODE_OPTIONS: {
   id: QuizMode
@@ -57,8 +58,6 @@ export function TestScreen({
   const [questions, setQuestions] = useState<QuizQuestion[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState<number[]>([])
-  const [runSub, setRunSub] = useState<RunSub>('mcq')
-  const [quizPicked, setQuizPicked] = useState<number | null>(null)
   const [starting, setStarting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -67,11 +66,10 @@ export function TestScreen({
     return shuffle(active).slice(0, count)
   }, [items, count])
 
-  useEffect(() => {
-    if (phase !== 'running') return
-    setRunSub('mcq')
-    setQuizPicked(null)
-  }, [phase, currentIndex])
+  const itemsByQuestionId = useMemo(
+    () => new Map(candidateItems.map((c) => [c.id, c])),
+    [candidateItems],
+  )
 
   async function startQuiz() {
     setError(null)
@@ -86,8 +84,6 @@ export function TestScreen({
       setQuestions(next)
       setAnswers([])
       setCurrentIndex(0)
-      setRunSub('mcq')
-      setQuizPicked(null)
       setPhase('running')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to start test')
@@ -102,19 +98,20 @@ export function TestScreen({
       ? questions.reduce((acc, q, idx) => acc + (answers[idx] === q.correctIndex ? 1 : 0), 0)
       : 0
 
-  function onPickOption(optionIndex: number) {
-    if (runSub !== 'mcq') return
-    setQuizPicked(optionIndex)
-    setRunSub('feedback')
+  const lastAnswerRef = useMemo(() => ({ current: null as number | null }), [])
+
+  function onAnswer(optionIndex: number, isCorrect: boolean) {
+    if (!current) return
+    lastAnswerRef.current = optionIndex
+    void applyQuizAnswerExposure(current.itemId, isCorrect).catch(() => {})
   }
 
-  function onContinueAfterFeedback() {
-    if (quizPicked === null || !current) return
-    const correct = quizPicked === current.correctIndex
-    void applyQuizAnswerExposure(current.itemId, correct).catch(() => {})
+  function onContinue() {
+    if (lastAnswerRef.current === null || !current) return
     const nextAnswers = [...answers]
-    nextAnswers[currentIndex] = quizPicked
+    nextAnswers[currentIndex] = lastAnswerRef.current
     setAnswers(nextAnswers)
+    lastAnswerRef.current = null
     if (currentIndex + 1 < questions.length) {
       setCurrentIndex((v) => v + 1)
     } else {
@@ -122,23 +119,27 @@ export function TestScreen({
     }
   }
 
+  const onSessionClose =
+    drillMode && onBackToPracticeHub ? onBackToPracticeHub : () => setPhase('idle')
+
   const cardBg = theme.surface2
   const cardBorder = theme.learnGlassBorder
 
-  return (
-    <GlassScreenRoot theme={theme}>
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{
-          paddingHorizontal: 20,
-          paddingTop: 12,
-          paddingBottom: 120,
-        }}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        {phase === 'idle' ? (
-          <>
+  const currentWord = current ? itemsByQuestionId.get(current.itemId) : undefined
+
+  if (phase === 'idle') {
+    return (
+      <GlassScreenRoot theme={theme}>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{
+            paddingHorizontal: 20,
+            paddingTop: 12,
+            paddingBottom: 120,
+          }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
             {drillMode && onBackToPracticeHub ? (
               <Pressable
                 onPress={onBackToPracticeHub}
@@ -356,123 +357,55 @@ export function TestScreen({
                 </Text>
               ) : null}
             </View>
-          </>
-        ) : null}
+        </ScrollView>
+      </GlassScreenRoot>
+    )
+  }
 
-        {phase !== 'idle' ? (
-          <View style={{ gap: 18 }}>
-            {phase === 'running' && current ? (
-              <GlassPanel theme={theme} learnDark={learnDark} leftAccent={theme.learnTertiary}>
-                <Text
-                  style={{
-                    fontFamily: fontLabelBold,
-                    fontSize: 12,
-                    fontWeight: '700',
-                    letterSpacing: 0.6,
-                    color: theme.learnOutline,
-                    marginBottom: 10,
-                  }}
-                >
-                  Question {currentIndex + 1} of {questions.length}
-                </Text>
-                <Text
-                  style={{
-                    fontFamily: fontHeadline,
-                    fontSize: 19,
-                    fontWeight: '800',
-                    color: theme.learnOnSurface,
-                    lineHeight: 27,
-                    marginBottom: 16,
-                  }}
-                >
-                  {current.questionText}
-                </Text>
-                {runSub === 'mcq' ? (
-                  <View style={{ gap: 10 }}>
-                    {current.options.map((opt, i) => (
-                      <GlassQuizOption
-                        key={i}
-                        theme={theme}
-                        learnDark={learnDark}
-                        label={opt}
-                        onPress={() => onPickOption(i)}
-                        fontBody={fontBody}
-                      />
-                    ))}
-                  </View>
-                ) : (
-                  <View style={{ gap: 14 }}>
-                    <Text style={{ fontFamily: fontBody, fontSize: 16, color: theme.learnOnSurface }}>
-                      {quizPicked === current.correctIndex ? (
-                        <Text style={{ fontWeight: '800', color: theme.learnAccent }}>Correct.</Text>
-                      ) : (
-                        <Text>
-                          <Text style={{ fontWeight: '800' }}>Incorrect.</Text>
-                          {'\n'}
-                          Correct:{' '}
-                          <Text style={{ fontWeight: '800' }}>{current.options[current.correctIndex]}</Text>
-                        </Text>
-                      )}
-                    </Text>
-                    <Text
-                      style={{
-                        fontFamily: fontBody,
-                        fontSize: 15,
-                        lineHeight: 22,
-                        color: theme.learnOnSurfaceVariant,
-                      }}
-                    >
-                      {current.explanation}
-                    </Text>
-                    <Pressable
-                      onPress={onContinueAfterFeedback}
-                      style={{
-                        alignSelf: 'flex-start',
-                        backgroundColor: theme.learnPillActiveBg,
-                        paddingVertical: 14,
-                        paddingHorizontal: 24,
-                        borderRadius: 999,
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontFamily: fontLabelBold,
-                          color: theme.learnPillActiveText,
-                          fontSize: 15,
-                          fontWeight: '700',
-                        }}
-                      >
-                        {currentIndex + 1 < questions.length ? 'Continue' : 'View results'}
-                      </Text>
-                    </Pressable>
-                  </View>
-                )}
-              </GlassPanel>
-            ) : null}
-
-            {phase === 'finished' ? (
-              <GlassPanel theme={theme} learnDark={learnDark} leftAccent={theme.learnAccentStrong}>
-                <Text
-                  style={{
-                    fontFamily: fontHeadline,
-                    fontSize: 22,
-                    fontWeight: '800',
-                    color: theme.learnOnSurface,
-                    marginBottom: 8,
-                  }}
-                >
-                  Section complete
-                </Text>
-                <Text style={{ fontFamily: fontBody, fontSize: 16, color: theme.learnOnSurfaceVariant, marginBottom: 18 }}>
-                  Score: {correctCount} / {questions.length}
-                </Text>
-                <GlassPrimaryCta theme={theme} label="New session" onPress={() => setPhase('idle')} fontLabelBold={fontLabelBold} />
-              </GlassPanel>
-            ) : null}
-          </View>
-        ) : null}
-      </ScrollView>
-    </GlassScreenRoot>
+  return (
+    <View style={{ flex: 1, backgroundColor: theme.learnScreenBg }}>
+      <SessionHeader
+        theme={theme}
+        onClose={onSessionClose}
+        current={phase === 'running' ? currentIndex + 1 : undefined}
+        total={phase === 'running' ? questions.length : undefined}
+        centerLabel={phase === 'finished' ? 'Done' : undefined}
+      />
+      {phase === 'running' && current && currentWord ? (
+        <QuizQuestionCard
+          theme={theme}
+          question={current}
+          word={currentWord}
+          bucketRole={bucketFromWord(currentWord)}
+          onAnswer={onAnswer}
+          onContinue={onContinue}
+          continueLabel={currentIndex + 1 < questions.length ? 'Continue' : 'View results'}
+        />
+      ) : phase === 'finished' ? (
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+        >
+          <GlassPanel theme={theme} learnDark={learnDark} leftAccent={theme.learnAccentStrong}>
+            <Text
+              style={{
+                fontFamily: fontHeadline,
+                fontSize: 22,
+                fontWeight: '800',
+                color: theme.learnOnSurface,
+                marginBottom: 8,
+              }}
+            >
+              Section complete
+            </Text>
+            <Text style={{ fontFamily: fontBody, fontSize: 16, color: theme.learnOnSurfaceVariant, marginBottom: 18 }}>
+              Score: {correctCount} / {questions.length}
+            </Text>
+            <GlassPrimaryCta theme={theme} label="New session" onPress={() => setPhase('idle')} fontLabelBold={fontLabelBold} />
+          </GlassPanel>
+        </ScrollView>
+      ) : null}
+    </View>
   )
 }
 
