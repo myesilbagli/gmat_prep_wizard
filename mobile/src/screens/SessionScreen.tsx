@@ -5,6 +5,7 @@ import {
   Easing,
   Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   View,
   type ViewStyle,
@@ -31,7 +32,7 @@ import { applySessionBatchOutcome, listVocabItems, markWordIntroduced } from '..
 import { PrimaryButton } from '../components/UI'
 import { SessionIntroCard } from '../components/SessionIntroCard'
 import { LearnFlashcardModal } from '../components/LearnFlashcardModal'
-import type { AppTheme } from '../theme'
+import { radius, spacing, typography, type AppTheme } from '../theme'
 
 type Phase = 'loading' | 'intro' | 'mcq' | 'summary' | 'empty'
 
@@ -57,6 +58,53 @@ function hexAlpha(hex: string, alpha: number): string {
   const g = parseInt(h.slice(2, 4), 16)
   const b = parseInt(h.slice(4, 6), 16)
   return `rgba(${r},${g},${b},${alpha})`
+}
+
+const PROGRESS_DASH_TRACK = 48
+
+function SessionProgressDash({
+  theme,
+  current,
+  total,
+}: {
+  theme: AppTheme
+  current: number
+  total: number
+}) {
+  const safeTotal = Math.max(total, 1)
+  const safeCurrent = Math.min(Math.max(current, 0), safeTotal)
+  const fillWidth = Math.max(2, Math.round((PROGRESS_DASH_TRACK * safeCurrent) / safeTotal))
+  return (
+    <View style={{ alignItems: 'center', gap: spacing.xs }}>
+      <Text
+        style={{
+          ...typography.label,
+          fontWeight: '600',
+          color: theme.textSecondary,
+        }}
+      >
+        {current} / {total}
+      </Text>
+      <View
+        style={{
+          width: PROGRESS_DASH_TRACK,
+          height: 2,
+          borderRadius: radius.full,
+          backgroundColor: theme.border,
+          overflow: 'hidden',
+        }}
+      >
+        <View
+          style={{
+            width: fillWidth,
+            height: 2,
+            borderRadius: radius.full,
+            backgroundColor: theme.primary,
+          }}
+        />
+      </View>
+    </View>
+  )
 }
 
 function McqStepMobile({
@@ -516,30 +564,82 @@ export function SessionScreen({
             ? 'Quiz'
             : ''
 
+  const introCounterCurrent = introIds.length > 0 ? introIndex + 1 : 0
+  const showProgressDash =
+    phase === 'intro' && introIds.length > 1 && introCounterCurrent > 0
+
   return (
     <View style={{ flex: 1, backgroundColor: theme.learnScreenBg }}>
-      <View
-        style={{
-          paddingHorizontal: 14,
-          paddingTop: Math.max(insets.top, 10),
-          paddingBottom: 10,
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <Pressable
-          onPress={onClose}
-          hitSlop={10}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
-          accessibilityRole="button"
-          accessibilityLabel="Exit session"
+      <View style={{ paddingTop: insets.top }}>
+        <View
+          style={{
+            height: 48,
+            paddingHorizontal: spacing.lg,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderBottomWidth: StyleSheet.hairlineWidth,
+            borderBottomColor: theme.border,
+            position: 'relative',
+          }}
         >
-          <MaterialIcons name="close" size={20} color={theme.primary} />
-          <Text style={{ color: theme.primary, fontWeight: '800', fontSize: 15 }}>Exit</Text>
-        </Pressable>
-        <Text style={{ color: theme.muted, fontWeight: '800', fontSize: 13 }}>{headerCenter}</Text>
-        <View style={{ width: 56 }} />
+          <Pressable
+            onPress={onClose}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Close session"
+          >
+            <MaterialIcons name="close" size={22} color={theme.primary} />
+          </Pressable>
+
+          <View
+            pointerEvents="none"
+            style={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              top: 0,
+              bottom: 0,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {showProgressDash ? (
+              <SessionProgressDash
+                theme={theme}
+                current={introCounterCurrent}
+                total={introIds.length}
+              />
+            ) : headerCenter ? (
+              <Text
+                style={{
+                  ...typography.label,
+                  fontWeight: '600',
+                  color: theme.textSecondary,
+                }}
+              >
+                {headerCenter}
+              </Text>
+            ) : null}
+          </View>
+
+          <Pressable
+            onPress={onClose}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Exit session"
+          >
+            <Text
+              style={{
+                ...typography.label,
+                fontWeight: '600',
+                color: theme.primary,
+              }}
+            >
+              Exit
+            </Text>
+          </Pressable>
+        </View>
       </View>
 
       {phase === 'intro' && currentIntroWord ? (
