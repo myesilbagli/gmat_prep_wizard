@@ -15,6 +15,7 @@ import {
   Inter_600SemiBold,
 } from '@expo-google-fonts/inter'
 import { Manrope_700Bold, Manrope_800ExtraBold } from '@expo-google-fonts/manrope'
+import { PlayfairDisplay_700Bold } from '@expo-google-fonts/playfair-display'
 import { MaterialIcons } from '@expo/vector-icons'
 import { useFonts } from 'expo-font'
 import type { AppTheme } from '../theme'
@@ -30,6 +31,7 @@ export function useGlassFonts() {
     Inter_400Regular,
     Inter_500Medium,
     Inter_600SemiBold,
+    PlayfairDisplay_700Bold,
   })
   return useMemo(
     () => ({
@@ -39,6 +41,7 @@ export function useGlassFonts() {
       fontBody: loaded ? 'Inter_400Regular' : undefined,
       fontLabel: loaded ? 'Inter_500Medium' : undefined,
       fontLabelBold: loaded ? 'Inter_600SemiBold' : undefined,
+      fontSerif: loaded ? 'PlayfairDisplay_700Bold' : undefined,
     }),
     [loaded],
   )
