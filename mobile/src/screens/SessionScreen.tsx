@@ -7,9 +7,7 @@ import {
   ScrollView,
   Text,
   View,
-  type ViewStyle,
 } from 'react-native'
-import { MaterialIcons } from '@expo/vector-icons'
 import * as Haptics from 'expo-haptics'
 import type { LearningBucket, QuizQuestion, VocabItem } from '@shared/types'
 import {
@@ -30,8 +28,9 @@ import { applySessionBatchOutcome, listVocabItems, markWordIntroduced } from '..
 import { PrimaryButton } from '../components/UI'
 import { SessionIntroCard } from '../components/SessionIntroCard'
 import { SessionHeader } from '../components/SessionHeader'
+import { QuizQuestionCard } from '../components/QuizQuestionCard'
 import { LearnFlashcardModal } from '../components/LearnFlashcardModal'
-import { spacing, type AppTheme } from '../theme'
+import type { AppTheme } from '../theme'
 
 type Phase = 'loading' | 'intro' | 'mcq' | 'summary' | 'empty'
 
@@ -57,147 +56,6 @@ function hexAlpha(hex: string, alpha: number): string {
   const g = parseInt(h.slice(2, 4), 16)
   const b = parseInt(h.slice(4, 6), 16)
   return `rgba(${r},${g},${b},${alpha})`
-}
-
-function McqStepMobile({
-  theme,
-  question,
-  quizSub,
-  quizPicked,
-  finishing,
-  onQuizPick,
-  onQuizContinue,
-}: {
-  theme: AppTheme
-  question: QuizQuestion
-  quizSub: 'mcq' | 'feedback'
-  quizPicked: number | null
-  finishing: boolean
-  onQuizPick: (idx: number) => void
-  onQuizContinue: () => void
-}) {
-  const reviewing = quizSub === 'feedback'
-  const correctIdx = question.correctIndex
-  const pickedOk = quizPicked !== null && quizPicked === correctIdx
-
-  const bannerTint = 0.175
-  const rowTint = 0.2
-
-  return (
-    <View style={{ gap: 10 }}>
-      <Text style={{ color: theme.text, fontSize: 17, lineHeight: 24 }}>{question.questionText}</Text>
-
-      {reviewing ? (
-        <View
-          accessibilityLiveRegion="polite"
-          accessibilityLabel={pickedOk ? 'Correct' : 'Not quite'}
-          style={{
-            minHeight: 52,
-            borderRadius: 12,
-            paddingHorizontal: 14,
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 10,
-            backgroundColor: pickedOk ? hexAlpha(theme.success, bannerTint) : hexAlpha(theme.danger, bannerTint),
-          }}
-        >
-          <MaterialIcons
-            name={pickedOk ? 'check' : 'close'}
-            size={28}
-            color={pickedOk ? theme.success : theme.danger}
-          />
-          <Text
-            style={{
-              fontSize: 19,
-              fontWeight: '800',
-              color: pickedOk ? theme.success : theme.danger,
-            }}
-          >
-            {pickedOk ? 'Correct' : 'Not quite'}
-          </Text>
-        </View>
-      ) : null}
-
-      <View style={{ gap: 10 }}>
-        {question.options.map((opt, i) => {
-          const isCorrectRow = i === correctIdx
-          const isWrongPicked = reviewing && quizPicked === i && i !== correctIdx
-
-          const baseRow: ViewStyle = {
-            paddingVertical: 14,
-            paddingHorizontal: 14,
-            borderRadius: 12,
-            borderWidth: 1,
-            borderColor: theme.border,
-            backgroundColor: theme.surface,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 12,
-          }
-
-          let rowStyle: ViewStyle = baseRow
-          let showCheck = false
-          let showClose = false
-
-          if (reviewing) {
-            if (isCorrectRow) {
-              rowStyle = {
-                ...baseRow,
-                backgroundColor: hexAlpha(theme.success, rowTint),
-                borderColor: theme.success,
-              }
-              showCheck = true
-            } else if (isWrongPicked) {
-              rowStyle = {
-                ...baseRow,
-                backgroundColor: hexAlpha(theme.danger, rowTint),
-                borderColor: theme.danger,
-              }
-              showClose = true
-            } else {
-              rowStyle = {
-                ...baseRow,
-                borderColor: 'transparent',
-                opacity: 0.6,
-              }
-            }
-          }
-
-          return (
-            <Pressable
-              key={i}
-              onPress={() => onQuizPick(i)}
-              disabled={reviewing}
-              accessibilityState={{ disabled: reviewing }}
-              style={rowStyle}
-            >
-              <View style={{ flex: 1 }}>
-                <Text style={{ color: theme.text, fontSize: 15 }}>{opt}</Text>
-              </View>
-              {reviewing && showCheck ? (
-                <MaterialIcons name="check" size={20} color={theme.success} />
-              ) : reviewing && showClose ? (
-                <MaterialIcons name="close" size={20} color={theme.danger} />
-              ) : null}
-            </Pressable>
-          )
-        })}
-      </View>
-
-      {reviewing ? (
-        <>
-          <Text style={{ color: theme.muted, fontSize: 14 }}>{question.explanation}</Text>
-          <PrimaryButton
-            theme={theme}
-            label={finishing ? 'Saving…' : 'Next'}
-            onPress={onQuizContinue}
-            disabled={finishing}
-          />
-        </>
-      ) : null}
-    </View>
-  )
 }
 
 export function SessionScreen({
@@ -227,8 +85,6 @@ export function SessionScreen({
 
   const [mcqQuestions, setMcqQuestions] = useState<QuizQuestion[]>([])
   const [quizIdx, setQuizIdx] = useState(0)
-  const [quizSub, setQuizSub] = useState<'mcq' | 'feedback'>('mcq')
-  const [quizPicked, setQuizPicked] = useState<number | null>(null)
   const [mcqCorrectById, setMcqCorrectById] = useState<Map<string, boolean>>(new Map())
 
   const [finishing, setFinishing] = useState(false)
@@ -253,7 +109,7 @@ export function SessionScreen({
   const currentIntroId = introIds[introIndex]
   const currentIntroWord = currentIntroId ? itemsById.get(currentIntroId) : undefined
   const currentQuizQ = mcqQuestions[quizIdx]
-  const stepKey = `${phase}-${introIndex}-${quizIdx}-${quizSub}-${quizFetchStatus}`
+  const stepKey = `${phase}-${introIndex}-${quizIdx}-${quizFetchStatus}`
 
   const runQuizFetchForBatch = useCallback((pickIds: string[], orderedLen: number) => {
     quizFetchGenRef.current += 1
@@ -339,8 +195,6 @@ export function SessionScreen({
         setIntroIndex(0)
         setMcqCorrectById(new Map())
         setQuizIdx(0)
-        setQuizSub('mcq')
-        setQuizPicked(null)
         setDeckAfter(null)
         setQuizFetchStatus('pending')
         setQuizFetchError(null)
@@ -386,27 +240,22 @@ export function SessionScreen({
     }
   }, [batch, itemsById, mcqCorrectById, onCompleted])
 
-  const onQuizPick = (idx: number) => {
-    if (quizSub !== 'mcq' || quizPicked !== null || !currentQuizQ) return
-    setQuizPicked(idx)
-    setQuizSub('feedback')
-    const ok = idx === currentQuizQ.correctIndex
+  const onQuizAnswer = (_idx: number, isCorrect: boolean) => {
+    if (!currentQuizQ) return
     setMcqCorrectById((prev) => {
       const next = new Map(prev)
-      next.set(currentQuizQ.itemId, ok)
+      next.set(currentQuizQ.itemId, isCorrect)
       return next
     })
     void Haptics.notificationAsync(
-      ok ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Error,
+      isCorrect ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Error,
     )
   }
 
   const onQuizContinue = useCallback(async () => {
     if (!currentQuizQ) return
-    setQuizPicked(null)
     if (quizIdx + 1 < mcqQuestions.length) {
       setQuizIdx((i) => i + 1)
-      setQuizSub('mcq')
     } else {
       await finishSession()
     }
@@ -551,6 +400,27 @@ export function SessionScreen({
             busy={introSubmitting}
           />
         </Animated.View>
+      ) : phase === 'mcq' && quizFetchStatus === 'ready' && currentQuizQ ? (
+        <Animated.View
+          style={{
+            flex: 1,
+            opacity: stepAnim,
+            transform: [{ translateY: stepAnim.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }],
+          }}
+        >
+          {initError ? (
+            <Text style={{ color: theme.danger, marginHorizontal: 16, marginBottom: 8 }}>{initError}</Text>
+          ) : null}
+          <QuizQuestionCard
+            theme={theme}
+            question={currentQuizQ}
+            word={itemsById.get(currentQuizQ.itemId)!}
+            bucketRole={introRoleById.get(currentQuizQ.itemId) ?? 'learning'}
+            onAnswer={onQuizAnswer}
+            onContinue={() => void onQuizContinue()}
+            busy={finishing}
+          />
+        </Animated.View>
       ) : (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
           {initError ? <Text style={{ color: theme.danger, marginBottom: 8 }}>{initError}</Text> : null}
@@ -572,16 +442,6 @@ export function SessionScreen({
                   <Text style={{ color: theme.danger, fontSize: 15 }}>{quizFetchError ?? 'Quiz could not be loaded.'}</Text>
                   <PrimaryButton theme={theme} label="Retry" onPress={retryQuizFetch} />
                 </View>
-              ) : quizFetchStatus === 'ready' && currentQuizQ ? (
-                <McqStepMobile
-                  theme={theme}
-                  question={currentQuizQ}
-                  quizSub={quizSub}
-                  quizPicked={quizPicked}
-                  finishing={finishing}
-                  onQuizPick={onQuizPick}
-                  onQuizContinue={() => void onQuizContinue()}
-                />
               ) : quizFetchStatus === 'ready' ? (
                 <Text style={{ color: theme.muted }}>No quiz questions.</Text>
               ) : null}
