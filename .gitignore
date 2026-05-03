@@ -28,3 +28,7 @@ mobile/.env
 *.njsproj
 *.sln
 *.sw?
+
+# Cursor: ignore agent plans and transcripts; keep .cursor/rules/ committable.
+.cursor/plans/
+.cursor/agent-transcripts/
