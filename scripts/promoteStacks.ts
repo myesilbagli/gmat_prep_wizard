@@ -20,6 +20,31 @@ type StagingRecord = {
   level: StackLevelBand
   generatedAt?: string
   result: GeneratedResult
+  /** Optional curated short glosses keyed by main language code (e.g. tr, fr, es). */
+  translations?: Record<string, string>
+}
+
+/**
+ * Drop empty/whitespace values, trim, and lowercase keys so curator typos
+ * (`"TR"`, `" hakim "`, `""`) do not produce dead glosses or noisy diffs.
+ * Returns `undefined` when the result has no usable entries so the caller
+ * can omit the field entirely.
+ */
+function sanitizeTranslations(
+  raw: Record<string, string> | undefined,
+): Record<string, string> | undefined {
+  if (!raw || typeof raw !== 'object') return undefined
+  const out: Record<string, string> = {}
+  for (const [k, v] of Object.entries(raw)) {
+    if (typeof k !== 'string') continue
+    const key = k.trim().toLowerCase()
+    if (!key) continue
+    if (typeof v !== 'string') continue
+    const val = v.trim()
+    if (!val) continue
+    out[key] = val
+  }
+  return Object.keys(out).length > 0 ? out : undefined
 }
 
 function parseArgs(argv: string[]) {
@@ -78,11 +103,13 @@ function main() {
         console.error(`Invalid result in staging for ${spec.id} position ${r.stackPosition}`)
         process.exit(1)
       }
+      const cleaned = sanitizeTranslations(r.translations)
       pack.push({
         text: r.text,
         stackPosition: r.stackPosition,
         level: r.level,
         result: r.result,
+        ...(cleaned ? { translations: cleaned } : {}),
       })
     }
     pack.sort((a, b) => a.stackPosition - b.stackPosition)
