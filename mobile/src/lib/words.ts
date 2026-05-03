@@ -37,7 +37,7 @@ export async function saveWordFromStackImport(params: {
 }) {
   return saveWord({
     text: params.text,
-    result: getStackImportResult(params.stackId, params.stackPosition),
+    result: getStackImportResult(params.stackId, params.stackPosition, params.mainLanguage),
     mainLanguage: params.mainLanguage,
     source: 'stack',
     stackId: params.stackId,

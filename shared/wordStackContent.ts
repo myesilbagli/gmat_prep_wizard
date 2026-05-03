@@ -6,6 +6,7 @@
 import type { GeneratedResult } from './types'
 import type { StackLevelBand, StackPackRow } from './stackPackTypes'
 import { stackImportPlaceholderResult } from './wordGeneration'
+import { normalizeMainLanguageCode } from './languages'
 import * as m_stack_arg_architecture from './stacks/stack_arg_architecture'
 import * as m_stack_academic_register from './stacks/stack_academic_register'
 import * as m_stack_discriminator from './stacks/stack_discriminator'
@@ -50,9 +51,16 @@ export function getWordsForStack(stackId: string): string[] {
 export function getStackImportResult(
   stackId: string,
   stackPosition: number,
+  mainLanguage?: string,
 ): GeneratedResult {
   const mod = MODULES[stackId]
   const row = mod?.STACK_PACK?.find((r) => r.stackPosition === stackPosition)
-  if (row?.result) return row.result
-  return stackImportPlaceholderResult()
+  const base = row?.result ?? stackImportPlaceholderResult()
+  if (!row || !mainLanguage) return base
+  const lang = normalizeMainLanguageCode(mainLanguage)
+  if (lang === 'en') return base
+  const gloss = row.translations?.[lang]
+  if (typeof gloss !== 'string' || !gloss.trim()) return base
+  // Clone defensively so we never mutate the cached STACK_PACK row.
+  return { ...base, translationSimple: gloss.trim() }
 }
