@@ -398,6 +398,7 @@ export function SessionScreen({
             introTotal={introIds.length}
             onGotIt={() => void onIntroGotIt()}
             busy={introSubmitting}
+            mainLanguage={mainLanguage}
           />
         </Animated.View>
       ) : phase === 'mcq' && quizFetchStatus === 'ready' && currentQuizQ ? (

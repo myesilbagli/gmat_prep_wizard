@@ -10,6 +10,8 @@ import {
 } from 'react-native'
 import type { SessionSlotRole } from '@shared/sessionPlanner'
 import type { VocabItem } from '@shared/types'
+import { getMainLanguageLabel } from '@shared/languages'
+import { getNativeGloss } from '@shared/vocab'
 import { BucketPill } from './BucketPill'
 import { PrimaryButton } from './UI'
 import { useGlassFonts } from './GlassUi'
@@ -100,6 +102,7 @@ export function SessionIntroCard({
   introTotal: _introTotal,
   onGotIt,
   busy,
+  mainLanguage,
 }: {
   theme: AppTheme
   word: VocabItem
@@ -110,6 +113,8 @@ export function SessionIntroCard({
   introTotal: number
   onGotIt: () => void
   busy: boolean
+  /** Learner's main language code (e.g. 'tr'); 'en' suppresses the native gloss block. */
+  mainLanguage: string
 }) {
   const { loaded, fontSerif, fontBody, fontLabelBold } = useGlassFonts()
   const [showMore, setShowMore] = useState(false)
@@ -150,6 +155,13 @@ export function SessionIntroCard({
 
   const hasExpandedContent =
     hasFullerExample || showFullDefInExpanded || hasSynonyms || hasContrast || hasHook
+
+  const gloss = getNativeGloss(word, mainLanguage)
+  const langLabel =
+    mainLanguage !== 'en'
+      ? getMainLanguageLabel(mainLanguage).split(' (')[0].toUpperCase()
+      : null
+  const showGloss = Boolean(gloss && langLabel)
 
   if (!loaded) {
     return (
@@ -369,6 +381,39 @@ export function SessionIntroCard({
           >
             {collapsedDefinition}
           </Text>
+        ) : null}
+
+        {showGloss ? (
+          <View
+            style={{
+              marginTop: hasCollapsedDefinition ? spacing.md : 0,
+              backgroundColor: theme.bgSubtle,
+              borderRadius: radius.md,
+              padding: spacing.md,
+            }}
+            accessibilityLabel={`${langLabel} gloss: ${gloss}`}
+          >
+            <Text
+              style={{
+                ...typography.caption,
+                ...(fontLabelBold ? { fontFamily: fontLabelBold } : {}),
+                color: theme.textMuted,
+              }}
+            >
+              {langLabel}
+            </Text>
+            <Text
+              style={{
+                ...typography.body,
+                ...(fontBody ? { fontFamily: fontBody } : {}),
+                color: theme.textSecondary,
+                fontStyle: 'italic',
+                marginTop: spacing.sm,
+              }}
+            >
+              {gloss}
+            </Text>
+          </View>
         ) : null}
 
         {hasCollapsedDefinition && hasBriefExample ? <QuoteDivider theme={theme} /> : null}
