@@ -28,6 +28,9 @@
       },
       "nuanceNote": "On the GMAT, whereas is often used to signal a strong contrast between two ideas, and test-takers may confuse it with while or although, which can indicate contrast or simultaneity. Recognizing the formal, oppositional register of whereas helps in RC and CR passages that hinge on precise logical relationships.",
       "memoryHook": "Remember that whereas sets up a clear opposition—think of legal documents or GMAT passages that draw a sharp line between two viewpoints. Its roots in formal writing and its use to highlight differences make it a stronger contrast marker than while in GMAT contexts."
+    },
+    "translations": {
+      "tr": "oysa buna karşılık"
     }
   },
   {
@@ -60,6 +63,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'nevertheless' is often used to introduce a concession or unexpected continuation, which can signal a shift in argument direction or author stance. Test-takers sometimes confuse it with 'however,' missing the subtle emphasis on persistence or contradiction that 'nevertheless' provides.",
       "memoryHook": "Remember that 'nevertheless' literally means 'never the less'—no matter what was said before, the following point is not diminished. In GMAT passages, it often marks where the author maintains a claim despite a preceding objection or difficulty."
+    },
+    "translations": {
+      "tr": "yine de"
     }
   },
   {
@@ -91,6 +97,9 @@
       },
       "nuanceNote": "On the GMAT, 'thus' is sometimes confused with contrast words like 'however' or 'nevertheless.' Test-takers must recognize that 'thus' always signals a result or inference, not a contradiction or alternative. In CR and RC, this distinction affects logical flow and argument structure questions.",
       "memoryHook": "Remember that 'thus' comes from the Old English 'þus,' meaning 'in this way.' On the GMAT, when you see 'thus,' look for a cause-effect relationship—such as a study's findings leading to a conclusion—rather than a contrast or opposing idea."
+    },
+    "translations": {
+      "tr": "bu nedenle"
     }
   },
   {
@@ -123,6 +132,9 @@
       },
       "nuanceNote": "On the GMAT, 'hence' is sometimes confused with words that merely indicate sequence ('then') or summary ('so'). Test-takers must recognize that 'hence' signals a logical or causal relationship, which can be critical for identifying argument structure in RC or CR questions.",
       "memoryHook": "Remember that 'hence' comes from the Old English 'heonan,' meaning 'from here.' On the GMAT, it always points to a result or conclusion that 'comes from' what was just stated—think of it as a bridge from cause to effect in formal arguments."
+    },
+    "translations": {
+      "tr": "bu nedenle"
     }
   },
   {
@@ -156,6 +168,9 @@
       },
       "nuanceNote": "On the GMAT, 'yet' is often used to introduce a contrast that is subtler than 'but' or 'however,' and answer choices may try to trick test-takers by substituting 'still' or 'nevertheless,' which can slightly shift the logical emphasis. Recognizing 'yet' as a marker of unexpected contrast is critical in RC and CR passages.",
       "memoryHook": "Think of 'yet' as a formal way to introduce an unexpected twist, much like a GMAT Reading Comprehension passage might present strong evidence for a claim, yet immediately follow with a counterpoint—signaling that the argument is more complex than it first appears."
+    },
+    "translations": {
+      "tr": "yine de"
     }
   },
   {
@@ -187,6 +202,9 @@
       },
       "nuanceNote": "On the GMAT, 'conversely' is often paired with 'however' or 'nevertheless' in answer choices, but only 'conversely' signals a direct reversal or reciprocal relationship. Test-takers should note that 'conversely' requires the two statements to be true opposites, not merely different.",
       "memoryHook": "Remember that 'conversely' comes from the Latin 'conversus,' meaning 'turned around.' In GMAT passages, it signals that the argument is turning to the opposite side or presenting a mirror-image relationship, not just any contrast."
+    },
+    "translations": {
+      "tr": "öte yandan"
     }
   },
   {
@@ -220,6 +238,9 @@
       },
       "nuanceNote": "On the GMAT, 'accordingly' is often paired with 'therefore' or 'similarly' as answer choices. Test-takers should note that 'accordingly' always refers to a result or response, not mere similarity or parallelism, which is a frequent source of confusion in Reading Comprehension and Critical Reasoning answer choices.",
       "memoryHook": "Remember that 'accordingly' shares its root with 'according to,' but instead of referencing a source, it points to what follows as a logical result. In GMAT passages, when you see a conclusion or action that follows from earlier information, 'accordingly' often signals that connection."
+    },
+    "translations": {
+      "tr": "bu nedenle"
     }
   },
   {
@@ -253,6 +274,9 @@
       },
       "nuanceNote": "On the GMAT, 'consequently' signals a logical result, not just a sequence in time. Test-takers often confuse it with 'subsequently' or 'afterward,' which do not imply causation. Recognizing this distinction is crucial for accurately evaluating argument structure or passage logic.",
       "memoryHook": "Remember that 'consequently' contains 'sequence,' but it always means one thing happens because of another, not just after it. In GMAT arguments, 'consequently' flags a direct cause-and-effect link—look for the reason behind the result, not just the order."
+    },
+    "translations": {
+      "tr": "sonuç olarak"
     }
   },
   {
@@ -284,6 +308,9 @@
       },
       "nuanceNote": "On the GMAT, 'given that' signals a premise or assumption, not a hypothetical or possibility. Test-takers may confuse it with 'even if' or 'if,' but 'given that' requires accepting the stated condition as fact, which is crucial for evaluating arguments or drawing correct inferences.",
       "memoryHook": "Remember that 'given that' means you must treat the stated information as a fact, not a possibility. On GMAT Critical Reasoning, when you see 'given that,' focus on how the argument builds from this fixed starting point, unlike 'if,' which leaves the premise open."
+    },
+    "translations": {
+      "tr": "-dığı göz önüne alındığında"
     }
   },
   {
@@ -316,6 +343,9 @@
       },
       "nuanceNote": "On the GMAT, 'support' is often a trap when contrasted with 'illustrate' or 'explain' in answer choices. Only 'support' directly strengthens or justifies an argument; 'illustrate' merely clarifies, which is insufficient for strengthening a conclusion in CR or RC questions.",
       "memoryHook": "Recall that in GMAT Critical Reasoning, a correct 'support' answer will always provide evidence or logic that makes the argument stronger—think of 'support' as the foundation holding up a building, not just a picture that decorates it (which would be 'illustrate')."
+    },
+    "translations": {
+      "tr": "desteklemek veya kanıtla doğrulamak"
     }
   },
   {
@@ -347,6 +377,9 @@
       },
       "nuanceNote": "On GMAT Critical Reasoning, 'strengthen' questions often include answer choices that merely restate the conclusion or provide irrelevant information; test-takers must identify the option that directly increases the logical connection between evidence and conclusion, not just one that supports the topic generally.",
       "memoryHook": "Remember that on GMAT CR, 'strengthen' questions ask for something that makes the argument’s reasoning tighter—think of adding a supporting pillar to a bridge, not just repeating what’s already there or proving it beyond doubt."
+    },
+    "translations": {
+      "tr": "daha güçlü hale getirmek"
     }
   },
   {
@@ -379,6 +412,9 @@
       },
       "nuanceNote": "On GMAT CR questions, 'weaken' is often confused with 'contradict' or 'refute.' A correct 'weaken' answer only needs to make the argument less persuasive, not disprove it entirely. GMAT test-writers exploit this by including extreme or irrelevant answer choices that go beyond what 'weaken' requires.",
       "memoryHook": "In GMAT Critical Reasoning, a 'weaken' answer pokes holes in the logic—think of it as making the argument’s foundation shakier, not demolishing the whole structure. Remember, to weaken is to erode confidence, not necessarily to destroy."
+    },
+    "translations": {
+      "tr": "zayıflatmak"
     }
   },
   {
@@ -410,6 +446,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'insofar as' often signals a limiting condition, which can be a trap if test-takers overlook the phrase and interpret a claim as absolute rather than qualified. Recognizing this scope limitation is essential for accurately identifying main ideas or evaluating arguments.",
       "memoryHook": "Remember that 'insofar as' literally means 'in so far as,' highlighting its function to set a boundary or limit. In GMAT passages, it often appears in complex sentences to restrict the claim’s scope, so always look for what comes after it to see the limitation."
+    },
+    "translations": {
+      "tr": "ölçüsünde"
     }
   },
   {
@@ -441,6 +480,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'inasmuch as' is a formal connector that signals causation or justification, not mere contrast or comparison. GMAT often tests this against 'whereas' or 'although,' so recognizing its causal function is crucial for parsing argument structure and eliminating distractor choices.",
       "memoryHook": "Remember that 'inasmuch as' literally means 'to the extent that,' which helps clarify its use to introduce a reason or justification. On the GMAT, spotting this phrase signals that what follows will explain or support the preceding claim, not contrast it."
+    },
+    "translations": {
+      "tr": "çünkü"
     }
   },
   {
@@ -473,6 +515,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'to the extent that' can be a trap when answer choices confuse conditional limitation with outright causation or necessity. Test-takers should note that this phrase restricts the claim’s scope, rather than asserting a universal or causal relationship.",
       "memoryHook": "Remember that 'to the extent that' sets a boundary or limit—think of it as drawing a line: the statement holds true only within that line. On the GMAT, it often appears in passages qualifying the strength or applicability of an argument."
+    },
+    "translations": {
+      "tr": "olduğu ölçüde"
     }
   },
   {
@@ -506,6 +551,9 @@
       },
       "nuanceNote": "On the GMAT, 'provided that' is sometimes confused with 'if' or 'unless' in answer choices, leading to logical errors in conditional reasoning. Recognizing that 'provided that' imposes a specific prerequisite is crucial for accurately interpreting complex RC sentences or CR arguments involving conditional logic.",
       "memoryHook": "Think of 'provided that' as a formal contract clause: the main benefit or action is granted only if a specific requirement is fulfilled. In GMAT RC or CR, spotting this phrase signals a strict condition, not just a possibility, which can change the argument’s logical structure."
+    },
+    "translations": {
+      "tr": "şartıyla"
     }
   },
   {
@@ -537,6 +585,9 @@
       },
       "nuanceNote": "On the GMAT, 'assuming that' signals a conditional relationship, not a certainty; test-takers sometimes misinterpret it as indicating a fact rather than a hypothetical premise. In CR, answer choices may exploit this by presenting assumptions as established facts, so careful attention to logical scope is essential.",
       "memoryHook": "Remember that 'assuming that' sets up a what-if scenario, often forming the backbone of GMAT Critical Reasoning questions. It signals that the statement is not necessarily true, but is being temporarily accepted to explore logical consequences or test the strength of an argument."
+    },
+    "translations": {
+      "tr": "varsayarsak ki"
     }
   },
   {
@@ -569,6 +620,9 @@
       },
       "nuanceNote": "On the GMAT, 'granting that' is sometimes paired with 'assuming that' or 'even if' in answer choices. Test-takers must recognize that 'granting that' concedes a point as true, whereas 'assuming that' merely sets a condition, which is a critical distinction in CR and RC logic.",
       "memoryHook": "Recall that 'granting' comes from 'to grant,' meaning to give or allow. In GMAT arguments, when you 'grant' a point, you allow it to be true for the sake of discussion, even if you will argue against its implications immediately after."
+    },
+    "translations": {
+      "tr": "kabul etmek gerekirse"
     }
   },
   {
@@ -600,6 +654,9 @@
       },
       "nuanceNote": "On the GMAT, albeit is sometimes paired with whereas or although in answer choices; the trap is to treat them as fully interchangeable. Albeit cannot introduce a full clause and is more restrictive, so recognizing its precise grammatical function can eliminate incorrect options in RC or SC questions.",
       "memoryHook": "Remember that albeit comes from 'all be it,' meaning 'even if it is.' On GMAT passages, it often appears to signal a subtle limitation or exception, so spotting it can help you identify nuanced author qualifications or hedges in complex arguments."
+    },
+    "translations": {
+      "tr": "her ne kadar öyle olsa da"
     }
   },
   {
@@ -632,6 +689,9 @@
       },
       "nuanceNote": "On the GMAT, 'notwithstanding' is often paired with 'despite' or 'nevertheless' as distractors. Test-takers may confuse its prepositional use with adverbial connectors. Recognizing its formal register and its ability to introduce concessive clauses is essential for accurately interpreting RC passages or CR arguments.",
       "memoryHook": "Remember that 'notwithstanding' literally means 'not standing in the way'—it signals that a fact or obstacle does not prevent something else from being true. In GMAT RC, it often introduces a contrast that qualifies or limits the preceding claim, so watch for subtle shifts in argument structure."
+    },
+    "translations": {
+      "tr": "-e rağmen"
     }
   },
   {
@@ -664,6 +724,9 @@
       },
       "nuanceNote": "On GMAT CR and RC, 'barring' signals a conditional exception, not an addition. Test-takers sometimes misread it as introducing an extra factor rather than limiting the scope. Recognizing that 'barring' excludes or prevents, rather than supplements, is critical for accurate inference and assumption questions.",
       "memoryHook": "Remember that 'barring' comes from the verb 'to bar,' meaning to block or exclude. In GMAT passages, when you see 'barring,' think of a barrier—something that, unless it happens, will not change the outcome. This helps clarify its meaning as an exception, not an addition."
+    },
+    "translations": {
+      "tr": "olmadıkça"
     }
   },
   {
@@ -697,6 +760,9 @@
       },
       "nuanceNote": "On GMAT CR and RC, 'absent' often signals a total lack—an absolute, not a partial shortfall. Test-takers sometimes confuse this with 'deficient,' which merely means insufficient. Recognizing this distinction can help eliminate distractors that overstate or understate the scope of absence in answer choices.",
       "memoryHook": "Recall that 'absent' comes from the Latin 'absens,' meaning 'being away.' On the GMAT, if evidence or reasoning is 'absent,' it is entirely missing—not merely weak or partial—so always check if the context requires total nonexistence versus mere inadequacy."
+    },
+    "translations": {
+      "tr": "mevcut olmayan"
     }
   },
   {
@@ -729,6 +795,9 @@
       },
       "nuanceNote": "On the GMAT, 'in light of' often appears in RC and CR passages to introduce reasoning or conclusions drawn from new data or evidence. Test-takers may confuse it with concessive phrases like 'despite,' but 'in light of' always signals causation or justification, not contrast.",
       "memoryHook": "Remember 'in light of' as shining a light on new facts—when new evidence is illuminated, your reasoning changes. On the GMAT, if a passage says 'in light of X,' it means conclusions or actions are justified or altered because of X, not contrary to it."
+    },
+    "translations": {
+      "tr": "-bunun ışığında"
     }
   },
   {
@@ -761,6 +830,9 @@
       },
       "nuanceNote": "On the GMAT, answer choices may confuse on the grounds that with causal or conditional phrases. Test-takers must note that on the grounds that always signals a justification for an action or claim, not a prerequisite or hypothetical, which is a subtle but critical distinction in CR and RC questions.",
       "memoryHook": "Recall that 'grounds' in this phrase refers to the foundation or basis for something, much like the 'grounds' of a legal case. In GMAT Critical Reasoning, look for this phrase when an argument provides a stated reason for a conclusion or action."
+    },
+    "translations": {
+      "tr": "gerekçesiyle"
     }
   },
   {
@@ -793,6 +865,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'by virtue of' signals a direct causal or justificatory link, not just a contextual factor. Test-takers often confuse it with looser phrases like 'in light of,' which can lead to misreading logical relationships and selecting incorrect answer choices that overstate or understate causation.",
       "memoryHook": "Recall that 'virtue' in this phrase comes from the Latin 'virtus,' meaning strength or power. On the GMAT, 'by virtue of' points to the specific strength, quality, or fact that directly causes or justifies an outcome—think of it as the driving force behind a result."
+    },
+    "translations": {
+      "tr": "sayesinde"
     }
   },
   {
@@ -824,6 +899,9 @@
       },
       "nuanceNote": "On the GMAT, 'predicated on' signals logical dependence, not just association. A common trap is to confuse it with terms like 'correlated with' or 'related to,' which do not imply that one idea must be true for the other to hold. Recognizing this distinction is critical in CR and RC inference questions.",
       "memoryHook": "Remember that 'predicate' shares a root with 'predict,' both coming from the Latin 'praedicare' (to proclaim or declare). On the GMAT, if a conclusion is 'predicated on' something, it is declared or asserted only because that underlying idea is assumed true."
+    },
+    "translations": {
+      "tr": "bir şeye dayalı olarak"
     }
   },
   {
@@ -855,6 +933,9 @@
       },
       "nuanceNote": "On the GMAT, 'contingent upon' often appears in answer choices to test your ability to distinguish strict logical dependence from mere association or coincidence. Be alert: answer choices with 'contingent upon' require a direct causal or conditional link, not just a statistical or temporal connection.",
       "memoryHook": "Recall that 'contingent' comes from the Latin 'contingere,' meaning 'to touch' or 'to happen.' In GMAT logic, if something is 'contingent upon' another, it only 'happens' if the other 'touches off' or triggers it—emphasizing direct dependence, not just connection."
+    },
+    "translations": {
+      "tr": "bağlı olmak"
     }
   },
   {
@@ -888,6 +969,9 @@
       },
       "nuanceNote": "On the GMAT, 'ostensibly' is often contrasted with words like 'explicitly' or 'actually' in answer choices, testing whether you recognize that 'ostensibly' signals a potential gap between appearance and reality. This subtlety is crucial in RC and CR when evaluating author intent or argument structure.",
       "memoryHook": "Remember that 'ostensibly' comes from the Latin 'ostendere,' meaning 'to show.' On the GMAT, when something is 'ostensibly' true, it is being shown or presented as such, but savvy test-takers should look for evidence that the reality may differ from appearances."
+    },
+    "translations": {
+      "tr": "görünüşte öyle olsa da"
     }
   },
   {
@@ -920,6 +1004,9 @@
       },
       "nuanceNote": "On the GMAT, 'purportedly' often appears in passages or arguments where the test-maker wants to highlight uncertainty or skepticism about a claim. Test-takers may fall into traps by treating purported statements as established facts, rather than recognizing the intended doubt or lack of verification.",
       "memoryHook": "Recall that 'purport' means to claim or profess; 'purportedly' signals that something is presented as true but may not be. On GMAT RC or CR, if a study is 'purportedly unbiased,' you should question whether that claim is substantiated."
+    },
+    "translations": {
+      "tr": "iddia edildiğine göre"
     }
   },
   {
@@ -952,6 +1039,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'allegedly' often signals uncertainty or disputed facts, which is critical for evaluating argument strength or evidence reliability. Test-takers may be trapped by answer choices that conflate 'allegedly' (unverified claim) with 'proven' or 'widely accepted' facts, so pay close attention to the source and certainty.",
       "memoryHook": "Recall that 'allegedly' comes from 'allege,' meaning to assert without proof; in GMAT legal or business passages, it flags claims that require further evidence, so always question whether the statement is established fact or merely an accusation."
+    },
+    "translations": {
+      "tr": "iddia edildiğine göre"
     }
   },
   {
@@ -984,6 +1074,9 @@
       },
       "nuanceNote": "On the GMAT, 'presumably' signals a logical leap or inference that may not be directly supported by evidence; answer choices that treat such statements as certain or proven are often incorrect. Test-takers must distinguish between what is assumed versus what is explicitly stated or guaranteed.",
       "memoryHook": "Remember that 'presumably' comes from 'presume,' meaning to take something as true without definitive proof. On GMAT RC or CR, when you see 'presumably,' look for an inference or assumption rather than a fact—this distinction is key to avoiding trap answers."
+    },
+    "translations": {
+      "tr": "muhtemelen öyle görünüyor ki"
     }
   },
   {
@@ -1017,6 +1110,9 @@
       },
       "nuanceNote": "On the GMAT, 'arguably' signals a qualified claim, not a definitive fact. Answer choices that confuse it with absolute certainty or universal agreement are incorrect; recognizing this hedging language is crucial for distinguishing between strong and moderate claims in RC and CR passages.",
       "memoryHook": "Remember that 'arguably' contains 'argue'—it introduces a point that could be argued for, but not one that is settled or beyond question. In GMAT passages, it often signals the author’s awareness of alternative viewpoints or the need for further justification."
+    },
+    "translations": {
+      "tr": "muhtemelen öyle kabul edilebilir"
     }
   },
   {
@@ -1048,6 +1144,9 @@
       },
       "nuanceNote": "On the GMAT, 'seemingly' often signals a trap where an answer choice confuses appearance with reality; test-takers must recognize that 'seemingly' does not guarantee truth. Be alert to passages or arguments where the distinction between what seems true and what is actually true is critical.",
       "memoryHook": "Recall that 'seemingly' derives from 'seem,' meaning to appear or give an impression. In GMAT passages, if something is described as 'seemingly' true, always question whether the underlying reality matches the surface appearance—this distinction is often tested in inference and critical reasoning questions."
+    },
+    "translations": {
+      "tr": "görünüşte"
     }
   },
   {
@@ -1079,6 +1178,9 @@
       },
       "nuanceNote": "On the GMAT, 'nominally' is often contrasted with words like 'actually' or 'effectively' to test your understanding of the difference between formal titles or roles and real power or influence. Be alert for answer choices that confuse official designation with practical reality, especially in RC passages discussing organizations or governance.",
       "memoryHook": "Recall that 'nominally' comes from the Latin 'nomen,' meaning 'name.' On the GMAT, if a group is 'nominally in charge,' it means they have the title but not necessarily the real control—think of a figurehead leader whose power is only on paper."
+    },
+    "translations": {
+      "tr": "yalnızca adı üzerinde"
     }
   },
   {
@@ -1111,6 +1213,9 @@
       },
       "nuanceNote": "On the GMAT, 'qualify' is often tested in RC and CR questions where an answer choice subtly weakens or limits a broad claim. Test-takers may confuse it with 'clarify' or miss that a qualified statement is not a full concession but a partial limitation.",
       "memoryHook": "Recall that in GMAT passages, an author who 'qualifies' a claim is not abandoning it but adding a condition or exception—think of a scientist saying, 'This is true, but only if X holds.' The Latin root 'qualis' means 'of what kind,' hinting at specifying or limiting."
+    },
+    "translations": {
+      "tr": "sınırlamak veya yumuşatmak"
     }
   },
   {
@@ -1143,6 +1248,9 @@
       },
       "nuanceNote": "On the GMAT, 'concede' often signals a shift or softening in an author’s stance, which can indicate a potential weakness or limitation in an argument. Test-takers may be tempted by answer choices that treat 'concede' as full agreement, but it actually implies partial or reluctant acknowledgment, not wholesale acceptance.",
       "memoryHook": "Remember that 'concede' comes from the Latin 'concedere,' meaning 'to yield' or 'to go with.' In GMAT passages, when an author concedes a point, they are 'yielding ground'—not fully agreeing, but strategically admitting something to strengthen their overall position."
+    },
+    "translations": {
+      "tr": "kabul etmek"
     }
   },
   {
@@ -1176,6 +1284,9 @@
       },
       "nuanceNote": "On the GMAT, 'grant' often appears in formal or institutional contexts, such as funding or permissions, and can be confused with less formal terms like 'give' or 'permit.' Be alert to the formality and the implication of an official or authoritative process when evaluating answer choices.",
       "memoryHook": "Remember that 'grant' is often used in academic or legal GMAT passages—think of a research grant or a government granting rights. The word’s root relates to 'guarantee,' reinforcing that something is given with authority, not just casually allowed."
+    },
+    "translations": {
+      "tr": "resmi olarak vermek"
     }
   },
   {
@@ -1209,6 +1320,9 @@
       },
       "nuanceNote": "On the GMAT, 'stipulate' is often used in Reading Comprehension or Critical Reasoning passages to indicate a formally stated condition, not just a general suggestion. A common trap is to confuse it with words like 'imply' or 'suggest,' which lack the explicitness and formality required by 'stipulate.'",
       "memoryHook": "Think of 'stipulate' as a legal term—when a contract or an argument on the GMAT stipulates something, it spells out the rule or condition in unmistakable terms, much like a lawyer would write a clause that leaves no room for ambiguity."
+    },
+    "translations": {
+      "tr": "açıkça şart koşmak"
     }
   },
   {
@@ -1241,6 +1355,9 @@
       },
       "nuanceNote": "On the GMAT, 'posit' often signals a claim that is open to challenge or analysis, whereas answer choices using 'assume' or 'assert' may subtly differ in strength or explicitness. Recognizing that 'posit' introduces a theoretical or debatable point can help distinguish between evidence and hypothesis in RC or CR passages.",
       "memoryHook": "Recall that 'posit' comes from the Latin 'ponere,' meaning 'to place.' In GMAT arguments, when someone 'posits' an idea, they are 'placing' it on the table for consideration, not declaring it as proven fact—watch for this subtlety in answer choices."
+    },
+    "translations": {
+      "tr": "ileri sürmek"
     }
   },
   {
@@ -1273,6 +1390,9 @@
       },
       "nuanceNote": "GMAT questions often test whether you recognize that 'contend' signals a strong, explicit claim, not a mere implication or hint. Answer choices using 'contend' should be reserved for passages or arguments where the author or speaker is clearly staking out a position, not just offering a possibility.",
       "memoryHook": "Remember that 'contend' comes from the Latin 'contendere,' meaning 'to stretch together' or 'to strive.' On the GMAT, think of authors or speakers 'stretching' their arguments against opposition, clearly staking out and defending a position rather than merely implying one."
+    },
+    "translations": {
+      "tr": "ileri sürmek"
     }
   },
   {
@@ -1306,6 +1426,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'maintain' often signals a position that is actively upheld, not merely stated. Test-takers may confuse it with 'claim,' missing the sense of ongoing defense or support that 'maintain' implies, which can affect answer choice precision.",
       "memoryHook": "Remember: 'maintain' comes from the Latin 'manu tenere'—to hold in the hand. On the GMAT, think of an author or speaker 'holding' their position firmly, not just stating it once but keeping it steady under scrutiny."
+    },
+    "translations": {
+      "tr": "sürdürmek"
     }
   },
   {
@@ -1339,6 +1462,9 @@
       },
       "nuanceNote": "On the GMAT, 'assert' is often paired with 'argue' or 'conclude' in answer choices. Test-takers should note that 'assert' does not imply evidence or reasoning, while 'argue' and 'conclude' do. This distinction can be crucial in Critical Reasoning questions that test the strength of support for a claim.",
       "memoryHook": "Remember that 'assert' comes from the Latin 'assertus,' meaning 'to claim or affirm.' In GMAT passages, when an author asserts something, they are simply stating it—often expecting you to evaluate whether the statement is adequately supported or merely an unsupported claim."
+    },
+    "translations": {
+      "tr": "ileri sürmek"
     }
   },
   {
@@ -1372,6 +1498,9 @@
       },
       "nuanceNote": "On the GMAT, 'hold' is often contrasted with softer verbs like 'suggest' or 'imply.' Test-takers may be trapped by answer choices that confuse a strong claim ('hold') with a tentative one ('suggest'), especially in inference or main idea questions where the author's commitment level is critical.",
       "memoryHook": "Think of a judge who 'holds' a ruling in court—this means the judge is officially stating a position, not merely hinting. On the GMAT, when an author 'holds' something, it’s a strong, declared claim, not just a possibility."
+    },
+    "translations": {
+      "tr": "ileri sürmek"
     }
   },
   {
@@ -1404,6 +1533,9 @@
       },
       "nuanceNote": "On the GMAT, 'undermine' is often tested against stronger or more direct terms like 'contradict' or 'refute.' Test-takers must recognize that 'undermine' does not require complete disproof—just enough to weaken the argument's support, which is a subtler, more nuanced action in RC and CR contexts.",
       "memoryHook": "Recall that 'undermine' has the root 'mine,' as in digging beneath something to weaken its foundation. In GMAT Critical Reasoning, a correct answer that 'undermines' an argument acts like a hidden force eroding the base, not toppling it outright."
+    },
+    "translations": {
+      "tr": "gizlice zayıflatmak"
     }
   },
   {
@@ -1436,6 +1568,9 @@
       },
       "nuanceNote": "On GMAT CR questions, 'bolster' is often paired with 'justify' or 'prove' as distractors; however, 'bolster' merely strengthens an argument and does not guarantee its truth. Recognizing that 'bolster' implies support, not absolute proof, is crucial for selecting the correct answer.",
       "memoryHook": "Remember that 'bolster' comes from a word for a supportive pillow—just as a pillow props up your head, a statement that bolsters an argument props up its reasoning, making it firmer but not necessarily irrefutable."
+    },
+    "translations": {
+      "tr": "desteklemek veya güçlendirmek"
     }
   },
   {
@@ -1468,6 +1603,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'buttress' often appears alongside words like 'corroborate' or 'validate.' Test-takers may mistakenly treat these as interchangeable, but 'buttress' can involve indirect or structural support, not just direct evidence, which can affect answer choice precision.",
       "memoryHook": "Remember that medieval cathedrals used flying buttresses to literally hold up their walls—just as, in GMAT arguments, additional evidence or reasoning serves to 'hold up' or reinforce a claim, even if it doesn’t directly prove it."
+    },
+    "translations": {
+      "tr": "desteklemek"
     }
   },
   {
@@ -1500,6 +1638,9 @@
       },
       "nuanceNote": "On the GMAT, substantiate is often contrasted with terms like 'illustrate' or 'suggest.' Test-takers should note that substantiate requires concrete evidence, not just explanation or possibility. Answer choices that merely provide examples or clarify ideas, rather than confirm them, do not substantiate a claim.",
       "memoryHook": "Remember that 'substantiate' shares its root with 'substance'—to substantiate an argument is to give it substance or real weight through evidence. On GMAT CR, only answers that add factual backing truly substantiate a claim, not those that merely explain or exemplify."
+    },
+    "translations": {
+      "tr": "kanıtlarla desteklemek"
     }
   },
   {
@@ -1532,6 +1673,9 @@
       },
       "nuanceNote": "On the GMAT, 'corroborate' is often used in answer choices that require strengthening an argument with direct supporting evidence, not just related or supplementary information. Test-takers may be tempted by distractors that merely elaborate or add detail without actually confirming the argument’s validity.",
       "memoryHook": "Remember that 'corroborate' comes from the Latin 'robur,' meaning strength. On the GMAT, to corroborate is to strengthen an argument by giving it more solid support—think of adding another pillar under a bridge to make it sturdier."
+    },
+    "translations": {
+      "tr": "kanıtla doğrulamak"
     }
   },
   {
@@ -1564,6 +1708,9 @@
       },
       "nuanceNote": "On the GMAT, test-takers may confuse 'rebut' with 'refute,' but 'rebut' does not require conclusively disproving an argument—only presenting a credible challenge. Recognizing this distinction is crucial in Critical Reasoning questions where the prompt asks for a response rather than definitive disproof.",
       "memoryHook": "Remember that 'rebut' comes from the Latin 're-' (back) and 'battuere' (to beat), so to rebut is to 'beat back' an argument. On the GMAT, when a passage asks for a way to weaken or challenge a claim, you are being asked to rebut it—not necessarily to prove it entirely false."
+    },
+    "translations": {
+      "tr": "karşı argüman sunmak"
     }
   },
   {
@@ -1596,6 +1743,9 @@
       },
       "nuanceNote": "GMAT questions often test the distinction between merely challenging an argument ('rebutting') and definitively disproving it ('refuting'). Answer choices that use 'refute' require strong, conclusive evidence, not just an alternative perspective or critique. Precision in scope is critical for RC and CR items.",
       "memoryHook": "Recall that 'refute' comes from the Latin 'refutare,' meaning 'to drive back.' In GMAT arguments, to refute is to drive back or demolish a claim with solid evidence, not just to question or oppose it. This helps distinguish it from weaker counterarguments."
+    },
+    "translations": {
+      "tr": "çürütmek veya yanlış olduğunu göstermek"
     }
   },
   {
@@ -1628,6 +1778,9 @@
       },
       "nuanceNote": "On GMAT CR and RC, answer choices that call into question an argument do not necessarily disprove it; they merely introduce uncertainty or doubt. Test-takers often confuse this with stronger terms like 'refute' or 'invalidate,' leading to incorrect answer selection when only skepticism is warranted.",
       "memoryHook": "Remember that to 'call into question' is to raise a hand in class and ask, 'Are we sure this is true?'—you’re not disproving the point, just signaling doubt, which is a common move in GMAT critical reasoning weaken questions."
+    },
+    "translations": {
+      "tr": "sorgulamak veya şüpheye düşürmek"
     }
   },
   {
@@ -1660,6 +1813,9 @@
       },
       "nuanceNote": "On the GMAT, 'lend credence to' is often paired with distractors like 'imply' or 'suggest,' which do not convey the same degree of evidentiary support. Recognizing this phrase signals that the passage or argument is providing concrete backing, not just a hint or possibility.",
       "memoryHook": "Remember that 'credence' shares a root with 'credit'—to lend credence is like giving credit to an idea, making it more trustworthy. In GMAT RC or CR, look for facts or data that actively strengthen an argument, not just those that are loosely related."
+    },
+    "translations": {
+      "tr": "güçlendirmek veya doğrulamak"
     }
   },
   {
@@ -1692,6 +1848,9 @@
       },
       "nuanceNote": "On the GMAT, 'give rise to' is often paired with 'correlate with' or 'associated with' as a trap; only 'give rise to' establishes causation, not mere coincidence or association. Recognizing this distinction is crucial for identifying logical flaws in CR arguments or RC answer choices.",
       "memoryHook": "Remember that 'give rise to' literally means to cause something to come into being—imagine a cause 'raising up' an effect. On the GMAT, if a passage says a policy 'gave rise to' a trend, it means the policy directly caused that trend, not just that they happened together."
+    },
+    "translations": {
+      "tr": "neden olmak"
     }
   },
   {
@@ -1723,6 +1882,9 @@
       },
       "nuanceNote": "On the GMAT, answer choices may switch causality by confusing 'stem from' (cause to effect) with 'lead to' (effect from cause). Test-takers should pay close attention to whether the passage is discussing origins or consequences, as this distinction is frequently tested in RC and CR questions.",
       "memoryHook": "Recall that a plant’s stem grows up from its roots; similarly, when something 'stems from' a source, it grows out of or originates in that source. In GMAT passages, trace ideas back to their roots to spot causal relationships."
+    },
+    "translations": {
+      "tr": "-den kaynaklanmak"
     }
   },
   {
@@ -1754,6 +1916,9 @@
       },
       "nuanceNote": "On the GMAT, 'attribute to' often appears in answer choices that require careful attention to causality or responsibility. Test-takers may be tempted to equate it with 'contribute to,' but the former implies a stronger, more direct causal link, which can be critical in distinguishing correct from incorrect answers.",
       "memoryHook": "Remember that 'attribute' comes from the Latin 'ad' (to) and 'tribuere' (to assign or give), so when you 'attribute to' something on the GMAT, you are specifically assigning cause or origin—not just noting a minor influence."
+    },
+    "translations": {
+      "tr": "-bağlamak, -nedeni olarak görmek"
     }
   },
   {
@@ -1787,6 +1952,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'account for' signals a demand for causal explanation, not mere mention or acknowledgment. Test-takers often miss this, mistakenly equating it with 'consider' or 'address,' which do not require a full explanation or justification in context.",
       "memoryHook": "Remember that in GMAT arguments, 'account for' always asks why something happens, not just whether it is noticed. For example, if a passage says a theory fails to account for new evidence, it means the theory cannot explain it—not just that it hasn’t mentioned it."
+    },
+    "translations": {
+      "tr": "açıklamak veya nedenini göstermek"
     }
   },
   {
@@ -1819,6 +1987,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, foster is often contrasted with facilitate or allow; test-takers may miss that foster requires active, ongoing support, not just making something possible. Recognizing this distinction can help eliminate distractors that confuse passive permission with active encouragement.",
       "memoryHook": "Remember foster as 'to nourish or nurture,' like a foster parent who actively supports a child’s growth. In GMAT passages, if an organization fosters innovation, it is not just allowing it but actively working to help it develop."
+    },
+    "translations": {
+      "tr": "teşvik etmek ve geliştirmek"
     }
   },
   {
@@ -1851,6 +2022,9 @@
       },
       "nuanceNote": "On the GMAT, 'mitigate' is often contrasted with words like 'eliminate' or 'ameliorate.' Test-takers may be tempted by answer choices suggesting complete removal of a problem, but 'mitigate' only means to reduce its severity, not to solve it entirely.",
       "memoryHook": "Remember that 'mitigate' comes from the Latin 'mitis,' meaning 'soft.' On the GMAT, if a passage says a new law or policy 'mitigates' a risk, it softens or lessens the negative impact, but does not necessarily remove it altogether."
+    },
+    "translations": {
+      "tr": "zararını azaltmak"
     }
   },
   {
@@ -1883,6 +2057,9 @@
       },
       "nuanceNote": "On the GMAT, 'reconcile' often appears in Reading Comprehension and Critical Reasoning questions where test-takers must resolve conflicting evidence or viewpoints. A common trap is selecting an answer that merely supports one side rather than harmonizing both, ignoring the need for true reconciliation.",
       "memoryHook": "Recall that 'reconcile' shares a root with 'conciliation'—both involve bringing parties or ideas together. On the GMAT, if two statements seem at odds, the correct answer may be the one that reconciles them, not justifies one or dismisses the other."
+    },
+    "translations": {
+      "tr": "uzlaştırmak veya uyumlu hale getirmek"
     }
   },
   {
@@ -1915,6 +2092,9 @@
       },
       "nuanceNote": "On the GMAT, 'presume' is often a trap when contrasted with 'infer' or 'assume.' Test-takers should note that 'presume' involves accepting something as likely true without full proof, which is a weaker, more tentative basis than 'infer,' which requires evidence-based reasoning.",
       "memoryHook": "Remember that 'presume' shares its root with 'presumption,' which in GMAT CR and RC often signals an unstated assumption—a gap in logic that may be challenged or required for the argument to hold. Spotting presumptions is key to evaluating logical flaws."
+    },
+    "translations": {
+      "tr": "varsaymak veya farz etmek"
     }
   },
   {
@@ -1946,6 +2126,9 @@
       },
       "nuanceNote": "On the GMAT, 'take for granted' often signals an unstated assumption in Critical Reasoning arguments. Test-takers may confuse it with 'infer,' but the GMAT uses 'take for granted' to highlight gaps in logic, not conclusions drawn from evidence. Recognizing this difference is crucial for identifying argument flaws.",
       "memoryHook": "Recall that GMAT Critical Reasoning questions frequently ask what an argument 'takes for granted'—meaning what it assumes without stating. If an answer choice fills an unstated gap, it’s likely what the argument takes for granted, not something deduced or inferred from the text."
+    },
+    "translations": {
+      "tr": "doğru kabul etmek"
     }
   },
   {
@@ -1978,6 +2161,9 @@
       },
       "nuanceNote": "On the GMAT, 'implicit' is often used in Reading Comprehension and Critical Reasoning to test your ability to identify unstated premises or conclusions. A common trap is confusing what is actually stated (explicit) with what is merely implied (implicit), especially in inference questions.",
       "memoryHook": "Remember that 'implicit' comes from the Latin 'implicare,' meaning 'to entwine'—so implicit ideas are woven into the text, not laid out plainly. In GMAT RC, if something is implicit, you must read between the lines to find it."
+    },
+    "translations": {
+      "tr": "üstü kapalı şekilde ifade edilen"
     }
   },
   {
@@ -2010,6 +2196,9 @@
       },
       "nuanceNote": "GMAT questions often present 'imply' and 'infer' as answer choices to test whether you recognize the direction of reasoning—author to reader or vice versa. Be careful: 'infer' is never about what the author does, but what the reader logically concludes from the text.",
       "memoryHook": "Remember: on the GMAT, you infer as a test-taker when you extract a logical conclusion from what is stated, even if the passage never says it outright. The Latin root 'inferre' means 'to bring in'—you bring in your own conclusion from the evidence provided."
+    },
+    "translations": {
+      "tr": "sonuç çıkarmak"
     }
   },
   {
@@ -2041,6 +2230,9 @@
       },
       "nuanceNote": "On the GMAT, answer choices that 'follow from' the passage are those that are strictly required by the text; test-takers often confuse this with choices that are merely plausible or supported. Recognizing that 'follow from' demands logical necessity, not just possibility, is critical for RC and CR accuracy.",
       "memoryHook": "Remember that 'follow from' means the conclusion is inescapable if the premises are true—think of a mathematical proof, where each step must follow from the previous one. On GMAT CR, only answers that are absolutely required by the argument 'follow from' it."
+    },
+    "translations": {
+      "tr": "mantıksal olarak çıkmak"
     }
   },
   {
@@ -2073,6 +2265,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, answer choices often confuse 'hinge on' with weaker connections like 'is associated with.' Test-takers must recognize that 'hinge on' signals a critical dependency, not just a loose link, which can be crucial for identifying assumptions or necessary conditions.",
       "memoryHook": "Imagine a door: it can only swing open or closed because it is attached to its hinges. Similarly, if an argument 'hinges on' a premise, removing that premise makes the whole argument collapse—just as a door falls if its hinges are gone."
+    },
+    "translations": {
+      "tr": "bağlı olmak"
     }
   },
   {
@@ -2105,6 +2300,9 @@
       },
       "nuanceNote": "On the GMAT, 'controvert' may appear alongside 'refute' or 'contradict' in answer choices. Test-takers should note that 'controvert' does not require disproving a claim, only challenging it, which is a subtle difference that can affect the correct answer in CR or RC questions.",
       "memoryHook": "Remember that 'controvert' shares its root with 'controversy'—both involve disagreement or debate. In GMAT passages, when an author controverts a position, they are not necessarily disproving it but rather engaging in reasoned opposition, often by introducing counterarguments or evidence."
+    },
+    "translations": {
+      "tr": "karşı çıkmak ve tartışmak"
     }
   },
   {
@@ -2138,6 +2336,9 @@
       },
       "nuanceNote": "On the GMAT, 'precipitate' is often a trap when paired with 'precipitous' in answer choices, as both derive from the same root but differ in meaning and register. Test-takers must distinguish between the negative connotation of rashness (precipitate) and the literal or figurative steepness (precipitous), especially in RC passages discussing decisions or actions.",
       "memoryHook": "Recall that 'precipitate' comes from the Latin 'praecipitare,' meaning 'to throw headlong.' In GMAT contexts, a 'precipitate' action is one that metaphorically leaps headfirst without looking—emphasizing the negative outcome of acting without sufficient forethought."
+    },
+    "translations": {
+      "tr": "aceleyle yapılmış"
     }
   },
   {
@@ -2170,6 +2371,9 @@
       },
       "nuanceNote": "On the GMAT, 'engender' is sometimes paired with more forceful or emotionally charged verbs like 'incite' or 'provoke' as distractors. Test-takers should note that 'engender' implies a neutral or gradual causation, not an immediate or inflammatory effect, which is crucial for accurately interpreting RC or CR answer choices.",
       "memoryHook": "Recall that 'engender' shares a root with 'generate' and 'genesis,' both relating to creation or origin. In GMAT passages, when a policy or trend is said to 'engender' an effect, it is setting the stage for something to arise, not directly stirring it up."
+    },
+    "translations": {
+      "tr": "neden olmak"
     }
   },
   {
@@ -2202,6 +2406,9 @@
       },
       "nuanceNote": "On GMAT CR and RC, 'preclude' is often contrasted with 'prevent' or 'foreclose' in answer choices. Test-takers should note that 'preclude' implies impossibility from the outset, not merely difficulty or an action taken after the fact, which can be a subtle but crucial distinction in logical reasoning.",
       "memoryHook": "Remember that 'preclude' comes from the Latin 'prae-' (before) and 'claudere' (to shut), literally meaning 'to shut out beforehand.' On GMAT arguments, if a factor precludes an outcome, it shuts the door before the outcome can even start to occur."
+    },
+    "translations": {
+      "tr": "imkânsız kılmak"
     }
   },
   {
@@ -2234,6 +2441,9 @@
       },
       "nuanceNote": "On the GMAT, 'obviate' is often contrasted with 'mitigate' or 'alleviate' in answer choices. Test-takers may be tempted by these near-synonyms, but 'obviate' signals complete removal of necessity, not merely reduction of impact—a subtle difference that can change the correct answer in RC or CR.",
       "memoryHook": "Recall that 'obviate' comes from the Latin 'obviare,' meaning 'to go against' or 'to prevent.' In GMAT arguments, if a new policy obviates a risk, it does not just reduce it—it makes the risk irrelevant, so no further action is required."
+    },
+    "translations": {
+      "tr": "gereksiz kılmak"
     }
   },
   {
@@ -2266,6 +2476,9 @@
       },
       "nuanceNote": "On the GMAT, 'vitiate' is often paired with 'invalidate' or 'mitigate' as distractors. Test-takers should note that vitiate specifically refers to introducing a flaw or corruption, not merely reducing severity or partially weakening, which can be a subtle but critical distinction in RC or CR answer choices.",
       "memoryHook": "Recall that 'vitiate' comes from the Latin 'vitium,' meaning 'fault' or 'defect'—so to vitiate is to introduce a defect that spoils validity. On GMAT CR, if a new factor vitiates an argument, it corrupts its logical foundation, not just lessens its impact."
+    },
+    "translations": {
+      "tr": "geçersiz kılmak veya bozmak"
     }
   },
   {
@@ -2298,6 +2511,9 @@
       },
       "nuanceNote": "On the GMAT, 'belie' is often used in Reading Comprehension passages to signal a mismatch between surface appearances and underlying facts. Test-takers may confuse it with 'contradict,' but 'belie' emphasizes misleading impressions rather than outright opposition—a distinction critical for precise answer selection.",
       "memoryHook": "Remember that 'belie' comes from Old English 'beleogan,' meaning 'to lie around or about.' On the GMAT, if a passage says a calm exterior belies turmoil, it means the calmness is deceptive—what you see hides what’s really there."
+    },
+    "translations": {
+      "tr": "gizlemek ya da olduğundan farklı göstermek"
     }
   },
   {
@@ -2330,6 +2546,9 @@
       },
       "nuanceNote": "On the GMAT, 'attenuate' is often tested against words like 'mitigate' or 'counteract,' where the scope differs: 'attenuate' refers to diminishing strength or intensity, not necessarily improving a situation. Recognizing this precision is crucial for distinguishing subtle answer-choice differences in CR and RC passages.",
       "memoryHook": "Remember that 'attenuate' comes from the Latin 'attenuare,' meaning 'to make thin.' On GMAT CR, if an argument is 'attenuated,' its support has been thinned out or weakened, not simply improved or made less harmful—this distinction often appears in answer choices."
+    },
+    "translations": {
+      "tr": "zayıflatmak veya azaltmak"
     }
   },
   {
@@ -2361,6 +2580,9 @@
       },
       "nuanceNote": "On the GMAT, 'disentangle' often appears in passages or questions requiring test-takers to identify and separate overlapping causes, arguments, or data. A common trap is to treat it as merely 'identify' or 'distinguish,' missing the sense of actively resolving complexity or confusion that the GMAT expects.",
       "memoryHook": "Think of disentangling as untying a knot in a GMAT argument: just as you would carefully separate intertwined strings to see each one clearly, you must separate overlapping claims or evidence to analyze them effectively on RC or CR questions."
+    },
+    "translations": {
+      "tr": "ayırt etmek ve çözmek"
     }
   },
   {
@@ -2393,6 +2615,9 @@
       },
       "nuanceNote": "On the GMAT, 'presuppose' is often paired with 'infer' as a distractor, since both relate to reasoning but operate in opposite directions—presupposition is an unspoken premise, while inference is a derived conclusion. Recognizing which is being tested is crucial for both RC and CR accuracy.",
       "memoryHook": "Remember that 'presuppose' contains 'pre-' (before) and 'suppose' (to assume); on GMAT CR, a presupposition is an assumption made before any argument or inference, often hidden and unstated, but essential for the argument’s logic to hold."
+    },
+    "translations": {
+      "tr": "önceden varsaymak"
     }
   },
   {
@@ -2424,6 +2649,9 @@
       },
       "nuanceNote": "On the GMAT, 'tacit' is frequently contrasted with 'explicit' in answer choices, especially in inference and assumption questions. Test-takers may be trapped by confusing what is merely implied with what is directly stated, which can affect the accuracy of their reasoning or passage interpretation.",
       "memoryHook": "Remember that 'tacit' comes from the Latin 'tacitus,' meaning 'silent.' In GMAT passages, a tacit agreement or assumption is one that is 'silent'—not spoken aloud—yet still shapes the argument or understanding."
+    },
+    "translations": {
+      "tr": "üstü kapalı şekilde kabul edilen"
     }
   },
   {
@@ -2455,6 +2683,9 @@
       },
       "nuanceNote": "On the GMAT, 'entail' is often paired with 'imply' as a trap; test-takers must recognize that 'entail' signals logical necessity, not mere suggestion. In RC and CR, misreading 'entail' as simply 'suggest' can lead to incorrect answer choices that fail to capture the required logical consequence.",
       "memoryHook": "Remember that 'entail' comes from the Latin 'intaliare,' meaning to enclose or require within. On the GMAT, if a premise entails something, that outcome is enclosed—logically locked in—so it must occur, not just possibly occur as with 'imply.'"
+    },
+    "translations": {
+      "tr": "gerektirmek"
     }
   },
   {
@@ -2487,6 +2718,9 @@
       },
       "nuanceNote": "On GMAT CR and RC, 'necessitate' is often contrasted with softer terms like 'suggest' or 'imply.' The test may trap students by offering answer choices that confuse logical requirement with mere possibility; only 'necessitate' signals an absolute logical consequence, not just a probable one.",
       "memoryHook": "Recall that 'necessitate' shares its root with 'necessary,' emphasizing that something must happen. On GMAT CR, if a premise necessitates a conclusion, that conclusion is required—not just suggested—by the information provided."
+    },
+    "translations": {
+      "tr": "gerektirmek"
     }
   },
   {
@@ -2519,6 +2753,9 @@
       },
       "nuanceNote": "On GMAT Critical Reasoning, test-takers often confuse 'warrant' with 'evidence' or 'premise.' A common trap is answer choices that restate evidence rather than identifying the unstated link. Recognizing that a warrant is implicit and necessary for the argument’s logic is crucial for correct answers.",
       "memoryHook": "Think of a 'warrant' as the invisible bridge between evidence and conclusion in a GMAT argument. If the bridge is missing or weak, the argument collapses—just as a Critical Reasoning question often asks you to identify or evaluate this crucial link."
+    },
+    "translations": {
+      "tr": "örtük varsayım"
     }
   },
   {
@@ -2550,6 +2787,9 @@
       },
       "nuanceNote": "On the GMAT, 'militate against' is often confused with 'mitigate,' especially in RC and CR answer choices where both may appear. Test-takers must recognize that 'militate against' refers to an active opposing force, not merely reducing severity, which is a critical distinction for precise reasoning.",
       "memoryHook": "Remember that 'militate' shares a root with 'military'—think of it as a force actively working against something. In GMAT passages, if a factor militates against a conclusion, it is fighting to block or prevent that outcome, not just making it less severe."
+    },
+    "translations": {
+      "tr": "olumsuz etki yapmak"
     }
   }
 ]

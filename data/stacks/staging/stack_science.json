@@ -30,6 +30,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'magnitude' is often contrasted with 'significance' or 'importance'—a trap for test-takers who conflate size with relevance. Precision matters: an answer choice referencing magnitude may be incorrect if the question asks about qualitative impact rather than quantitative scale.",
       "memoryHook": "Recall that 'magnitude' shares a root with 'magnum' (meaning 'great' or 'large' in Latin), emphasizing sheer size or amount. In GMAT passages, magnitude always points to measurable quantity, not to subjective importance or value."
+    },
+    "translations": {
+      "tr": "büyüklük derecesi"
     }
   },
   {
@@ -62,6 +65,9 @@
       },
       "nuanceNote": "On the GMAT, 'proliferate' is sometimes paired with 'propagate' or 'expand' in answer choices; test-takers should note that 'proliferate' implies a notably rapid or exponential increase, not just any form of spread or growth. Recognizing this scope difference is crucial for precise RC and CR answers.",
       "memoryHook": "Recall 'proliferate' from the Latin 'proles' (offspring) and 'ferre' (to bear), suggesting the idea of 'bearing many offspring'—just as bacteria can proliferate rapidly in favorable conditions, so too can ideas or trends in the contexts described on the GMAT."
+    },
+    "translations": {
+      "tr": "hızla çoğalmak"
     }
   },
   {
@@ -93,6 +99,9 @@
       },
       "nuanceNote": "GMAT questions may use 'ecosystem' to test your ability to recognize interdependence and systemic effects, as opposed to isolated factors. Be alert for answer choices that conflate 'ecosystem' with 'environment,' as the former always implies dynamic interactions, which can alter the scope of an argument or passage.",
       "memoryHook": "Remember that 'eco-' comes from the Greek for 'house' or 'home,' and 'system' means an organized whole. On the GMAT, 'ecosystem' always signals an interconnected 'home system'—not just a place, but a network of living things and their relationships."
+    },
+    "translations": {
+      "tr": "canlılar ve çevre sistemi"
     }
   },
   {
@@ -124,6 +133,9 @@
       },
       "nuanceNote": "On the GMAT, 'flora' is often paired with 'fauna' in RC passages, and answer choices may test whether you recognize that 'flora' excludes animals. Do not select options that broaden the scope to all living things or that conflate plant and animal life.",
       "memoryHook": "Remember that 'flora' comes from the Latin word for flowers and is used in scientific contexts to mean all plant life in a region. On the GMAT, if a passage discusses environmental impact, 'flora' refers only to plants—not animals or general life."
+    },
+    "translations": {
+      "tr": "bir bölgedeki bitki örtüsü"
     }
   },
   {
@@ -155,6 +167,9 @@
       },
       "nuanceNote": "On GMAT Reading Comprehension, 'fauna' is often paired with 'flora' in passages about environmental science. A common trap is answer choices that swap the two, so it is crucial to track whether the question concerns animals or plants for precise comprehension.",
       "memoryHook": "Remember that 'fauna' comes from the Roman goddess Fauna, associated with animals, while 'flora' comes from Flora, the goddess of plants. In GMAT passages, if you see 'fauna,' think of animal populations, especially when the text contrasts them with plant life."
+    },
+    "translations": {
+      "tr": "bir bölgedeki hayvan topluluğu"
     }
   },
   {
@@ -186,6 +201,9 @@
       },
       "nuanceNote": "On the GMAT, 'mutation' is sometimes paired with 'adaptation' or 'variation' in answer choices; however, only 'mutation' refers specifically to a genetic-level change, not broader phenotypic or population-level shifts. Recognizing this precision is essential for accurately answering RC and CR questions involving biological mechanisms.",
       "memoryHook": "Remember that 'mutation' comes from the Latin 'mutare,' meaning 'to change.' In GMAT passages, it always signals a genetic or molecular-level alteration, not just any difference or adaptation—focus on the underlying DNA or gene change to distinguish it from broader evolutionary terms."
+    },
+    "translations": {
+      "tr": "genetik değişim"
     }
   },
   {
@@ -217,6 +235,9 @@
       },
       "nuanceNote": "On the GMAT, 'climatic' is often paired with 'climactic' as a distractor, especially in RC passages about environmental science or in answer choices that test precise vocabulary. Recognizing that 'climatic' is never about drama or narrative structure is essential for accurate answer selection.",
       "memoryHook": "Remember that 'climatic' contains the word 'climate'—it always refers to weather or environmental conditions, not to the climax of a story. For example, a GMAT RC passage about global warming will use 'climatic' to describe changes in weather, not narrative tension."
+    },
+    "translations": {
+      "tr": "iklimle ilgili"
     }
   },
   {
@@ -249,6 +270,9 @@
       },
       "nuanceNote": "On the GMAT, 'erosion' is often paired with distractors like 'corrosion' or 'decline.' Test-takers should note that 'erosion' implies a process—often gradual and caused by external forces—rather than a sudden loss or a purely chemical reaction, which is a subtle but critical distinction in RC and CR contexts.",
       "memoryHook": "Think of 'erosion' as the slow fading of a coastline by waves—just as water gradually wears away land, so too can confidence, value, or resources be slowly reduced over time in GMAT passages."
+    },
+    "translations": {
+      "tr": "aşamalı yıpranma ve kayıp"
     }
   },
   {
@@ -281,6 +305,9 @@
       },
       "nuanceNote": "On the GMAT, 'replicate' is often contrasted with words like 'imitate' or 'approximate' in answer choices; only 'replicate' implies an exact duplication, which is critical in scientific reasoning questions or passages discussing experimental validity. Watch for subtle shifts in meaning in RC and CR answer choices.",
       "memoryHook": "Think of 'replicate' in GMAT science passages: when a study is replicated, it is repeated exactly to verify results. The Latin root 'replicare' means 'to fold back'—implying making an exact copy, not just a loose imitation. This precision is key in GMAT logic."
+    },
+    "translations": {
+      "tr": "aynısını yeniden yapmak"
     }
   },
   {
@@ -312,6 +339,9 @@
       },
       "nuanceNote": "On the GMAT, 'empirical' is often paired with 'theoretical' in answer choices, testing whether a passage or argument is grounded in observed evidence or abstract principles. Misreading this distinction can lead to incorrect inferences, especially in Reading Comprehension questions about the basis of an author's claims.",
       "memoryHook": "Recall that 'empirical' comes from the Greek 'empeiria,' meaning experience. In GMAT passages, when a study or argument is described as 'empirical,' it means the claims are supported by real-world data or observation, not just ideas or models."
+    },
+    "translations": {
+      "tr": "deneysel verilere dayalı"
     }
   },
   {
@@ -343,6 +373,9 @@
       },
       "nuanceNote": "On the GMAT, 'symbiotic' is sometimes paired with 'parasitic' or 'commensal' in answer choices, requiring test-takers to distinguish whether both, one, or neither party benefits. The term is often used metaphorically in RC passages, so be alert for non-biological contexts.",
       "memoryHook": "Recall that 'symbiotic' comes from Greek roots meaning 'living together.' In GMAT passages, think of two companies or nations that thrive because of their close cooperation—both sides gain, unlike a 'parasitic' relationship where only one side benefits."
+    },
+    "translations": {
+      "tr": "karşılıklı faydalı ilişkili"
     }
   },
   {
@@ -375,6 +408,9 @@
       },
       "nuanceNote": "On the GMAT, 'metabolic' is sometimes confused with broader terms like 'nutritional' or 'digestive.' Test-takers should note that 'metabolic' is narrower, referring only to chemical transformations within cells, not to food intake or digestion itself—precision in scope often distinguishes correct RC or CR answers.",
       "memoryHook": "Recall that 'metabolic' comes from the Greek 'metabole,' meaning 'change.' On the GMAT, think of metabolism as the body’s internal engine—'metabolic' describes the chemical changes that keep that engine running, not the fuel (food) itself."
+    },
+    "translations": {
+      "tr": "vücut enerji kullanımıyla ilgili"
     }
   },
   {
@@ -407,6 +443,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'endemic' is often contrasted with broader terms like 'epidemic' or 'universal.' Test-takers may be tempted to equate 'endemic' with 'widespread,' but the GMAT relies on the precise, localized scope of 'endemic' to test reading accuracy.",
       "memoryHook": "Remember that 'endemic' shares a root with 'demic,' relating to 'people' or 'population.' On the GMAT, if a problem describes a trait or issue as 'endemic,' it signals something confined to a particular group or region—not something that spreads rapidly or affects everyone."
+    },
+    "translations": {
+      "tr": "belli bir bölgeye özgü"
     }
   },
   {
@@ -438,6 +477,9 @@
       },
       "nuanceNote": "On GMAT Reading Comprehension and Critical Reasoning, 'pandemic' is sometimes paired with 'epidemic' as a distractor; test-takers must note the broader, global scope implied by 'pandemic.' Misreading this scope can lead to incorrect inferences about the extent or impact of the phenomenon discussed.",
       "memoryHook": "Recall that 'pandemic' comes from the Greek 'pan-' meaning 'all' and 'demos' meaning 'people.' On the GMAT, if a passage refers to a disease or issue affecting all or most of the world, 'pandemic' is the precise term—unlike 'epidemic,' which is more local."
+    },
+    "translations": {
+      "tr": "küresel salgın hastalık"
     }
   },
   {
@@ -469,6 +511,9 @@
       },
       "nuanceNote": "On the GMAT, answer choices may confuse photosynthesis with respiration or misstate its scope, implying it occurs in all organisms or under all conditions. Be alert to whether the passage specifies plants, light requirements, or the direction of energy conversion, as these details often determine the correct answer.",
       "memoryHook": "Remember that 'photo-' means 'light' and 'synthesis' means 'putting together.' In GMAT RC passages about ecosystems or plant biology, photosynthesis is always about plants using light to build food, not about breaking food down—that's respiration."
+    },
+    "translations": {
+      "tr": "bitkilerin güneş ışığıyla besin üretmesi"
     }
   },
   {
@@ -500,6 +545,9 @@
       },
       "nuanceNote": "On the GMAT, a common trap is confusing 'biomass' with any biological material, not recognizing that the term often implies use for energy production or ecological measurement. Be alert for answer choices that conflate 'biomass' with fossil fuels or that ignore its renewable aspect in RC and CR questions.",
       "memoryHook": "Remember that 'bio-' means 'life' and 'mass' means 'amount.' On the GMAT, 'biomass' frequently appears in passages about renewable energy, contrasting with fossil fuels—think of fields of plants or heaps of organic waste being converted into usable energy."
+    },
+    "translations": {
+      "tr": "canlı madde toplamı"
     }
   },
   {
@@ -532,6 +580,9 @@
       },
       "nuanceNote": "On the GMAT, answer choices may confuse 'taxonomy' with terms like 'hierarchy' or 'classification,' but taxonomy specifically refers to a structured system of categories, not just any grouping or ranking. In RC or CR, pay attention to whether the passage discusses systematic classification or simply an ordered list.",
       "memoryHook": "Remember that 'taxonomy' comes from the Greek 'taxis' (arrangement) and 'nomia' (method), highlighting its meaning as a methodical system for arranging things. In GMAT science or social science passages, taxonomy often appears when discussing how researchers organize complex sets of data or concepts."
+    },
+    "translations": {
+      "tr": "sınıflandırma sistemi"
     }
   },
   {
@@ -563,6 +614,9 @@
       },
       "nuanceNote": "On the GMAT, 'genotype' is frequently contrasted with 'phenotype' in science passages. Test-takers may be misled by answer choices that conflate the two, so it is critical to distinguish between genetic potential (genotype) and expressed traits (phenotype), especially in inference or detail questions.",
       "memoryHook": "Think of 'genotype' as the 'type' of genes hidden inside an organism, like blueprints stored in a vault. In GMAT biology passages, genotype is the unseen genetic code, while phenotype is the visible result—so always check if the question asks about hidden or observable traits."
+    },
+    "translations": {
+      "tr": "genetik yapı"
     }
   },
   {
@@ -594,6 +648,9 @@
       },
       "nuanceNote": "On the GMAT, 'phenotype' is often contrasted with 'genotype' in science passages, and answer choices may confuse the two. Be alert to whether the question concerns observable traits (phenotype) or genetic information (genotype), as this distinction is frequently tested in RC and CR questions.",
       "memoryHook": "Remember that 'phenotype' contains 'photo', hinting at what can be seen or observed. In GMAT biology passages, phenotype is what you can measure or notice, while genotype is hidden in the genes—so focus on observable evidence when you see 'phenotype'."
+    },
+    "translations": {
+      "tr": "gözlemlenebilir özellikler"
     }
   },
   {
@@ -625,6 +682,9 @@
       },
       "nuanceNote": "On the GMAT, 'heritable' is often contrasted with 'acquired' or 'environmental,' especially in passages or arguments testing understanding of causation in biological or behavioral contexts. Test-takers may be trapped by answer choices that conflate genetic inheritance with learned or environmental traits.",
       "memoryHook": "Remember 'heritable' by connecting it to 'heritage'—both relate to what is handed down from ancestors. In GMAT passages, if a trait is described as heritable, it means it is encoded in DNA and not simply learned or developed after birth."
+    },
+    "translations": {
+      "tr": "kalıtsal olarak aktarılabilen"
     }
   },
   {
@@ -656,6 +716,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, natural selection is often contrasted with random processes like genetic drift or artificial selection; test-takers may be tempted by answer choices that conflate purposeful selection with naturally occurring adaptive processes. Precision is required: natural selection is not directed or intentional, nor is it synonymous with all evolutionary change.",
       "memoryHook": "Recall that 'natural selection' was coined by Darwin to distinguish nature’s non-random filtering of traits from 'artificial selection,' where humans intentionally breed for certain characteristics. On the GMAT, look for context clues about adaptation to environment, not human intervention or pure chance."
+    },
+    "translations": {
+      "tr": "doğal seçilim"
     }
   },
   {
@@ -688,6 +751,9 @@
       },
       "nuanceNote": "On the GMAT, 'catalyst' is sometimes paired with 'precursor' or 'cause' in answer choices; test-takers must note that a catalyst specifically accelerates or enables change, rather than simply preceding it or being the sole cause, which is a frequent trap in CR and RC questions.",
       "memoryHook": "Recall that in chemistry, a catalyst speeds up a reaction without being consumed; similarly, in GMAT passages, a catalyst is the factor that makes change happen faster or more effectively, but does not itself undergo fundamental transformation."
+    },
+    "translations": {
+      "tr": "değişimi hızlandıran etken"
     }
   },
   {
@@ -720,6 +786,9 @@
       },
       "nuanceNote": "On the GMAT, 'catalyze' is sometimes confused with 'facilitate' or 'support' in answer choices; however, 'catalyze' always involves a strong, active role in initiating or accelerating change, not merely enabling it. Be alert to this distinction in RC passages or CR answer options, especially when process dynamics are discussed.",
       "memoryHook": "Think of a catalyst in chemistry: it makes a reaction happen faster without being consumed. On the GMAT, if something 'catalyzes' change, it’s the spark that gets things moving quickly—more than just helping, it actively triggers transformation."
+    },
+    "translations": {
+      "tr": "hızlandırmak veya tetiklemek"
     }
   },
   {
@@ -752,6 +821,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'compound' is sometimes mistaken for 'complex,' but the test often exploits the distinction: 'compound' signals combination, not necessarily difficulty. Watch for answer choices that conflate the two, especially when the passage stresses structure over challenge.",
       "memoryHook": "Recall that 'compound' comes from the Latin 'componere,' meaning 'to put together.' In GMAT passages, a 'compound sentence' or 'compound effect' always involves two or more elements joined, not just something complicated or hard to understand."
+    },
+    "translations": {
+      "tr": "birden fazla unsurdan oluşan"
     }
   },
   {
@@ -783,6 +855,9 @@
       },
       "nuanceNote": "On the GMAT, 'kinetic' is often contrasted with 'potential' in science or technical reading comprehension passages. Test-takers may be trapped by answer choices that conflate stored energy (potential) with energy in action (kinetic), so precise understanding of this distinction is critical.",
       "memoryHook": "Remember 'kinetic' from the Greek 'kinesis,' meaning movement. In GMAT science passages, kinetic energy is always about things in motion—think of a rolling ball, not one sitting still with potential energy."
+    },
+    "translations": {
+      "tr": "hareketle ilgili"
     }
   },
   {
@@ -814,6 +889,9 @@
       },
       "nuanceNote": "On GMAT Reading Comprehension, 'sedimentary' is often contrasted with 'igneous' or 'metamorphic' in science passages, and answer choices may try to blur these distinctions. Precision matters: 'sedimentary' specifically signals formation by deposition, not by heat or transformation, which is a common trap in RC and CR questions.",
       "memoryHook": "Remember that 'sedimentary' comes from the word 'sediment,' meaning material that settles at the bottom of a liquid. In GMAT passages, sedimentary rocks are always associated with layers formed by gradual accumulation, not by volcanic or high-pressure processes."
+    },
+    "translations": {
+      "tr": "tortul tabakalardan oluşan"
     }
   },
   {
@@ -846,6 +924,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'tectonic' often signals deep, underlying shifts rather than superficial or rapid disruptions. Test-takers may be tempted by answer choices that conflate 'tectonic' with any dramatic change, but the word specifically implies foundational or structural transformation.",
       "memoryHook": "Recall that 'tectonic' comes from the Greek 'tekton,' meaning builder; in both geology and GMAT passages, it describes the underlying 'building blocks' or forces that reshape entire systems, not just surface-level events."
+    },
+    "translations": {
+      "tr": "büyük ölçekli köklü değişim"
     }
   },
   {
@@ -877,6 +958,9 @@
       },
       "nuanceNote": "On the GMAT, 'weathering' is often paired with 'erosion' in science passages, tempting test-takers to conflate the two. However, only 'weathering' refers to the stationary breakdown of material, not its movement. Precision in distinguishing these terms is critical for answering inference and detail questions correctly.",
       "memoryHook": "Remember that 'weathering' stays in place—think of rocks 'weathering' where they are, slowly crumbling from rain and wind. In contrast, 'erosion' means those pieces are carried away. GMAT questions often hinge on this difference, especially in passages about environmental change."
+    },
+    "translations": {
+      "tr": "kaya ve toprak aşınması"
     }
   },
   {
@@ -909,6 +993,9 @@
       },
       "nuanceNote": "On the GMAT, a common trap is to conflate 'aerosol' with 'gas' or 'vapor,' but 'aerosol' always involves particles or droplets suspended in air, not just a substance in gaseous form. Precision in distinguishing these terms can be crucial for answering RC inference or CR assumption questions correctly.",
       "memoryHook": "Recall that 'aerosol' combines 'aero-' (air) and 'sol' (solution or solid), so it literally means 'particles in air.' In GMAT science passages, look for 'aerosol' when discussing pollution, climate effects, or airborne transmission, not when referring to pure gases."
+    },
+    "translations": {
+      "tr": "havada asılı ince parçacıklar"
     }
   },
   {
@@ -942,6 +1029,9 @@
       },
       "nuanceNote": "On the GMAT, 'pathogen' is sometimes paired with 'antigen' or 'bacteria' in answer choices, but only 'pathogen' unequivocally refers to any disease-causing organism. Precision matters: 'bacteria' is a type of pathogen, but not all pathogens are bacteria, and 'antigen' is not inherently disease-causing.",
       "memoryHook": "Remember that 'patho-' means 'disease' and '-gen' means 'producer' in Greek, so a pathogen is literally a 'disease producer.' On the GMAT, if a passage discusses the cause of an illness at the microbial level, 'pathogen' is the precise term."
+    },
+    "translations": {
+      "tr": "hastalık yapan mikrop"
     }
   },
   {
@@ -973,6 +1063,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'predation' is sometimes paired with 'competition' or 'parasitism' in answer choices; test-takers must recognize that predation always involves killing and consuming, while competition does not. The GMAT may also use 'predation' metaphorically in economic contexts, so watch for scope shifts.",
       "memoryHook": "Recall that 'predation' comes from the Latin 'praedari,' meaning 'to plunder'—think of a predator taking by force. On the GMAT, when you see 'predation,' focus on the idea of direct consumption or exploitation, not just rivalry or indirect conflict."
+    },
+    "translations": {
+      "tr": "avcılık ve avlanma ilişkisi"
     }
   },
   {
@@ -1005,6 +1098,9 @@
       },
       "nuanceNote": "On the GMAT, answer choices may conflate 'order of magnitude' with simple increases or decreases, but 'order of magnitude' denotes a much larger, exponential change. Recognizing this scope is critical in RC and CR passages discussing scientific or economic data, where precision in scale matters.",
       "memoryHook": "Remember that 'order of magnitude' involves powers of ten: a population growing from 10,000 to 100,000 is an increase by one order of magnitude. In GMAT passages, this phrase signals a dramatic, not incremental, change—far beyond a simple doubling or tripling."
+    },
+    "translations": {
+      "tr": "büyüklük mertebesi"
     }
   },
   {
@@ -1037,6 +1133,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'stratum' signals a structural or hierarchical distinction, not just any group. Test-takers often confuse it with 'cohort' or 'segment,' but 'stratum' always implies a layered or ranked context, which can be critical for accurately interpreting arguments or data breakdowns.",
       "memoryHook": "Remember that 'stratum' comes from the Latin for 'something spread out' or 'laid down,' like geological layers. In GMAT passages, think of social or economic strata as layers in a cake—each with its own properties, stacked above or below others."
+    },
+    "translations": {
+      "tr": "toplumsal tabaka"
     }
   },
   {
@@ -1068,6 +1167,9 @@
       },
       "nuanceNote": "On the GMAT, glaciation is sometimes contrasted with general geological processes like erosion or weathering in answer choices. Test-takers should note that glaciation specifically involves ice coverage and its direct effects, not just any process that changes landforms. Precision in identifying the scope of glaciation versus broader terms is often tested in RC and CR questions.",
       "memoryHook": "Remember that 'glaciation' comes from the Latin 'glacies,' meaning ice—think of glaciers spreading across continents. On GMAT RC passages about Earth's history, glaciation signals periods when ice sheets dominated landscapes, unlike erosion, which could result from many agents, not just ice."
+    },
+    "translations": {
+      "tr": "buzullaşma dönemi"
     }
   },
   {
@@ -1100,6 +1202,9 @@
       },
       "nuanceNote": "On the GMAT, 'sequestration' often appears in contexts involving environmental science or finance, where its scope is broader than merely legal isolation. Test-takers may be misled by answer choices that conflate sequestration with temporary or health-related isolation, missing its more technical or procedural connotations.",
       "memoryHook": "Recall that 'sequestration' shares a root with 'sequester,' meaning to set apart. In GMAT passages, sequestration often refers to carbon or funds being deliberately set aside—think of sequestration as 'putting in a separate section' for a specific purpose."
+    },
+    "translations": {
+      "tr": "izolasyon ve ayrı tutma"
     }
   },
   {
@@ -1131,6 +1236,9 @@
       },
       "nuanceNote": "On the GMAT, 'albedo' often appears in science passages where test-takers might confuse it with general brightness or absorption. The trap is to overlook its specific meaning: the fraction of incoming energy reflected, not just how bright something appears or how much energy it absorbs.",
       "memoryHook": "Remember that 'albedo' comes from the Latin 'albus,' meaning 'white,' which helps recall that it relates to how much light a surface reflects—think of fresh snow’s high albedo compared to dark soil’s low albedo in GMAT science passages."
+    },
+    "translations": {
+      "tr": "yansıtma oranı"
     }
   },
   {
@@ -1163,6 +1271,9 @@
       },
       "nuanceNote": "On the GMAT, 'pathogenesis' is sometimes paired with 'etiology' as a distractor, especially in science RC passages. Test-takers must recognize that 'pathogenesis' concerns the mechanism or process, not just the initial cause, which is a subtle but critical distinction for precise answer selection.",
       "memoryHook": "Recall that 'patho-' means disease and '-genesis' means origin or creation. In GMAT passages, 'pathogenesis' is about the sequence of events that create disease—not just what starts it, but how it unfolds biologically."
+    },
+    "translations": {
+      "tr": "hastalığın oluşum süreci"
     }
   },
   {
@@ -1194,6 +1305,9 @@
       },
       "nuanceNote": "On the GMAT, speciation is sometimes paired with adaptation or evolution as a distractor, but only speciation denotes the origin of new, reproductively isolated species. Recognizing this scope—new species versus mere change within a species—can be critical in RC passages about biology or evolution.",
       "memoryHook": "Recall that 'speciation' contains 'species,' signaling the creation of new species. On the GMAT, a passage might describe how a population splits and evolves separately; only when they can no longer interbreed does speciation, not just adaptation, occur."
+    },
+    "translations": {
+      "tr": "yeni türlerin oluşumu"
     }
   },
   {
@@ -1225,6 +1339,9 @@
       },
       "nuanceNote": "On the GMAT, genetic drift is frequently contrasted with natural selection; test-takers may incorrectly assume all genetic changes are adaptive or purposeful. Recognizing that genetic drift involves randomness, not environmental adaptation, is crucial for correctly interpreting RC and CR passages discussing evolutionary mechanisms.",
       "memoryHook": "Remember that 'drift' implies movement by chance, like a boat drifting on water; in GMAT biology passages, genetic drift means allele frequencies shift randomly, not because of environmental pressures—unlike 'natural selection,' which is purposeful and adaptive."
+    },
+    "translations": {
+      "tr": "rastgele gen değişimi"
     }
   },
   {
@@ -1256,6 +1373,9 @@
       },
       "nuanceNote": "On the GMAT, 'paleontological' is often paired with 'archaeological' as a distractor, exploiting their surface similarity. Test-takers must note that 'paleontological' always refers to fossils and non-human life, while 'archaeological' involves human artifacts—a subtle but crucial distinction in science passages.",
       "memoryHook": "Recall that 'paleo-' means 'ancient' and '-ontology' relates to 'being' or 'existence.' In GMAT passages, if the context involves dinosaurs, extinct plants, or prehistoric animals—not human tools—'paleontological' is the precise term, distinguishing it from human-centered 'archaeological.'"
+    },
+    "translations": {
+      "tr": "fosil bilimiyle ilgili"
     }
   },
   {
@@ -1287,6 +1407,9 @@
       },
       "nuanceNote": "On the GMAT, 'anthropogenic' often appears in passages contrasting human and natural causes; answer choices may blur this distinction. Recognizing its precise scope—limited to human origins—helps avoid traps where test-writers conflate human and non-human sources or effects.",
       "memoryHook": "Remember: 'anthropo-' means human and '-genic' means produced by. In GMAT RC, if a passage discusses pollution or climate change and specifies 'anthropogenic,' it wants you to focus only on what humans have caused, not what happens naturally."
+    },
+    "translations": {
+      "tr": "insan kaynaklı"
     }
   },
   {
@@ -1319,6 +1442,9 @@
       },
       "nuanceNote": "On the GMAT, entropy is often used in passages about scientific or economic systems to signal inevitable movement toward disorder. Test-takers may confuse it with equilibrium or stability, but entropy specifically denotes increasing chaos, not balance. Recognizing this distinction is crucial for RC inference and CR assumption questions.",
       "memoryHook": "Remember that 'entropy' comes from the Greek 'en-' (in) and 'trope' (turning), suggesting a turning inward toward disorder. On the GMAT, if a passage discusses systems becoming more random or less structured over time, entropy is likely the key concept."
+    },
+    "translations": {
+      "tr": "düzensizlik eğilimi"
     }
   }
 ]

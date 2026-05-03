@@ -31,6 +31,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'earnest' is often contrasted with words like 'sarcastic' or 'ironic,' and test-takers may be misled by answer choices that confuse genuine seriousness with excessive enthusiasm or emotional intensity. Recognizing the neutral, sincere connotation of 'earnest' is crucial for accurately interpreting tone in RC passages.",
       "memoryHook": "Remember that 'earnest' comes from the Old English 'eornost,' meaning serious or intent. On the GMAT, an 'earnest' argument is one that is straightforward and sincere, not playful or mocking—think of a scholar presenting findings with genuine conviction, not exaggeration."
+    },
+    "translations": {
+      "tr": "samimi ve ciddi"
     }
   },
   {
@@ -61,6 +64,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'solemn' is sometimes used in passages or answer choices to signal a tone of seriousness or gravity, which can be confused with words like 'ceremonial' that indicate formality without necessarily implying seriousness. Recognizing this distinction can clarify authorial intent or argument tone.",
       "memoryHook": "Recall that 'solemn' comes from the Latin 'sollemnis,' meaning 'performed with due ceremony,' but in GMAT contexts, it always carries a sense of seriousness or earnestness—think of a judge’s solemn oath, which is both formal and deeply serious, not just ritualistic."
+    },
+    "translations": {
+      "tr": "ciddi ve ağırbaşlı"
     }
   },
   {
@@ -90,6 +96,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'defiant' is often contrasted with 'assertive' or 'confident' in answer choices. Test-takers should note that 'defiant' carries a stronger sense of opposition to authority, which is critical when analyzing arguments about group behavior or leadership styles in RC or CR passages.",
       "memoryHook": "Think of 'defiant' as rooted in 'defy,' which means to resist or challenge. In GMAT passages, a defiant group doesn’t just state its position—it actively pushes back against established rules or authority, which can shift the tone or direction of an argument."
+    },
+    "translations": {
+      "tr": "başkaldıran tavırda"
     }
   },
   {
@@ -119,6 +128,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'nostalgic' is often used to signal a subjective, emotionally charged perspective, which can affect the author’s credibility or the argument’s tone. Test-takers may confuse it with neutral terms like 'retrospective,' missing subtle cues about bias or emotional appeal in RC or CR questions.",
       "memoryHook": "Remember that 'nostalgic' comes from the Greek 'nostos' (return home) and 'algos' (pain); it literally means the pain of wanting to return to a past time. In GMAT passages, this emotional yearning can color an author’s argument or tone."
+    },
+    "translations": {
+      "tr": "geçmişe özlem duyan"
     }
   },
   {
@@ -148,6 +160,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'celebratory' is sometimes confused with words like 'commendatory' or 'laudatory,' but only 'celebratory' implies a tone of joy or festivity. Recognizing this emotional or tonal nuance can help distinguish between answer choices in RC questions about author attitude or passage tone.",
       "memoryHook": "Remember that 'celebratory' comes from 'celebrate,' so when a GMAT passage is described as celebratory, it’s not just approving—it’s actively joyful or festive, as in a celebration. This helps differentiate it from merely positive or praiseful tones."
+    },
+    "translations": {
+      "tr": "kutlama havasında"
     }
   },
   {
@@ -178,6 +193,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'emphatic' is often paired with 'explicit' or 'categorical' in answer choices. Test-takers should note that 'emphatic' refers to the strength or intensity of expression, not just clarity or directness. Misreading this can lead to subtle errors in RC or CR inference questions.",
       "memoryHook": "Recall that 'emphatic' shares a root with 'emphasis'—both relate to stressing or highlighting something. In GMAT passages, when an author is described as emphatic, look for strong, insistent language that draws attention to a particular idea or claim."
+    },
+    "translations": {
+      "tr": "vurgulu ve kesin"
     }
   },
   {
@@ -209,6 +227,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'adamant' is sometimes paired with 'steadfast' or 'resolute' as a distractor, but only 'adamant' implies an unwillingness to negotiate or adapt. Recognizing this nuance is crucial in RC and CR questions that hinge on whether a position is open to revision.",
       "memoryHook": "Think of 'adamant' as being like a diamond—its Greek root 'adamas' means 'unbreakable.' In GMAT passages, an adamant stance is one that cannot be changed or worn down, no matter how strong the counterargument."
+    },
+    "translations": {
+      "tr": "kararından dönmeyen"
     }
   },
   {
@@ -238,6 +259,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'ironic' is often confused with 'sarcastic' or 'satirical' in answer choices. Test-takers should note that 'ironic' emphasizes an unexpected reversal or contradiction, not necessarily humor or ridicule, which is a nuance that can change the meaning of a passage or argument.",
       "memoryHook": "Remember that 'ironic' comes from the Greek 'eironeia,' meaning 'dissimulation' or 'feigned ignorance.' On the GMAT, look for situations where the result is the opposite of what the context leads you to expect—such as a policy intended to help, but which actually harms."
+    },
+    "translations": {
+      "tr": "beklenmedik şekilde ters anlamlı"
     }
   },
   {
@@ -268,6 +292,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'trace' is sometimes paired with 'analyze' or 'summarize' in answer choices. Test-takers must recognize that 'trace' requires attention to sequence or development, not merely listing features or providing a critical evaluation, which is a common RC and CR trap.",
       "memoryHook": "Recall that to 'trace' something is like drawing a line along its path—on the GMAT, this means following the logical or historical steps of an argument or concept, not just breaking it apart or summarizing its content."
+    },
+    "translations": {
+      "tr": "izini sürmek"
     }
   },
   {
@@ -299,6 +326,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'aloof' is often contrasted with words like 'indifferent' or 'disinterested.' Test-takers should note that 'aloof' implies a conscious separation, not simply a lack of care. This distinction frequently appears in RC passages discussing leadership or group dynamics, where tone and intent matter.",
       "memoryHook": "Remember that 'aloof' comes from a nautical term meaning 'to windward,' describing a ship that keeps its distance from danger. On the GMAT, think of an aloof leader as someone who deliberately keeps emotional or social distance, not just someone who doesn't care."
+    },
+    "translations": {
+      "tr": "uzak duran"
     }
   },
   {
@@ -329,6 +359,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'detached' is often used to describe an author's tone in RC passages; students may confuse it with 'objective' or 'disinterested,' but 'detached' specifically signals emotional neutrality, not just lack of bias. Recognizing this nuance can help eliminate incorrect answer choices.",
       "memoryHook": "Recall that 'detached' comes from the root 'detach,' meaning to separate; in GMAT RC, a detached tone means the author has 'separated' themselves from emotional involvement, focusing instead on facts or analysis, unlike a passionate or invested author."
+    },
+    "translations": {
+      "tr": "duygudan uzak yaklaşan"
     }
   },
   {
@@ -358,6 +391,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'impartial' is sometimes confused with 'neutral' or 'disinterested.' However, 'impartial' specifically refers to fairness and absence of bias, not just lack of involvement or emotion. Test-takers should watch for answer choices that blur these distinctions, especially in questions about author perspective or argument evaluation.",
       "memoryHook": "Remember that 'impartial' contains 'partial' with the prefix 'im-' meaning 'not'—so it literally means 'not partial.' On the GMAT, an impartial judge evaluates arguments without favoring any side, a crucial trait when assessing the validity of evidence or reasoning."
+    },
+    "translations": {
+      "tr": "tarafsız ve adil"
     }
   },
   {
@@ -389,6 +425,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT Reading Comprehension, 'evenhanded' is often a correct answer when a passage presents multiple viewpoints without bias, but students may confuse it with 'balanced,' which does not always imply fairness. Recognizing the subtle distinction can help avoid trap answers that conflate mere inclusion with genuine impartiality.",
       "memoryHook": "Recall that 'evenhanded' literally evokes the image of holding scales with both hands at the same level—no side is tipped or favored. On GMAT passages, look for language that signals the author is weighing arguments or evidence without showing preference."
+    },
+    "translations": {
+      "tr": "tarafsız ve adil"
     }
   },
   {
@@ -420,6 +459,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'partisan' is often contrasted with terms like 'objective' or 'neutral.' A common trap is to overlook the negative connotation of bias or advocacy implied by 'partisan,' especially when the passage discusses evidence or argumentation quality.",
       "memoryHook": "Recall that 'partisan' shares a root with 'party'—think of a political party loyalist who supports their side no matter what. On the GMAT, spotting 'partisan' signals a lack of neutrality or objectivity in reasoning or evidence."
+    },
+    "translations": {
+      "tr": "taraf tutan destekçi"
     }
   },
   {
@@ -449,6 +491,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'reverent' is sometimes contrasted with 'neutral' or 'respectful' in answer choices. Test-takers should note that 'reverent' signals a heightened, almost solemn respect, which can shift the tone or intent of a passage more strongly than a merely polite or neutral stance.",
       "memoryHook": "Think of 'reverent' as related to 'revere'—to deeply honor or admire. On the GMAT, a 'reverent' tone in a passage means the author is not just being polite, but is expressing profound respect, often for traditions, figures, or foundational ideas."
+    },
+    "translations": {
+      "tr": "derin saygı gösteren"
     }
   },
   {
@@ -479,6 +524,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'irreverent' is often paired with 'iconoclastic' or 'sarcastic' as answer choices. Test-takers should note that 'irreverent' signals a lack of respect, not necessarily open hostility or humor; answer choices may exploit this subtle distinction in tone or intent.",
       "memoryHook": "Remember that 'irreverent' comes from the Latin 'revereri' (to respect) with the prefix 'ir-' (not), so it literally means 'not respectful.' On GMAT passages, an irreverent author might question or poke fun at revered theories without proposing to destroy them."
+    },
+    "translations": {
+      "tr": "saygısızca alaycı"
     }
   },
   {
@@ -509,6 +557,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'condescending' is frequently confused with 'critical' or 'skeptical' in answer choices, but only 'condescending' carries the implication of superiority and subtle disrespect. Recognizing this nuance helps avoid selecting an answer that merely signals analysis or doubt rather than patronization.",
       "memoryHook": "Remember that 'condescending' comes from Latin roots meaning 'to descend together,' but in modern usage, it refers to someone metaphorically 'descending' to interact with others as if they are beneath them—a common trap in GMAT tone or attitude questions."
+    },
+    "translations": {
+      "tr": "üstten bakan küçümseyici tavır"
     }
   },
   {
@@ -540,6 +591,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'bitter' is often used to signal not just disagreement but a particularly harsh or emotionally charged stance. Test-takers may confuse it with 'critical,' but only 'bitter' suggests personal animosity or deep-seated resentment, which can affect the tone or intent of a passage or argument.",
       "memoryHook": "Think of 'bitter' as the taste of extremely strong coffee—unpleasant and lingering. In GMAT passages, a 'bitter' tone sticks out as especially harsh or resentful, signaling more than just objective criticism; it’s emotionally charged and often personal."
+    },
+    "translations": {
+      "tr": "şiddetli düşmanlık içeren"
     }
   },
   {
@@ -571,6 +625,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'resigned' is often contrasted with more active or oppositional attitudes. Test-takers may be tempted by answer choices suggesting reluctance or resistance, but 'resigned' specifically refers to passive acceptance, not active struggle or protest—a subtle but critical distinction in inference and tone questions.",
       "memoryHook": "Remember that 'resigned' shares a root with 'resignation,' as in submitting a letter to accept leaving a job; in GMAT passages, it signals a character or group has accepted an outcome, usually not by choice but because alternatives are unavailable."
+    },
+    "translations": {
+      "tr": "kabullenmiş çaresizce kabul eden"
     }
   },
   {
@@ -601,6 +658,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'apologetic' is often paired with 'defensive' or 'dismissive' as answer choices. Test-takers should focus on whether the author admits fault or shows regret (apologetic), rather than merely responding to criticism (defensive) or rejecting it outright (dismissive).",
       "memoryHook": "Remember that 'apologetic' comes from 'apology,' meaning an expression of regret. In GMAT passages, look for language acknowledging mistakes or shortcomings—such as 'regrettably,' 'unfortunately,' or explicit admissions of error—to spot an apologetic tone."
+    },
+    "translations": {
+      "tr": "özür dileyen bir tutum sergileyen"
     }
   },
   {
@@ -630,6 +690,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'unapologetic' is often used to signal a tone that is neither conciliatory nor defensive, which can be contrasted with more neutral or regretful stances in answer choices. Test-takers may mistakenly select synonyms like 'insistent' or 'steadfast' that lack the crucial element of lacking remorse.",
       "memoryHook": "Remember that 'unapologetic' literally means 'not apologizing.' In GMAT RC passages, an author described as unapologetic is not just firm, but also openly unconcerned with criticism or regret—think of a company defending a controversial policy without expressing any regret."
+    },
+    "translations": {
+      "tr": "pişmanlık göstermeyen"
     }
   },
   {
@@ -660,6 +723,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'tentative' is often paired with 'preliminary' or 'provisional' in answer choices. Test-takers may mistakenly select 'preliminary' when the passage stresses uncertainty or the potential for revision, rather than simply indicating an early stage or sequence.",
       "memoryHook": "Recall that 'tentative' comes from the Latin 'tentare,' meaning 'to try.' On the GMAT, a tentative conclusion is one that is being 'tried out'—it is not fixed and may change as more evidence is gathered."
+    },
+    "translations": {
+      "tr": "kesin olmayan"
     }
   },
   {
@@ -691,6 +757,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, answer choices may conflate 'noncommittal' with 'equivocal' or 'neutral.' However, 'noncommittal' specifically refers to avoiding commitment, not merely being unbiased or ambiguous. Recognizing this precision helps test-takers distinguish subtle author attitudes in RC and CR passages.",
       "memoryHook": "Recall that 'noncommittal' literally means 'not committing.' In GMAT RC, an author who remains noncommittal is deliberately avoiding a firm stance—often to keep options open or avoid controversy—unlike 'equivocal,' which suggests intentional ambiguity or possible deception."
+    },
+    "translations": {
+      "tr": "kararsız ve tarafsız kalan"
     }
   },
   {
@@ -721,6 +790,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'cynical' is often used to describe a viewpoint that assumes ulterior motives, not just doubt. Test-takers frequently confuse it with 'skeptical,' which is broader and does not necessarily imply negative assumptions about intent—precision in motive attribution is key on inference questions.",
       "memoryHook": "Recall that 'cynical' comes from the Greek 'kynikos,' meaning 'dog-like,' originally referring to philosophers who rejected social conventions. On the GMAT, a 'cynical' stance always implies biting skepticism about motives, not just general doubt."
+    },
+    "translations": {
+      "tr": "başkalarının niyetlerine güvenmeyen"
     }
   },
   {
@@ -751,6 +823,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'lament' is often used to signal the author's emotional stance, not just logical critique. Test-takers may mistakenly equate it with 'criticize,' missing the underlying tone of sorrow or regret that shapes the passage's perspective or argument.",
       "memoryHook": "Recall that 'lament' comes from the Latin 'lamentari,' meaning 'to wail or weep.' On the GMAT, when an author laments a trend, they are metaphorically 'weeping' over it—not just pointing out flaws, but expressing genuine sadness or loss."
+    },
+    "translations": {
+      "tr": "üzülmek ve yakınmak"
     }
   },
   {
@@ -781,6 +856,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'survey' is often paired with 'study' or 'experiment' in answer choices; test-takers must distinguish that a survey gathers self-reported data, sometimes introducing bias or sampling issues, whereas experiments involve controlled variables. Recognizing this distinction is critical for RC and CR inference and flaw questions.",
       "memoryHook": "Remember that 'survey' comes from the French 'surveoir,' meaning 'to look over.' On the GMAT, think of a survey as a tool to 'look over' a group’s opinions or behaviors, but not necessarily every individual—unlike a census, which covers everyone."
+    },
+    "translations": {
+      "tr": "anket çalışması"
     }
   },
   {
@@ -811,6 +889,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC, answer choices may conflate 'chronicle' with analytical or interpretive works; however, a chronicle is strictly factual and sequential. Recognizing this distinction helps avoid trap answers that attribute evaluative or causal claims to mere chronicles.",
       "memoryHook": "Remember that 'chronicle' shares a root with 'chronology,' emphasizing its function as a time-ordered record. On the GMAT, look for passages that simply list events without analysis—these are chronicles, not histories or commentaries."
+    },
+    "translations": {
+      "tr": "tarihsel olayların kaydı"
     }
   },
   {
@@ -841,6 +922,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'champion' signals not just approval but proactive advocacy, which is stronger than merely agreeing or passively supporting. Answer choices that use 'champion' versus 'endorse' or 'support' often test whether you recognize the difference between active and passive involvement in an argument or passage.",
       "memoryHook": "Remember that 'champion' comes from the idea of a champion in a contest—someone who fights for a cause. On the GMAT, if an author 'champions' something, they are not just in favor; they are energetically pushing for it, much like a champion fights for victory."
+    },
+    "translations": {
+      "tr": "savunmak ve desteklemek"
     }
   },
   {
@@ -872,6 +956,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'polemical' is often used to signal a passage’s subjective or biased tone, which can be a trap in inference or tone questions where 'analytical' or 'objective' are incorrect distractors. Recognizing polemical language helps distinguish between fact-based and opinion-based arguments.",
       "memoryHook": "Think of 'polemical' as related to 'polemic,' which comes from the Greek for 'war' or 'battle.' On the GMAT, a polemical passage is waging war with words, aggressively attacking opposing viewpoints rather than neutrally analyzing them."
+    },
+    "translations": {
+      "tr": "tartışmacı ve saldırgan bakış açısı"
     }
   },
   {
@@ -902,6 +989,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'conciliatory' is often paired with distractors like 'compromising' or 'submissive.' Test-takers must distinguish that 'conciliatory' implies an effort to calm or appease, not necessarily to yield or give up one's position, which is a subtle but critical distinction in RC and CR questions.",
       "memoryHook": "Recall that 'conciliatory' comes from the Latin 'conciliāre,' meaning 'to bring together.' In GMAT passages, a conciliatory statement seeks to unite opposing sides, not just to concede, but to foster goodwill and reduce tension—key when analyzing author’s tone or argument strategy."
+    },
+    "translations": {
+      "tr": "uzlaştırıcı tavırda"
     }
   },
   {
@@ -933,6 +1023,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'equivocal' can be a trap when contrasted with 'ambiguous' or 'uncertain'—test-takers must notice whether the passage implies deliberate vagueness or simply a lack of clarity. Precision in identifying the author’s intent is often tested in RC and CR questions.",
       "memoryHook": "Remember that 'equivocal' comes from the Latin roots 'aequus' (equal) and 'vocare' (to call), suggesting 'calling equally' to more than one meaning. In GMAT passages, an equivocal statement seems to 'speak' in multiple directions, creating interpretive uncertainty."
+    },
+    "translations": {
+      "tr": "belirsiz veya iki anlamlı"
     }
   },
   {
@@ -963,6 +1056,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'deferential' is often contrasted with 'respectful' or 'obedient' in answer choices; the test may exploit the subtle difference that 'deferential' implies active yielding to authority, not just general politeness. Be alert to context: only use 'deferential' when submission or hierarchy is central.",
       "memoryHook": "Remember that 'deferential' contains 'defer,' which means to yield or submit. On GMAT Reading Comprehension, an author’s deferential tone signals not just respect but a willingness to accept another’s judgment, especially in hierarchical or expert-driven contexts."
+    },
+    "translations": {
+      "tr": "saygılı ve itaatkâr"
     }
   },
   {
@@ -993,6 +1089,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, answer choices may conflate 'derisive' with 'critical' or 'skeptical,' but only 'derisive' conveys overt mockery or scorn. Recognizing this sharper, more negative tone is essential for accurately answering RC tone questions or CR questions about argument style.",
       "memoryHook": "Recall that 'derisive' comes from the Latin 'deridere,' meaning 'to laugh at.' On the GMAT, if an author is not just disagreeing but actually ridiculing or sneering at an idea, 'derisive' is the precise descriptor to choose."
+    },
+    "translations": {
+      "tr": "alaycı ve küçümseyici"
     }
   },
   {
@@ -1024,6 +1123,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'sardonic' is sometimes confused with 'sarcastic' or 'ironic,' but it carries a more biting, contemptuous edge. Recognizing this sharper tone can help distinguish between answer choices that merely imply humor and those that signal underlying scorn or derision.",
       "memoryHook": "Recall that 'sardonic' comes from the Greek 'Sardonios,' referring to a bitter or scornful laugh. On the GMAT, if a passage’s tone feels like a dry, cutting mockery rather than light teasing, it’s likely sardonic rather than simply sarcastic or ironic."
+    },
+    "translations": {
+      "tr": "alaycı ve iğneleyici"
     }
   },
   {
@@ -1054,6 +1156,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'indignant' is sometimes paired with neutral or positive emotional terms as distractors. Test-takers should note that indignant always implies negative emotion rooted in perceived unfairness, not mere disagreement or disappointment, which can be a subtle but critical distinction in tone or author’s attitude questions.",
       "memoryHook": "Recall that 'indignant' shares a root with 'dignity'—when someone feels their dignity has been violated by unfair treatment, they become indignant. On the GMAT, look for this word when the author’s anger is tied specifically to a sense of injustice, not just general annoyance."
+    },
+    "translations": {
+      "tr": "haksızlığa öfkeli"
     }
   },
   {
@@ -1084,6 +1189,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'fervent' is sometimes paired with 'vehement' or 'fanatical' as a distractor, but only 'fervent' reliably signals positive, heartfelt conviction rather than aggression or extremity. Test-takers should note that 'fervent' typically lacks the negative or hostile undertones present in some near-synonyms.",
       "memoryHook": "Recall that 'fervent' comes from the Latin 'fervere,' meaning 'to boil.' On the GMAT, think of a scholar whose ideas 'boil over' with sincere passion—intense but not hostile—distinguishing 'fervent' from the more combative 'vehement.'"
+    },
+    "translations": {
+      "tr": "coşkulu ve tutkulu"
     }
   },
   {
@@ -1115,6 +1223,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'zealous' can be a trap when contrasted with terms like 'fanatical' or 'passionate'; its connotation is strong but not inherently negative or irrational. Recognize that GMAT uses 'zealous' to indicate intensity that may be admirable or problematic, depending on context.",
       "memoryHook": "Recall that 'zealous' shares its root with 'zeal,' meaning great energy or enthusiasm for a cause. On the GMAT, a 'zealous' advocate is deeply committed—think of a lawyer or reformer who pushes reforms with tireless, sometimes excessive, dedication, but not necessarily with irrationality."
+    },
+    "translations": {
+      "tr": "aşırı istekli ve tutkulu"
     }
   },
   {
@@ -1144,6 +1255,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'sanguine' is frequently contrasted with words like 'buoyant' or 'confident,' but its key nuance is optimism despite adversity or uncertainty. Test-takers may be trapped by answer choices that overlook this subtlety, especially in RC passages discussing economic or scientific predictions.",
       "memoryHook": "Recall that 'sanguine' comes from the Latin word for 'blood' (sanguis), historically linked to a cheerful temperament. On the GMAT, when an author maintains optimism despite challenges—such as a company projecting growth amid market volatility—'sanguine' is the precise term for this confident outlook."
+    },
+    "translations": {
+      "tr": "iyimser ve umutlu"
     }
   },
   {
@@ -1173,6 +1287,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'wistful' is often paired with 'nostalgic' as a distractor, but the correct answer hinges on recognizing that 'wistful' lacks the warm, sentimental attachment of nostalgia. Test-takers should note that 'wistful' implies gentle longing, not overt emotional attachment.",
       "memoryHook": "Recall that 'wistful' contains 'wish'—think of someone quietly wishing for something just out of reach. In GMAT passages, a wistful author subtly expresses longing or regret, but stops short of the deep, personal sentimentality found in nostalgia."
+    },
+    "translations": {
+      "tr": "özlem dolu hüzünlü şekilde özleyen"
     }
   },
   {
@@ -1203,6 +1320,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'elegiac' is sometimes paired with 'nostalgic' or 'sentimental' as a distractor, but only 'elegiac' conveys a distinctly mournful or sorrowful tone. Recognizing this emotional precision is crucial for RC tone questions, where answer choices often hinge on subtle distinctions in attitude.",
       "memoryHook": "Remember that 'elegiac' comes from 'elegy,' a poem of lament or mourning. In GMAT RC passages, if the author’s tone is more sorrowful than simply reflective or longing, 'elegiac' is the precise term—unlike 'nostalgic,' which lacks the same depth of sadness."
+    },
+    "translations": {
+      "tr": "hüzünlü ve ağıt dolu"
     }
   },
   {
@@ -1232,6 +1352,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'wry' is often contrasted with 'sarcastic' or 'humorous' in answer choices; test-takers should note that 'wry' implies subtle, understated irony rather than obvious mockery or broad humor. Recognizing this nuance is key to eliminating distractors that misread tone.",
       "memoryHook": "Think of a GMAT passage in which the author gently mocks a flawed theory—not with harsh words, but with a dry, knowing twist; this subtle, almost-smiling irony is 'wry.' The word’s root relates to twisting, reflecting its 'twisted' or indirect sense of humor."
+    },
+    "translations": {
+      "tr": "ince alaycı mizahi"
     }
   },
   {
@@ -1262,6 +1385,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'expound' is often paired with distractors like 'enumerate' or 'summarize.' Recognize that 'expound' signals comprehensive explanation, not mere listing or brief overview. In RC and CR, this distinction is crucial for correctly identifying the author's intent or the function of a passage.",
       "memoryHook": "Recall that 'expound' shares a root with 'explanation'—both involve making something clear. In GMAT RC, when a passage does more than just mention ideas—when it unpacks and analyzes them—it is expounding, not just listing or summarizing."
+    },
+    "translations": {
+      "tr": "ayrıntılı şekilde açıklamak"
     }
   },
   {
@@ -1293,6 +1419,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'deride' signals not just disagreement but a tone of scorn or mockery, which is stronger than mere critique. Answer choices that conflate 'deride' with neutral analysis or overlook its negative connotation often serve as traps, especially in tone or attitude questions.",
       "memoryHook": "Recall that 'deride' comes from the Latin 'deridere,' meaning 'to laugh at.' On GMAT passages, if an author derides a theory, they are not merely disagreeing—they are mocking or dismissing it, signaling a harsher, more contemptuous stance than simple criticism."
+    },
+    "translations": {
+      "tr": "alay etmek"
     }
   },
   {
@@ -1323,6 +1452,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'decry' is often paired with 'lament' or 'criticize,' but only 'decry' implies formal, public denunciation. Test-takers may be trapped by answer choices that blur the line between personal regret ('lament') and public condemnation ('decry'), especially in Reading Comprehension passages analyzing policy or scholarly debate.",
       "memoryHook": "Recall that 'decry' shares roots with 'cry out'—imagine a scholar vocally denouncing a flawed theory in a formal debate. On the GMAT, if the passage describes open, public criticism rather than private regret, 'decry' is the precise term to select."
+    },
+    "translations": {
+      "tr": "açıkça kınamak"
     }
   },
   {
@@ -1354,6 +1486,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT Reading Comprehension, 'extol' signals overt, enthusiastic approval, which is stronger than neutral support or mere agreement. Test-takers often miss subtle distinctions between words like 'extol' and 'endorse' or 'support,' especially when answer choices blur the intensity or publicity of the praise described in the passage.",
       "memoryHook": "Recall that 'extol' comes from the Latin 'extollere,' meaning 'to lift up.' On the GMAT, if an author 'lifts up' an idea or achievement with visible enthusiasm, they are extolling it—not just supporting or agreeing with it quietly."
+    },
+    "translations": {
+      "tr": "yüceltmek ve övmek"
     }
   },
   {
@@ -1385,6 +1520,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'repudiate' is often paired with 'refute' as a distractor. While both involve disagreement, 'repudiate' signals rejection without necessarily providing evidence, whereas 'refute' requires disproving with logic or facts. Recognizing this distinction is crucial in RC and CR answer choices.",
       "memoryHook": "Recall that 'repudiate' comes from the Latin 'repudiare,' meaning 'to cast off.' On the GMAT, when an author repudiates a theory, they are not necessarily disproving it—they are decisively rejecting or distancing themselves from it, often on principle or conviction."
+    },
+    "translations": {
+      "tr": "reddetmek veya geçersiz saymak"
     }
   },
   {
@@ -1416,6 +1554,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, test-takers may confuse 'disavow' with milder terms like 'disagree' or 'disclaim.' However, 'disavow' signals a formal, often public, denial of responsibility or association, which can alter the logical structure of an argument or the interpretation of a passage’s stance.",
       "memoryHook": "Recall that 'disavow' contains 'avow,' meaning to declare or affirm. Adding 'dis-' reverses the sense: to formally deny or reject any declaration of support or involvement, as when an organization distances itself from a controversial statement in a GMAT passage."
+    },
+    "translations": {
+      "tr": "reddetmek veya sahiplenmemek"
     }
   }
 ]

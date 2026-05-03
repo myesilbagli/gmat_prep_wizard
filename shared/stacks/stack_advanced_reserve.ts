@@ -30,6 +30,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'quixotic' is sometimes paired with 'visionary' or 'ambitious' as a distractor; test-takers must notice that 'quixotic' implies impracticality, not just boldness. Recognizing the negative or skeptical undertone is crucial for distinguishing correct RC or CR answer choices.",
       "memoryHook": "Remember that 'quixotic' comes from Don Quixote, the literary character who pursued impossible dreams like fighting windmills. On the GMAT, if a plan seems noble but detached from reality, 'quixotic' is the precise term to describe its impractical idealism."
+    },
+    "translations": {
+      "tr": "gerçekçi olmayan derecede idealist"
     }
   },
   {
@@ -61,6 +64,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'byzantine' often signals not just complexity but also a negative judgment about unnecessary or confusing intricacy. Test-takers may be tempted to equate it with 'complex,' but GMAT questions may hinge on recognizing the negative or obstructive nuance unique to 'byzantine.'",
       "memoryHook": "Recall that the Byzantine Empire was famous for its elaborate bureaucracy and intricate court politics—on the GMAT, 'byzantine' evokes systems so tangled and overcomplicated that they hinder understanding or progress, not just those that are merely detailed or multifaceted."
+    },
+    "translations": {
+      "tr": "aşırı karmaşık ve girift"
     }
   },
   {
@@ -92,6 +98,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'protean' is sometimes paired with 'mutable' or 'variable' as a distractor; however, 'protean' specifically connotes adaptability and versatility, not just changeability. Test-takers should watch for answer choices that confuse mere susceptibility to change with the active ability to assume multiple roles or forms.",
       "memoryHook": "Recall that 'protean' comes from Proteus, a Greek sea god who could change his shape at will—just as a protean argument or person on the GMAT can shift forms or strategies to fit new circumstances."
+    },
+    "translations": {
+      "tr": "kolayca değişebilen"
     }
   },
   {
@@ -122,6 +131,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'sui generis' is sometimes paired with 'idiosyncratic' or 'unique' as answer choices. Test-takers must note that 'sui generis' conveys formal, categorical distinctiveness, not merely unusual or personal traits, which is a subtle but critical distinction in argument analysis.",
       "memoryHook": "Remember that 'sui generis' is Latin for 'of its own kind.' On the GMAT, it is used to signal that something cannot be directly compared to established categories—think of the EU's legal status as a classic example in RC passages."
+    },
+    "translations": {
+      "tr": "eşsiz ve kendine özgü"
     }
   },
   {
@@ -153,6 +165,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'halcyon' is often used to evoke nostalgia for a past era of stability or prosperity, not merely happiness or beauty. Test-takers may be misled by answer choices like 'idyllic' or 'utopian,' which suggest perfection or ideal conditions rather than the specific calm and prosperity implied by 'halcyon.'",
       "memoryHook": "Recall that 'halcyon' derives from a Greek myth about a bird calming the sea, which highlights the word’s association with tranquil, prosperous times. On the GMAT, look for contexts contrasting peaceful past periods with later unrest or decline."
+    },
+    "translations": {
+      "tr": "huzurlu ve refah dolu dönem"
     }
   },
   {
@@ -183,6 +198,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'arcane' often appears in passages or answer choices describing knowledge that is not merely complex but also inaccessible or reserved for a select few. Test-takers may confuse it with terms like 'technical' or 'complex,' but 'arcane' carries a connotation of exclusivity that is sometimes critical for eliminating incorrect answers.",
       "memoryHook": "Think of 'arcane' as knowledge locked behind an 'arc' or gate—accessible only to those with the right key. On GMAT RC, if a passage describes a theory or terminology as 'arcane,' it's not just difficult; it's reserved for insiders, which can affect the author's tone or argument scope."
+    },
+    "translations": {
+      "tr": "anlaşılması güç"
     }
   },
   {
@@ -213,6 +231,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'apocryphal' is often contrasted with 'mythical' or 'legendary' in answer choices; test-takers must recognize that 'apocryphal' suggests doubt about factual accuracy, not outright fiction or fantasy. The GMAT may exploit this subtlety to test your understanding of evidentiary standards in argument evaluation.",
       "memoryHook": "Recall that 'apocryphal' shares a root with 'Apocrypha,' ancient texts of doubtful authenticity excluded from the canonical Bible. On the GMAT, think of 'apocryphal' as a story that sounds plausible but lacks the rigorous evidence required in academic argumentation."
+    },
+    "translations": {
+      "tr": "doğruluğu şüpheli hikaye"
     }
   },
   {
@@ -244,6 +265,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'recondite' is often used to describe arguments or evidence that are not just unfamiliar but intrinsically difficult to comprehend. Test-takers may confuse it with 'esoteric,' which implies exclusivity, but 'recondite' focuses on complexity—an important distinction for RC and CR answer choices.",
       "memoryHook": "Remember that 'recondite' comes from the Latin 'reconditus,' meaning 'hidden away.' On the GMAT, if a passage discusses theories or data that seem 'hidden' due to their complexity, the term 'recondite' is likely being used or implied."
+    },
+    "translations": {
+      "tr": "anlaşılması güç"
     }
   },
   {
@@ -275,6 +299,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, answer choices may pair 'salutary' with 'salubrious' or 'healthy,' but only 'salutary' conveys the idea of a positive, often corrective effect beyond physical health. Recognizing this broader scope is crucial for distinguishing subtle answer-choice traps in RC and CR questions.",
       "memoryHook": "Recall that 'salutary' comes from the Latin 'salus,' meaning health or welfare, but on the GMAT, it signals improvement or benefit in a broad sense—such as a policy having a salutary (beneficial) effect on society, not just on physical health."
+    },
+    "translations": {
+      "tr": "faydalı ve olumlu etkili"
     }
   },
   {
@@ -305,6 +332,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'inveterate' is often paired with 'inherent' or 'innate' in answer choices, tempting test-takers to overlook the crucial distinction between acquired habits and natural qualities. Recognizing whether the passage refers to learned versus intrinsic traits can determine the correct answer in RC and CR questions.",
       "memoryHook": "Remember that 'inveterate' comes from the Latin 'vetus,' meaning 'old,' highlighting the idea of something so established it's become second nature. On GMAT passages, look for references to long-standing patterns or behaviors, not qualities present from birth."
+    },
+    "translations": {
+      "tr": "kökleşmiş alışkanlık haline gelmiş"
     }
   },
   {
@@ -335,6 +365,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'putative' is often contrasted with words like 'ostensible' or 'actual' to test whether you can distinguish between what is assumed versus what is proven or merely apparent. Watch for answer choices that conflate assumed status with confirmed fact, especially in inference or strengthen/weaken questions.",
       "memoryHook": "Recall that 'putative' comes from the Latin 'putare,' meaning 'to think' or 'to consider.' On the GMAT, if a study refers to a 'putative cause,' it means the cause is widely believed but not definitively established—a subtle but critical distinction for precise reading."
+    },
+    "translations": {
+      "tr": "varsayılan olarak kabul edilen"
     }
   },
   {
@@ -366,6 +399,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT CR and RC, 'specious' is often paired with 'plausible' or 'valid' in answer choices to test whether you can distinguish between arguments that are merely superficially convincing and those that are logically sound. The GMAT frequently exploits this subtlety to trap test-takers who do not scrutinize reasoning closely.",
       "memoryHook": "Remember that 'specious' comes from the Latin 'speciosus,' meaning 'good-looking' or 'showy.' On the GMAT, a specious argument is one that looks solid on the surface but falls apart under scrutiny—much like a façade that hides structural flaws."
+    },
+    "translations": {
+      "tr": "görünüşte doğru ama aslında yanlış"
     }
   },
   {
@@ -396,6 +432,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'nugatory' is sometimes paired with 'negligible' or 'inconsequential' in answer choices; however, 'nugatory' connotes a total lack of value or effect, which is stronger than merely being minor or insignificant. Recognizing this absolute sense can help eliminate distractors in RC and CR questions.",
       "memoryHook": "Remember that 'nugatory' comes from the Latin 'nugari,' meaning 'to trifle.' On the GMAT, if an argument’s evidence is described as nugatory, it means it is so trivial or ineffective that it might as well not exist at all."
+    },
+    "translations": {
+      "tr": "değersiz veya etkisiz"
     }
   },
   {
@@ -425,6 +464,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'mercurial' is sometimes paired with 'volatile' or 'erratic' as answer-choice distractors. Test-takers should note that 'mercurial' typically refers to personality or mood shifts, while 'volatile' can apply to both emotional states and physical phenomena, such as chemicals or markets.",
       "memoryHook": "Recall that 'mercurial' derives from Mercury, the Roman god known for his swiftness and unpredictability, as well as the element mercury, which moves erratically. On the GMAT, think of a mercurial CEO whose sudden mood changes make company strategy hard to predict."
+    },
+    "translations": {
+      "tr": "değişken ruh hali"
     }
   },
   {
@@ -456,6 +498,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'perfunctory' is often paired with 'superficial' or 'cursory' as distractors. However, 'perfunctory' specifically signals a lack of sincere effort or engagement, not just lack of depth. In RC or CR, look for context indicating routine or obligation rather than mere shallowness.",
       "memoryHook": "Recall that 'perfunctory' comes from the Latin 'perfunctorius,' meaning 'done in passing.' In a GMAT context, a perfunctory answer on a reading comprehension question would be one given just to move on, not to demonstrate true understanding."
+    },
+    "translations": {
+      "tr": "gelişigüzel yapılan"
     }
   },
   {
@@ -487,6 +532,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'fastidious' can be a trap when contrasted with 'meticulous' or 'precise'—test-takers must recognize that 'fastidious' implies not just thoroughness but also a critical, sometimes overly demanding, approach. This subtle negative or critical connotation can shift the meaning of an argument or author's tone.",
       "memoryHook": "Recall that 'fastidious' comes from the Latin 'fastidium,' meaning 'disgust' or 'aversion.' On the GMAT, think of a fastidious reviewer who is so exacting that even minor imperfections provoke criticism—this critical edge distinguishes it from merely being careful or thorough."
+    },
+    "translations": {
+      "tr": "titiz ve seçici"
     }
   },
   {
@@ -518,6 +566,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'venal' is often paired with 'venial' as a distractor, exploiting their similar appearance but distinct meanings. Test-takers should also note that 'venal' has a strongly negative, formal connotation, which may help eliminate answer choices that imply mere minor faults or neutral actions.",
       "memoryHook": "Remember that 'venal' shares a root with 'vendor,' both relating to selling; a 'venal' official is metaphorically for sale. In GMAT RC passages about government or business ethics, 'venal' signals corruption, not a trivial or forgivable mistake—unlike 'venial.'"
+    },
+    "translations": {
+      "tr": "rüşvetçi veya kolayca satın alınabilen"
     }
   },
   {
@@ -549,6 +600,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT CR and RC, 'mendacious' is often contrasted with words like 'erroneous' or 'misleading.' Test-takers must distinguish between intentional deceit (mendacious) and unintentional inaccuracy (erroneous), as answer choices frequently exploit this subtlety to trap those who equate any falsehood with dishonesty.",
       "memoryHook": "Recall that 'mendacious' shares a root with 'mendacity,' both stemming from the Latin 'mendax,' meaning 'lying.' In GMAT passages, if a source is described as mendacious, you must infer deliberate falsehood, not a mere mistake—critical when evaluating argument flaws or author bias."
+    },
+    "translations": {
+      "tr": "yalancı veya yanıltıcı"
     }
   },
   {
@@ -580,6 +634,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'feckless' is sometimes confused with 'negligent' or 'inept,' but it specifically signals a lack of effective action or initiative, not merely carelessness or incompetence. Recognizing this distinction helps avoid trap answer choices that conflate irresponsibility with simple error or omission.",
       "memoryHook": "Remember that 'feckless' comes from the Scots word 'feck,' meaning 'effect' or 'value.' Thus, someone feckless literally lacks effect or value—think of a GMAT argument weakened by a feckless policy, which fails not because of malice, but because of ineffectiveness and lack of drive."
+    },
+    "translations": {
+      "tr": "sorumsuz ve etkisiz"
     }
   },
   {
@@ -611,6 +668,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'truculent' is often paired with 'pugnacious' or 'contentious' as a distractor; however, 'truculent' signals a more openly hostile or antagonistic stance, not just a willingness to argue. Recognizing this nuance can help avoid misattributing tone or intent in answer choices.",
       "memoryHook": "Recall that 'truculent' comes from the Latin 'trux,' meaning fierce or wild. On GMAT passages, a truculent tone is not just argumentative but actively hostile—think of a debater who attacks rather than just disagrees, signaling a higher level of aggression than mere assertiveness."
+    },
+    "translations": {
+      "tr": "kavgacı ve saldırgan tavırlı"
     }
   },
   {
@@ -642,6 +702,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'sanctimonious' is often paired with 'pious' or 'virtuous' as a distractor; test-takers must note the negative, hypocritical connotation. In RC or CR, the scope of the word signals not just moral behavior, but the pretense or insincerity behind it—critical for inference questions.",
       "memoryHook": "Recall that 'sanctimonious' comes from 'sanctus' (Latin for 'holy'), but unlike 'pious,' it always carries a negative edge—think of someone loudly proclaiming their virtue in a GMAT passage, but only to mask their own faults or win approval."
+    },
+    "translations": {
+      "tr": "ahlakçı geçinen"
     }
   },
   {
@@ -673,6 +736,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'obsequious' is often contrasted with more neutral or positive terms like 'deferential' or 'respectful.' Test-takers may be trapped by missing the negative connotation, especially if a passage discusses hierarchy or authority, where tone and intent are critical for inference questions.",
       "memoryHook": "Remember that 'obsequious' comes from the Latin 'obsequium,' meaning compliance or dutiful service. On the GMAT, picture a character who always agrees with a superior, not out of genuine respect, but to curry favor—highlighting the word’s negative, sycophantic undertone."
+    },
+    "translations": {
+      "tr": "aşırı yalakalık yapan"
     }
   },
   {
@@ -704,6 +770,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'pellucid' is sometimes contrasted with 'lucid' or 'perspicuous' in answer choices. Test-takers should note that 'pellucid' is especially formal and often signals an elevated register, which can be a subtle clue in RC passages or CR answer sets when precision of clarity is being tested.",
       "memoryHook": "Think of 'pellucid' as related to 'lucid' (clear), but with an extra shine—like a perfectly clear window or crystal-clear water. In GMAT passages, a 'pellucid' argument stands out for its complete transparency, leaving no room for confusion or misinterpretation."
+    },
+    "translations": {
+      "tr": "kolayca anlaşılır"
     }
   },
   {
@@ -735,6 +804,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'plaintive' is sometimes paired with broader emotional descriptors like 'poignant' or 'wistful' in answer choices. Test-takers should note that 'plaintive' is narrowly focused on sorrow or lament, whereas the distractors may imply a wider or less specific emotional range.",
       "memoryHook": "Remember that 'plaintive' shares its root with 'plaint,' meaning a complaint or lament. In GMAT RC, if a passage’s tone is described as plaintive, look for subtle cues of sorrow or subdued grief, not merely emotional intensity or nostalgia."
+    },
+    "translations": {
+      "tr": "hüzünlü ve dokunaklı"
     }
   },
   {
@@ -765,6 +837,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'lugubrious' is often a trap when contrasted with words like 'somber' or 'serious.' Test-takers must recognize that 'lugubrious' carries an overtone of excess or affectation, not just straightforward seriousness or sadness, which can change the passage’s tone analysis.",
       "memoryHook": "Recall that 'lugubrious' comes from the Latin 'lugere,' meaning 'to mourn.' On GMAT passages, if a tone seems not just sad but almost theatrically gloomy, 'lugubrious' is likely the best descriptor—think of a passage that seems to 'mourn' excessively."
+    },
+    "translations": {
+      "tr": "aşırı kasvetli ve hüzünlü"
     }
   },
   {
@@ -796,6 +871,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'trenchant' is often paired with 'cogent' or 'lucid' in answer choices; however, only 'trenchant' implies a cutting or sharply critical tone. Test-takers should watch for this nuance, as GMAT questions may hinge on the argument’s incisiveness rather than mere clarity or persuasiveness.",
       "memoryHook": "Trenchant comes from the French 'trancher,' meaning 'to cut.' On the GMAT, think of a trenchant argument as one that 'cuts through' confusion, exposing the core issue with sharp, decisive language—much more pointed than simply being clear or logical."
+    },
+    "translations": {
+      "tr": "keskin ve etkili"
     }
   },
   {
@@ -827,6 +905,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'tendentious' is often paired with 'subjective' or 'biased' in answer choices; however, only 'tendentious' carries the connotation of purposeful advocacy. Recognizing this distinction is critical in RC passages where the author’s stance or intent is being tested.",
       "memoryHook": "Remember that 'tendentious' comes from the Latin 'tendere,' meaning 'to stretch toward.' In GMAT passages, a tendentious argument stretches facts toward one side, signaling a lack of neutrality and alerting you to possible bias in reasoning."
+    },
+    "translations": {
+      "tr": "taraflı ve önyargılı"
     }
   },
   {
@@ -858,6 +939,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'peremptory' is often confused with 'presumptive' or 'preemptive' due to similar prefixes. Test-takers must recognize that 'peremptory' signals an absolute, non-negotiable stance, which is a subtle but crucial distinction in RC and CR answer choices involving authority or decision-making.",
       "memoryHook": "Recall that 'peremptory' stems from the Latin 'perimere,' meaning 'to take entirely.' On the GMAT, a peremptory order 'takes away' your right to respond or object—think of a judge issuing a peremptory ruling that ends debate instantly."
+    },
+    "translations": {
+      "tr": "tartışmaya kapalı kesin"
     }
   },
   {
@@ -889,6 +973,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'axiomatic' is often contrasted with 'empirical' in reading comprehension passages or critical reasoning arguments. Test-takers may be trapped by answer choices that conflate foundational assumptions (axiomatic) with those supported by data (empirical), so distinguishing between the two is essential for precision.",
       "memoryHook": "Recall that 'axiom' means a statement taken as true without proof; in GMAT logic questions, 'axiomatic' premises are those the argument expects you to accept as given, unlike empirical claims, which require supporting data or evidence."
+    },
+    "translations": {
+      "tr": "doğru kabul edilen tartışmasız"
     }
   },
   {
@@ -920,6 +1007,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'inexorable' is often paired with 'inevitable' in answer choices, but only 'inexorable' captures the idea of something being immune to influence or argument. Recognizing this precision is crucial in RC passages discussing forces or trends resistant to change, not merely certain to occur.",
       "memoryHook": "Recall that 'inexorable' comes from Latin roots meaning 'not able to be entreated'—think of a GMAT passage about climate change describing an inexorable trend, where no policy or negotiation can halt the process, highlighting resistance to intervention, not just certainty."
+    },
+    "translations": {
+      "tr": "durdurulamaz şekilde ilerleyen"
     }
   },
   {
@@ -951,6 +1041,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'inimical' is often paired with 'unfavorable' or 'adverse' in answer choices. Test-takers should note that 'inimical' carries a stronger, more active sense of opposition or hostility, which can be crucial for distinguishing precise author attitudes or argument flaws.",
       "memoryHook": "Remember that 'inimical' shares a root with 'enemy' (Latin: 'inimicus'), which highlights its meaning of being actively hostile or harmful. On the GMAT, if a policy or factor is described as 'inimical,' it is not just bad but works against the intended purpose."
+    },
+    "translations": {
+      "tr": "zarar verici veya düşmanca"
     }
   },
   {
@@ -982,6 +1075,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'invidious' is often paired with 'insidious' as a distractor, exploiting their similar sounds but different meanings. Test-takers should note that 'invidious' always involves provoking resentment or unfairness, a nuance critical for precise RC and CR answer choices.",
       "memoryHook": "Recall that 'invidious' shares a root with 'envy' (Latin 'invidia'), which helps you remember it relates to actions that provoke envy or resentment—unlike 'insidious,' which refers to hidden harm. On GMAT CR, look for situations where unfairness or ill will is central."
+    },
+    "translations": {
+      "tr": "kıskançlık ve huzursuzluk yaratan"
     }
   },
   {
@@ -1012,6 +1108,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'inscrutable' is often contrasted with 'ambiguous' or 'unclear.' Test-takers may mistakenly equate mere vagueness with total opacity, but 'inscrutable' signals that the reasoning or intent cannot be discerned at all, not just that it is open to multiple interpretations.",
       "memoryHook": "Remember that 'inscrutable' comes from the Latin 'scrutari' (to search or examine) with the prefix 'in-' (not), so it literally means 'not able to be examined.' In GMAT passages, if a position or rationale is inscrutable, no amount of close reading will reveal its logic."
+    },
+    "translations": {
+      "tr": "anlaşılması güç"
     }
   },
   {
@@ -1042,6 +1141,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT CR and RC, 'intransigent' is often contrasted with words implying flexibility or negotiation; test-takers may confuse it with 'dogmatic' or 'obstinate,' but only 'intransigent' specifically signals refusal to compromise, which can alter the logical structure of an argument or the predicted outcome.",
       "memoryHook": "Remember that 'intransigent' comes from Latin roots meaning 'not coming to an agreement.' On the GMAT, if a party is described as intransigent, expect that no compromise or settlement will occur unless external factors force a change."
+    },
+    "translations": {
+      "tr": "uzlaşmaz kararlı tavizsiz"
     }
   },
   {
@@ -1073,6 +1175,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'implacable' signals not just stubbornness but an active, ongoing refusal to yield or be pacified, often with a negative or adversarial connotation. Test-takers should watch for answer choices that confuse mere rigidity ('inflexible') with the emotional or hostile persistence implied by 'implacable.'",
       "memoryHook": "Remember that 'implacable' comes from the Latin 'im-' (not) and 'placare' (to calm or appease). In GMAT passages, an 'implacable' critic or enemy cannot be soothed or won over, no matter how strong the arguments or concessions."
+    },
+    "translations": {
+      "tr": "yatıştırılamaz derecede kararlı"
     }
   },
   {
@@ -1103,6 +1208,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'insidious' is often contrasted with words like 'pervasive' or 'overt' in answer choices. Test-takers may miss that 'insidious' specifically denotes subtle, gradual harm rather than just being widespread or obvious, a distinction that is critical for RC and CR precision.",
       "memoryHook": "Remember that 'insidious' comes from the Latin 'insidiae,' meaning 'ambush' or 'plot.' On the GMAT, think of an economic trend or policy that undermines stability not by direct attack, but by quietly accumulating negative effects that are hard to detect until too late."
+    },
+    "translations": {
+      "tr": "gizli ve sinsi şekilde zararlı"
     }
   },
   {
@@ -1134,6 +1242,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'chimerical' often appears in contexts where an argument or plan is dismissed for being unrealistic. Test-takers may confuse it with 'visionary,' but only 'chimerical' implies impracticality—a subtle negative connotation that can determine the correct answer.",
       "memoryHook": "Recall that 'chimerical' comes from 'chimera,' a mythical creature made of disparate animal parts—just as a chimerical plan is assembled from impossible or fantastical elements. On the GMAT, when an argument is dismissed as chimerical, it means it’s as unreal as a mythological beast."
+    },
+    "translations": {
+      "tr": "gerçekleşmesi imkânsız derecede hayali"
     }
   },
   {
@@ -1164,6 +1275,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'panacea' often appears in contexts where an answer choice overstates the effectiveness of a proposed solution. Test-takers should be alert to the word’s connotation of unrealistic or overly broad claims, which can signal a reasoning flaw or an unsupported assumption.",
       "memoryHook": "Remember that 'panacea' comes from the Greek goddess Panakeia, who was associated with universal healing. On the GMAT, if a passage or argument treats one solution as if it could fix everything, it’s invoking the idea of a panacea—often a red flag for overgeneralization."
+    },
+    "translations": {
+      "tr": "her derde deva çözüm"
     }
   },
   {
@@ -1195,6 +1309,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'paragon' is sometimes paired with 'prototype' or 'archetype' as a distractor. However, 'paragon' specifically connotes the highest standard or perfection, whereas the others merely indicate a representative or original example. This scope of excellence is critical for precise answer selection.",
       "memoryHook": "Recall that 'paragon' comes from the Italian 'paragone,' meaning 'touchstone'—a stone used to test the quality of gold. On the GMAT, a 'paragon' is the touchstone against which all others are measured, always representing the very best example in a given context."
+    },
+    "translations": {
+      "tr": "mükemmel örnek"
     }
   },
   {
@@ -1224,6 +1341,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "A frequent GMAT trap is conflating 'pastiche' with 'parody' or 'satire' in RC passages, especially when the passage discusses homage versus critique. The GMAT often tests whether you recognize that 'pastiche' lacks the negative or mocking connotation of 'parody,' focusing on stylistic emulation rather than ridicule.",
       "memoryHook": "Recall that 'pastiche' comes from the Italian word for 'pie' or 'pastry,' suggesting a mixture of ingredients. On GMAT RC, a 'pastiche' is like a literary pie—blending styles from different sources into one work, but without the intent to mock."
+    },
+    "translations": {
+      "tr": "farklı tarzların taklidi"
     }
   },
   {
@@ -1255,6 +1375,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'polemic' is often contrasted with more neutral or analytical terms like 'treatise' or 'discourse.' Test-takers may be tempted by answer choices that overlook the confrontational, one-sided nature of a polemic, which is crucial for accurately identifying authorial intent or passage tone in RC and CR questions.",
       "memoryHook": "Recall that 'polemic' comes from the Greek 'polemikos,' meaning 'warlike'—think of a polemic as a verbal battle, not a calm discussion. On the GMAT, a polemic signals the author is attacking, not neutrally analyzing, a viewpoint."
+    },
+    "translations": {
+      "tr": "sert eleştiri yazısı"
     }
   },
   {
@@ -1286,6 +1409,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, invective is often a trap for tone or purpose questions: test-takers may mistake it for legitimate critique or analysis. Recognizing invective helps distinguish between passages that present logical arguments and those that merely express emotional disapproval, which is crucial for accurately identifying the author’s intent.",
       "memoryHook": "Recall that 'invective' comes from the Latin 'invectivus,' meaning 'to attack with words.' On the GMAT, if a passage uses emotionally charged or abusive language instead of logical reasoning, it’s likely invective—watch for this when evaluating argument quality."
+    },
+    "translations": {
+      "tr": "ağır hakaret içeren eleştiri"
     }
   },
   {
@@ -1317,6 +1443,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'diatribe' is sometimes paired with 'critique' or 'analysis' in answer choices; test-takers must recognize that 'diatribe' implies a hostile, one-sided attack, not a balanced or reasoned evaluation. This distinction is crucial in RC inference and CR tone questions.",
       "memoryHook": "Remember that 'diatribe' comes from Greek roots meaning 'to wear away through rubbing'—think of a speaker’s harsh words wearing down their target. On the GMAT, a diatribe is never neutral or analytical; it’s always emotionally charged and aggressively critical."
+    },
+    "translations": {
+      "tr": "sert eleştiri dolu saldırı"
     }
   },
   {
@@ -1348,6 +1477,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'apotheosis' often appears in contexts requiring recognition of idealization or ultimate exemplification, not just peak or maximum. A common GMAT trap is to treat it as a simple synonym for 'peak,' missing the evaluative or qualitative dimension implied by the term.",
       "memoryHook": "Recall that 'apotheosis' comes from Greek roots meaning 'to make a god'—on GMAT passages, it signals something or someone being elevated to the highest, almost divine, standard, not just reaching a high point but embodying perfection or the ultimate ideal."
+    },
+    "translations": {
+      "tr": "mükemmellik zirvesi"
     }
   },
   {
@@ -1378,6 +1510,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'watershed' is often used to signal a pivotal shift, not just any important event. A common trap is confusing it with 'milestone,' which may be significant but lacks the implication of a fundamental change. Be alert for context clues indicating transformation or division.",
       "memoryHook": "Think of a watershed as the ridge dividing two river systems: after water crosses it, it flows in a new direction. Similarly, a 'watershed moment' on the GMAT marks a point after which events take a distinctly different course, not just a notable step forward."
+    },
+    "translations": {
+      "tr": "dönüm noktası"
     }
   },
   {
@@ -1409,6 +1544,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'crucible' often appears in RC passages describing pivotal historical or scientific moments. Test-takers may confuse it with 'catalyst' or 'milestone,' but 'crucible' specifically involves a process of intense trial, not merely a turning point or an instigator of change. Recognizing this scope is essential for precise answer selection.",
       "memoryHook": "Recall that a 'crucible' is literally a container used for melting substances at high heat; in GMAT contexts, it metaphorically describes situations that 'melt away' superficialities, exposing true character or value under intense pressure—much like a scientific crucible reveals the essence of a material."
+    },
+    "translations": {
+      "tr": "zorlu sınav dönemi"
     }
   },
   {
@@ -1440,6 +1578,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'panoply' is sometimes contrasted with terms like 'plethora' or 'array.' Test-takers should note that 'panoply' implies both impressiveness and completeness, not merely abundance; answer choices that suggest excess or disorder (as with 'plethora') are incorrect in this context.",
       "memoryHook": "Recall that 'panoply' comes from Greek roots meaning 'all arms'—originally referring to a full suit of armor. On the GMAT, think of a 'panoply' as a complete set of impressive elements, just as a fully armored knight is equipped with every necessary piece."
+    },
+    "translations": {
+      "tr": "tam takım düzenlemeler bütünü"
     }
   },
   {
@@ -1470,6 +1611,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'welter' is sometimes paired with 'plethora' or 'array' as a distractor; test-takers must note that 'welter' implies disorder, not just abundance. In RC or CR, recognizing this nuance helps avoid misreading a passage’s tone or the author's attitude toward complexity.",
       "memoryHook": "Think of a GMAT Reading Comprehension passage describing economic data as a 'welter of statistics'—the key is not just the amount, but the confusion and lack of order. Remember, 'welter' signals a chaotic mix, not simply a large number."
+    },
+    "translations": {
+      "tr": "karmaşık yığın"
     }
   },
   {
@@ -1501,6 +1645,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'panegyric' often appears in RC passages to signal an uncritical or celebratory tone; a common trap is confusing it with more neutral or balanced forms of recognition. Recognizing the word’s strong, one-sided connotation can help eliminate answer choices that imply objectivity or criticism.",
       "memoryHook": "Recall that 'panegyric' comes from Greek roots meaning 'all the people' and 'assembly,' originally referring to speeches of praise delivered at public gatherings. On the GMAT, if a passage reads like a ceremonial celebration, 'panegyric' is likely the best descriptor."
+    },
+    "translations": {
+      "tr": "övgü dolu konuşma"
     }
   },
   {
@@ -1532,6 +1679,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC, 'jeremiad' is often paired with 'polemic' or 'critique' as distractors; test-takers must note that a jeremiad is not merely critical but specifically mournful and warning in tone. Recognizing this connotation helps eliminate answer choices that mischaracterize the author's attitude or intent.",
       "memoryHook": "Jeremiad comes from the prophet Jeremiah, known for lamenting Israel’s decline; on the GMAT, if a passage sounds like a formal, extended warning about societal decay, it’s likely a jeremiad—not just a critique or argument."
+    },
+    "translations": {
+      "tr": "uzun ve karamsar yakınma"
     }
   },
   {
@@ -1563,6 +1713,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'iconoclastic' is often paired with 'heterodox' or 'unorthodox' as distractors; however, only 'iconoclastic' implies a deliberate attack on established beliefs, not merely holding different views. Recognizing this nuance is crucial when evaluating answer choices in RC or CR passages involving intellectual controversy.",
       "memoryHook": "Recall that 'iconoclast' originally meant 'breaker of icons'—someone who literally destroyed religious images. In GMAT passages, an iconoclastic argument doesn’t just differ from tradition; it actively seeks to dismantle or challenge what is widely revered or accepted."
+    },
+    "translations": {
+      "tr": "yerleşik görüşlere karşı çıkan"
     }
   },
   {
@@ -1594,6 +1747,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'hagiography' is sometimes paired with 'biography' or 'panegyric' as a distractor. The test often relies on the subtle negative connotation of excessive praise, so recognizing that 'hagiography' implies bias or lack of critical distance is crucial for accurate answer selection.",
       "memoryHook": "Recall that 'hagiography' comes from the Greek 'hagios' (holy) and 'graphia' (writing), originally describing saints’ lives. On the GMAT, think of any account that treats its subject as 'saintly'—that is, too good to be true and lacking critical perspective."
+    },
+    "translations": {
+      "tr": "aşırı övgü dolu biyografi"
     }
   },
   {
@@ -1624,6 +1780,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'polymath' is sometimes contrasted with 'specialist' to test your grasp of breadth versus depth in expertise. Be alert to passages where the scope of knowledge—wide-ranging versus narrowly focused—affects the strength or relevance of an argument or claim.",
       "memoryHook": "The Greek roots 'poly-' (many) and 'mathē' (learning) combine to form 'polymath,' literally meaning 'much learned.' Picture a GMAT RC passage referencing da Vinci as a quintessential polymath, integrating art, engineering, and anatomy—unlike a specialist who delves deeply into only one subject."
+    },
+    "translations": {
+      "tr": "çok yönlü bilgin"
     }
   },
   {
@@ -1654,6 +1813,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'pedantic' is often contrasted with 'precise' or 'thorough.' Test-takers may be tempted by answer choices that confuse necessary detail with excessive, irrelevant detail; recognizing the negative connotation of 'pedantic' is essential to avoid this trap.",
       "memoryHook": "Recall that 'pedantic' comes from 'pedant,' historically a teacher overly fixated on rules and minutiae. On the GMAT, a pedantic answer will focus on trivialities rather than the argument’s core logic or main idea—watch for this when eliminating distractors."
+    },
+    "translations": {
+      "tr": "aşırı detaycı"
     }
   },
   {
@@ -1685,6 +1847,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, bombastic is often paired with 'eloquent' or 'persuasive' as a distractor; test-takers must recognize that bombastic implies negative judgment about style, not just elevated language. RC and CR questions may use bombastic to signal a lack of genuine argument or to critique superficial analysis.",
       "memoryHook": "Bombastic comes from 'bombast,' originally meaning cotton padding—think of language padded with unnecessary fluff. On the GMAT, bombastic passages may sound impressive but lack real argumentative substance, so look for style that overwhelms or distracts from the actual point."
+    },
+    "translations": {
+      "tr": "ağdalı ve gösterişli dil"
     }
   },
   {
@@ -1716,6 +1881,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'turgid' is sometimes paired with 'verbose' or 'elaborate' as answer choices. Test-takers should note that 'turgid' implies not just length but also an unnecessarily grandiose or inflated style, which can obscure meaning—a subtlety often tested in inference or tone questions.",
       "memoryHook": "Recall that 'turgid' shares a root with 'turgeō' (Latin for 'to swell'); think of writing that swells up with unnecessary complexity, making the passage harder to digest—much like a swollen river overflowing its banks, the language overwhelms the reader."
+    },
+    "translations": {
+      "tr": "ağdalı ve süslü dil"
     }
   },
   {
@@ -1747,6 +1915,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'inveigh' is sometimes paired with softer terms like 'lament' or 'question' as distractors. Recognize that 'inveigh' always implies strong, public, and negative criticism, which is crucial for distinguishing author’s tone or argument strength in RC and CR passages.",
       "memoryHook": "Recall that 'inveigh' comes from the Latin 'invehere,' meaning 'to carry in'—think of carrying in harsh words. On GMAT passages, look for authors who go beyond mere disagreement and launch into forceful, critical attacks—those are inveighing."
+    },
+    "translations": {
+      "tr": "sertçe eleştirmek"
     }
   },
   {
@@ -1778,6 +1949,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'excoriate' is often paired with milder terms like 'rebuke' or 'reproach' in answer choices. Test-takers should watch for the degree of severity implied, as GMAT RC and CR passages may hinge on whether the criticism is moderate or exceptionally harsh.",
       "memoryHook": "Remember that 'excoriate' comes from the Latin for 'to strip the skin off,' so when someone is excoriated in a GMAT passage, they are being figuratively 'skinned alive' by intense and thorough criticism—far stronger than a mere reprimand or rebuke."
+    },
+    "translations": {
+      "tr": "ağır şekilde eleştirmek"
     }
   },
   {
@@ -1809,6 +1983,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'castigate' is often paired with milder terms like 'criticize' or 'advise' as distractors; test-takers must recognize its intense, formal connotation. Its use signals a much harsher, more public form of disapproval than general negative feedback, which is crucial in RC and CR distinctions.",
       "memoryHook": "Recall that 'castigate' shares a root with 'chastise' and comes from the Latin 'castigare,' meaning 'to make pure' by correction. On the GMAT, when a passage describes a formal, public, and severe rebuke—especially by an institution or authority—'castigate' is the precise term."
+    },
+    "translations": {
+      "tr": "sertçe eleştirmek"
     }
   }
 ]

@@ -30,6 +30,9 @@
       },
       "nuanceNote": "On the GMAT, 'prevailing' is often used to signal the dominant perspective or condition in Reading Comprehension passages, while answer choices may substitute 'prevalent' or 'popular.' Test-takers must note that 'prevailing' carries a stronger sense of influence or authority, not just frequency.",
       "memoryHook": "Remember that 'prevailing' comes from the Latin 'praevalere,' meaning 'to be stronger.' On the GMAT, if a passage refers to the prevailing theory, it’s not just common—it’s the one exerting the most influence or control at that time."
+    },
+    "translations": {
+      "tr": "hakim olan"
     }
   },
   {
@@ -63,6 +66,9 @@
       },
       "nuanceNote": "On the GMAT, 'conventional' is often paired with 'innovative' or 'radical' as a distractor, especially in RC passages discussing scientific or business practices. Test-takers should note that 'conventional' does not inherently imply positive or negative judgment, but simply adherence to established norms.",
       "memoryHook": "Remember that 'conventional' comes from 'convention,' meaning an agreed-upon practice. In GMAT passages, when you see references to 'conventional methods,' think of approaches that are widely accepted—not necessarily the most effective or progressive, just the most common."
+    },
+    "translations": {
+      "tr": "alışılagelmiş"
     }
   },
   {
@@ -95,6 +101,9 @@
       },
       "nuanceNote": "On the GMAT, 'characterize' often appears in RC and CR questions asking how an author or argument presents or frames an idea. A common trap is confusing 'characterize' with 'summarize'—the former demands attention to specific qualities, not just a general overview.",
       "memoryHook": "Remember that 'characterize' comes from 'character,' meaning a distinctive mark or trait. On the GMAT, when asked how an author characterizes an argument, look for specific descriptive language, not just a summary of content."
+    },
+    "translations": {
+      "tr": "özelliklerini tanımlamak"
     }
   },
   {
@@ -127,6 +136,9 @@
       },
       "nuanceNote": "On the GMAT, 'depict' is sometimes confused with 'suggest' or 'imply'; however, 'depict' always indicates direct, explicit representation. Answer choices that conflate depiction with mere suggestion are incorrect, especially in RC questions that ask what the passage explicitly states or shows.",
       "memoryHook": "Remember that 'depict' shares a root with 'picture'—both involve making something visible or clear. On GMAT RC, if the passage depicts a process, it means the process is described in enough detail for the reader to visualize or understand it directly."
+    },
+    "translations": {
+      "tr": "tasvir etmek"
     }
   },
   {
@@ -158,6 +170,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'empirical' is frequently contrasted with 'theoretical' or 'anecdotal.' A common trap is assuming that all evidence is empirical, when some passages emphasize that certain claims are untested or only theoretically possible. Precision about the source of evidence is critical for inference questions.",
       "memoryHook": "Remember that 'empirical' comes from the Greek 'empeiria,' meaning experience. On the GMAT, empirical always points to evidence that comes from actual experiments or observations, not just ideas or models. If you see data, think 'empirical.'"
+    },
+    "translations": {
+      "tr": "deneysel verilere dayalı"
     }
   },
   {
@@ -190,6 +205,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'salient' often appears in questions or answer choices to signal the most prominent or impactful point, not just any related detail. Test-takers may be trapped by confusing 'salient' with 'relevant,' mistakenly treating any applicable information as equally important when only the most noticeable or influential aspect is required.",
       "memoryHook": "Think of 'salient' as coming from the Latin 'salire,' meaning 'to leap.' On the GMAT, a salient point is one that 'leaps out' from the passage or argument—it's what you would immediately notice if you had to summarize the most important idea."
+    },
+    "translations": {
+      "tr": "göze çarpan en belirgin"
     }
   },
   {
@@ -221,6 +239,9 @@
       },
       "nuanceNote": "On the GMAT, answer choices may include information that is factually accurate but not pertinent to the specific argument or question stem. Test-takers should focus on direct relevance, as the test often rewards precision in identifying what truly addresses the prompt.",
       "memoryHook": "Remember that 'pertinent' comes from the Latin 'pertinere,' meaning 'to pertain.' On GMAT RC and CR, always check if the information 'pertains' directly to the question—if it does, it's pertinent; if not, it's likely a distractor."
+    },
+    "translations": {
+      "tr": "ilgili ve konuya dair"
     }
   },
   {
@@ -252,6 +273,9 @@
       },
       "nuanceNote": "On the GMAT, 'germane' is often used in answer choices to signal direct relevance, while distractors may use words like 'tangential' or 'incidental' to imply weak or indirect connection. Recognizing this scope distinction is crucial in RC and CR questions that test logical alignment with the passage or argument.",
       "memoryHook": "Think of 'germane' as stemming from the same root as 'germanus,' meaning 'having the same parents' in Latin—just as siblings are closely related, so is information that is germane to a topic. On GMAT passages, germane points are always tightly linked to the main argument."
+    },
+    "translations": {
+      "tr": "ilgili ve konuya uygun"
     }
   },
   {
@@ -284,6 +308,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'tangential' is often contrasted with terms that imply direct relevance or strong connection, such as 'central' or 'analogous.' Test-takers may be misled by answer choices that confuse incidental mention with substantive importance, so recognizing the limited scope implied by 'tangential' is crucial.",
       "memoryHook": "Recall that in geometry, a tangent touches a circle at just one point without crossing it—similarly, a tangential point in an argument merely brushes the main issue without engaging it directly, making it only superficially related."
+    },
+    "translations": {
+      "tr": "doğrudan ilgili olmayan"
     }
   },
   {
@@ -315,6 +342,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'pervasive' is often paired with 'prevalent' or 'common' in answer choices. 'Pervasive' implies thorough penetration or influence, not just frequency. Test-takers may incorrectly select it when the passage only supports something being widespread, not deeply ingrained.",
       "memoryHook": "Remember that 'pervasive' comes from the Latin 'pervadere,' meaning 'to go through.' On the GMAT, if an influence or problem 'goes through' every part of something, it's pervasive—not just present, but saturating the whole context."
+    },
+    "translations": {
+      "tr": "her yere yayılan"
     }
   },
   {
@@ -346,6 +376,9 @@
       },
       "nuanceNote": "On the GMAT, 'ubiquitous' often appears in RC passages to signal an all-encompassing presence, while answer choices may use 'prevalent' or 'common' to subtly shift the scope. Test-takers should be alert to whether the passage claims something is truly everywhere or just widespread.",
       "memoryHook": "Remember that 'ubiquitous' comes from the Latin 'ubique,' meaning 'everywhere.' On the GMAT, if a passage claims a phenomenon is 'ubiquitous,' it means you should assume no meaningful exceptions—unlike 'prevalent,' which allows for areas where the phenomenon is absent."
+    },
+    "translations": {
+      "tr": "her yerde bulunan"
     }
   },
   {
@@ -378,6 +411,9 @@
       },
       "nuanceNote": "On the GMAT, 'rigorous' is often contrasted with words like 'stringent' or 'strict,' but only 'rigorous' captures the sense of analytical thoroughness and logical precision. Test-takers may be tempted by choices that emphasize severity, missing the word's focus on careful, detailed reasoning in RC or CR passages.",
       "memoryHook": "Recall that 'rigorous' comes from the Latin 'rigor,' meaning stiffness or strictness; in GMAT reading passages, a 'rigorous' analysis is not just harsh, but methodical and exact—think of a scientist meticulously checking every detail, not merely enforcing tough rules."
+    },
+    "translations": {
+      "tr": "titiz ve sıkı"
     }
   },
   {
@@ -411,6 +447,9 @@
       },
       "nuanceNote": "GMAT RC and CR questions often include both 'systematic' and 'systemic' as answer choices to test precision. 'Systematic' refers to method or procedure, while 'systemic' refers to scope or pervasiveness—confusing the two can lead to incorrect inferences about causality or breadth.",
       "memoryHook": "Recall that 'systematic' shares its root with 'system' plus the suffix '-atic,' meaning 'pertaining to.' In GMAT passages, a 'systematic' approach is one that follows a clear, step-by-step system—think of a scientist following a checklist rather than improvising."
+    },
+    "translations": {
+      "tr": "düzenli ve planlı"
     }
   },
   {
@@ -443,6 +482,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'substantive' often appears in contexts where the test distinguishes between changes or arguments that genuinely matter and those that are only procedural or superficial. A common trap is confusing 'substantive' with 'nominal' or overlooking its implication of real impact versus formality.",
       "memoryHook": "Remember that 'substantive' shares a root with 'substance'—think of a GMAT passage that asks whether a policy change has real substance or is just for show. If it’s substantive, it truly matters and affects outcomes, not just appearances."
+    },
+    "translations": {
+      "tr": "önemli ve anlamlı"
     }
   },
   {
@@ -474,6 +516,9 @@
       },
       "nuanceNote": "On the GMAT, 'cursory' is often used in RC or CR passages to signal that a process or review was inadequate due to haste, not just shallowness. Test-takers may be tempted by answer choices with 'superficial,' but must note the emphasis on speed and lack of careful attention in 'cursory.'",
       "memoryHook": "Recall that 'cursory' shares a root with 'cursor,' which moves quickly across a screen; similarly, a cursory review moves quickly over material without pausing for depth, a pitfall often highlighted in GMAT passages critiquing inadequate analysis."
+    },
+    "translations": {
+      "tr": "yüzeysel ve dikkatsiz"
     }
   },
   {
@@ -507,6 +552,9 @@
       },
       "nuanceNote": "On the GMAT, 'robust' often appears in Reading Comprehension or Critical Reasoning to describe arguments or systems that can handle objections or unexpected variables. A common trap is confusing 'robust' with 'comprehensive'; only the former signals durability or resilience, not just thoroughness.",
       "memoryHook": "Remember that 'robust' comes from the Latin 'robustus,' meaning 'strong as an oak.' On the GMAT, if an argument or system is described as robust, picture it as an oak tree—able to withstand storms (objections or challenges) without toppling."
+    },
+    "translations": {
+      "tr": "sağlam ve güvenilir"
     }
   },
   {
@@ -539,6 +587,9 @@
       },
       "nuanceNote": "On the GMAT, 'speculative' often appears in answer choices to signal reasoning that lacks sufficient support, tempting test-takers to confuse it with valid inference. Recognizing that 'speculative' indicates a weaker, less evidence-based claim is crucial for distinguishing correct from trap answers, especially in CR and RC.",
       "memoryHook": "Recall that 'speculative' shares its root with 'speculate,' which means to guess or theorize without firm evidence. On the GMAT, if an answer is described as speculative, it usually means the reasoning leaps beyond what the passage or argument justifies."
+    },
+    "translations": {
+      "tr": "kanıta dayanmayan varsayımsal"
     }
   },
   {
@@ -572,6 +623,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'plausible' often appears as a tempting answer choice because it suggests a reasonable explanation, but it does not guarantee truth or likelihood. Test-takers should distinguish between what merely seems reasonable (plausible) and what is most likely (probable), as GMAT questions frequently hinge on this subtle difference.",
       "memoryHook": "Remember that 'plausible' comes from the Latin 'plausibilis,' meaning 'worthy of applause.' On the GMAT, a plausible answer is one that deserves a polite clap—it sounds convincing, but you should look for evidence before giving a standing ovation."
+    },
+    "translations": {
+      "tr": "makul görünen"
     }
   },
   {
@@ -605,6 +659,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'compelling' signals a higher standard than 'plausible' or 'reasonable.' Test-makers may present answer choices that are merely plausible as distractors, but only those that are truly compelling—logically forceful and difficult to dispute—are correct when the question asks for the strongest support.",
       "memoryHook": "Remember that 'compelling' comes from the Latin 'compellere,' meaning 'to drive together' or 'force.' On the GMAT, a compelling argument drives the reader toward agreement, leaving little room for doubt—much more than just a plausible or possible explanation."
+    },
+    "translations": {
+      "tr": "ikna edici ve güçlü"
     }
   },
   {
@@ -638,6 +695,9 @@
       },
       "nuanceNote": "On the GMAT, 'striking' is often used to highlight something that stands out in a passage, but test-takers may confuse it with 'significant,' which implies importance rather than distinctiveness. Recognizing whether the context requires emphasis on visibility or impact is crucial for RC and CR accuracy.",
       "memoryHook": "Recall that 'striking' comes from the verb 'to strike,' meaning to hit or make contact forcefully—something that 'strikes' you is hard to miss. On the GMAT, a 'striking' trend or fact is one that metaphorically 'hits' the reader’s attention immediately."
+    },
+    "translations": {
+      "tr": "göze çarpan derecede belirgin"
     }
   },
   {
@@ -670,6 +730,9 @@
       },
       "nuanceNote": "On the GMAT, 'purport' is often used in RC or CR passages to indicate a statement or study that claims something, sometimes falsely. Test-takers may confuse it with 'imply,' but 'purport' always involves an explicit claim, which is a subtle but crucial distinction in answer choices.",
       "memoryHook": "Think of 'purport' as 'purportedly'—a word often seen in GMAT passages to signal that a study or author is making a claim that may not be fully substantiated. Remember: to 'purport' is to put forth a claim, not just to hint."
+    },
+    "translations": {
+      "tr": "iddia etmek"
     }
   },
   {
@@ -702,6 +765,9 @@
       },
       "nuanceNote": "On the GMAT, 'construe' often appears in RC or CR passages where precise interpretation of a statement is tested. A common trap is confusing 'construe' with 'infer'—the former deals with explicit meaning, while the latter involves reading between the lines. Recognizing this distinction can prevent misinterpretation of answer choices.",
       "memoryHook": "Remember that 'construe' comes from the Latin 'construere,' meaning 'to build'—so when you construe a statement on the GMAT, you are 'building' its meaning from the words given, not guessing what is implied."
+    },
+    "translations": {
+      "tr": "yorumlamak veya anlam çıkarmak"
     }
   },
   {
@@ -734,6 +800,9 @@
       },
       "nuanceNote": "On the GMAT, 'conceive of' is often tested against more concrete terms like 'perceive' or 'observe.' Test-takers may be misled by answer choices that confuse mental conceptualization with direct observation, especially in Reading Comprehension passages discussing theories or hypothetical scenarios.",
       "memoryHook": "Remember that 'conceive' shares a root with 'concept'—both involve forming ideas. On the GMAT, when a passage discusses what someone can or cannot 'conceive of,' it’s about their ability to mentally construct or imagine something, not just notice it."
+    },
+    "translations": {
+      "tr": "hayal etmek"
     }
   },
   {
@@ -766,6 +835,9 @@
       },
       "nuanceNote": "On the GMAT, 'regard as' often appears in RC and CR passages to signal the author's evaluative stance or to introduce a classification that may be challenged or supported. Test-takers sometimes confuse it with more neutral terms, missing its evaluative nuance or mistaking it for self-identification language.",
       "memoryHook": "Remember that 'regard as' comes from the idea of 'looking at' (re- + garder, to look), so on the GMAT, it signals how someone 'looks at' or evaluates something, not just how something is labeled or named."
+    },
+    "translations": {
+      "tr": "olarak görmek"
     }
   },
   {
@@ -798,6 +870,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'posit' often appears in passages or answer choices to indicate a formal, explicit claim, not just an unstated belief. Test-takers may confuse it with 'assume' or 'suggest,' but 'posit' always implies a deliberate, reasoned proposal, which can be critical for evaluating arguments or identifying premises.",
       "memoryHook": "Remember that 'posit' comes from the Latin 'ponere,' meaning 'to place.' On the GMAT, when an author 'posits' something, they are 'placing' an idea on the table for discussion—think of it as formally putting forth a theory or claim in an argument."
+    },
+    "translations": {
+      "tr": "ileri sürmek"
     }
   },
   {
@@ -829,6 +904,9 @@
       },
       "nuanceNote": "On the GMAT, answer choices may use 'emergent' and 'emerging' interchangeably, but only 'emergent' accurately describes properties or phenomena that arise unexpectedly within complex systems. Recognizing this precision is crucial in Reading Comprehension passages about science or economics, where subtle distinctions affect answer validity.",
       "memoryHook": "Recall that 'emergent' comes from the Latin 'emergere,' meaning 'to rise out.' In GMAT passages, think of 'emergent' as describing new behaviors or patterns that arise unexpectedly from a system, not just anything that is becoming popular or visible."
+    },
+    "translations": {
+      "tr": "yeni ortaya çıkan"
     }
   },
   {
@@ -861,6 +939,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, entrenched is often contrasted with terms like 'pervasive' or 'prevalent,' which suggest widespread presence but not necessarily resistance to change. Test-takers should watch for answer choices that conflate mere commonality with the deeper, more stubborn quality implied by 'entrenched.'",
       "memoryHook": "Think of a trench dug deep in the ground—hard to remove and firmly in place. 'Entrenched' comes from the idea of being literally or figuratively dug in, making it memorable as something difficult to dislodge, just like deeply rooted beliefs or systems on the GMAT."
+    },
+    "translations": {
+      "tr": "kökleşmiş"
     }
   },
   {
@@ -894,6 +975,9 @@
       },
       "nuanceNote": "On the GMAT, 'enduring' is often contrasted with 'temporary' or confused with 'permanent.' Test-takers should note that 'enduring' signals continued existence or influence, but not necessarily forever; distinguishing this scope is crucial in RC and CR answer choices.",
       "memoryHook": "Recall that 'enduring' comes from the Latin 'durare,' meaning 'to last.' On the GMAT, an 'enduring' trend or institution is one that survives over time, even if it faces difficulties—unlike 'permanent,' which means truly unchanging."
+    },
+    "translations": {
+      "tr": "kalıcı"
     }
   },
   {
@@ -925,6 +1009,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'formative' is often contrasted with 'transformative' or 'foundational' in answer choices. Test-takers should note that 'formative' implies incremental influence during development, not complete or radical change, which is a frequent scope trap in inference and detail questions.",
       "memoryHook": "Remember that 'formative' comes from the Latin 'formare,' meaning 'to form.' In GMAT contexts, think of a formative period as the time when something is being 'formed' or shaped, not completely changed—unlike 'transformative,' which signals a total overhaul."
+    },
+    "translations": {
+      "tr": "şekillendirici döneme ait"
     }
   },
   {
@@ -957,6 +1044,9 @@
       },
       "nuanceNote": "On the GMAT, 'foundational' often appears in RC or CR passages to signal a premise or principle that supports an entire argument or theory. Test-takers may confuse it with 'elementary' or 'introductory,' but 'foundational' implies indispensability, not just simplicity or early placement.",
       "memoryHook": "Recall that a building’s foundation is what everything else rests on; in GMAT arguments, a 'foundational' assumption or principle is what the reasoning depends upon—if it’s removed or disproven, the entire structure may collapse."
+    },
+    "translations": {
+      "tr": "temel ve gerekli"
     }
   },
   {
@@ -989,6 +1079,9 @@
       },
       "nuanceNote": "On the GMAT, 'rudimentary' is often contrasted with terms like 'elementary' or 'fundamental' in answer choices, where only 'rudimentary' implies a lack of full development. Be alert for answer choices that confuse basic with incomplete, as the GMAT frequently tests this subtle distinction in RC and CR passages.",
       "memoryHook": "Recall that 'rudimentary' comes from the Latin 'rudimentum,' meaning 'beginning' or 'first attempt.' On the GMAT, think of a rudimentary business plan: it covers only the bare minimum and lacks the depth or polish of a fully developed proposal."
+    },
+    "translations": {
+      "tr": "temel ve gelişmemiş"
     }
   },
   {
@@ -1022,6 +1115,9 @@
       },
       "nuanceNote": "On the GMAT, 'profound' is sometimes contrasted with terms like 'subtle' or 'nuanced' in answer choices; test-takers must recognize that 'profound' signals major, far-reaching impact, not just complexity or slight distinction. RC and CR questions often hinge on this difference in scope and significance.",
       "memoryHook": "Remember that 'profound' comes from the Latin 'profundus,' meaning 'deep.' In GMAT passages, when an idea is described as profound, it’s not just complex—it reaches deep into the core of an issue or argument, affecting the foundation of the discussion."
+    },
+    "translations": {
+      "tr": "derin ve etkili"
     }
   },
   {
@@ -1054,6 +1150,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'far-reaching' often appears in answer choices to test whether you recognize the difference between broad impact and mere prevalence. Test-takers may incorrectly equate 'far-reaching' with 'widespread,' missing the scope and depth implied by the former in evaluating argument strength or passage claims.",
       "memoryHook": "Recall that 'far-reaching' literally means effects that 'reach far'—not just many places, but deeply into different areas. On the GMAT, a policy described as 'far-reaching' will likely have significant, transformative consequences, not just be popular or common."
+    },
+    "translations": {
+      "tr": "geniş kapsamlı"
     }
   },
   {
@@ -1086,6 +1185,9 @@
       },
       "nuanceNote": "On the GMAT, 'marked' signals a strong, sometimes quantifiable distinction, which is more forceful than simply 'notable' or 'noteworthy.' Test-takers may be misled by answer choices that use weaker terms, so recognizing 'marked' as indicating a substantial difference is key in RC and CR contexts.",
       "memoryHook": "Think of 'marked' as something that has been 'marked out' or highlighted for attention—on GMAT passages, it often flags a difference or change that stands out clearly, much like a highlighted line in a textbook signals something important."
+    },
+    "translations": {
+      "tr": "belirgin"
     }
   },
   {
@@ -1118,6 +1220,9 @@
       },
       "nuanceNote": "On the GMAT, 'sweeping' is often used to flag an answer choice that overstates the evidence or draws an overly broad conclusion. Test-takers may be tempted by such choices, but must recognize when the scope of the claim exceeds what the passage or argument supports.",
       "memoryHook": "Recall that 'sweeping' comes from the idea of a broom moving across an entire floor—on the GMAT, a 'sweeping' claim tries to cover everything at once, often missing important exceptions or nuances. Watch for answer choices that make such overreaching generalizations."
+    },
+    "translations": {
+      "tr": "genelleştirici ve kapsayıcı"
     }
   },
   {
@@ -1150,6 +1255,9 @@
       },
       "nuanceNote": "On the GMAT, 'nuanced' is often used to indicate a sophisticated or layered interpretation, and answer choices may trap test-takers by offering options that are merely 'detailed' or 'complex' without true subtlety. Recognizing this distinction is crucial for RC and CR accuracy.",
       "memoryHook": "Remember that 'nuanced' comes from the French word 'nuance,' meaning 'shade' or 'subtle difference.' On the GMAT, a 'nuanced argument' isn’t just lengthy or complex—it reveals hidden layers or fine distinctions that a superficial reading might miss."
+    },
+    "translations": {
+      "tr": "ince ayrımlara sahip"
     }
   },
   {
@@ -1182,6 +1290,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, ambiguous is often confused with vague or equivocal, but only ambiguous strictly denotes multiple plausible interpretations, not merely a lack of detail or intentional deception. Recognizing this helps avoid trap answers that conflate ambiguity with general imprecision or evasiveness.",
       "memoryHook": "Recall that 'ambiguous' comes from the Latin 'ambigere,' meaning 'to wander around.' On the GMAT, an ambiguous sentence 'wanders' between meanings, making it difficult to pin down a single, precise interpretation—precisely the kind of wording that can undermine a logical argument."
+    },
+    "translations": {
+      "tr": "belirsiz veya iki anlamlı"
     }
   },
   {
@@ -1213,6 +1324,9 @@
       },
       "nuanceNote": "On the GMAT, 'paradoxical' often appears in RC and CR passages to signal a surprising or counterintuitive result, tempting test-takers to confuse it with 'ambiguous.' Recognizing that 'paradoxical' involves a seeming contradiction—rather than mere vagueness or uncertainty—is crucial for correctly interpreting argument structures or authorial intent.",
       "memoryHook": "Recall that 'paradox' comes from the Greek 'para' (beside, beyond) and 'doxa' (opinion), meaning 'beyond belief.' On the GMAT, a paradoxical result is one that defies initial expectations but often points to a deeper, logically consistent explanation beneath the surface contradiction."
+    },
+    "translations": {
+      "tr": "görünüşte çelişkili ama doğru"
     }
   },
   {
@@ -1244,6 +1358,9 @@
       },
       "nuanceNote": "On the GMAT, 'counterintuitive' is often used to describe findings or arguments that challenge assumptions but are logically supported by evidence. Test-takers may confuse it with 'implausible,' which is a stronger, negative judgment; GMAT RC and CR questions sometimes exploit this subtlety to mislead.",
       "memoryHook": "Recall that 'counter-' means 'against' and 'intuitive' relates to instinct or gut feeling. On the GMAT, a counterintuitive answer may seem wrong at first glance but is correct when you analyze the logic or evidence more deeply."
+    },
+    "translations": {
+      "tr": "sezgilere aykırı"
     }
   },
   {
@@ -1275,6 +1392,9 @@
       },
       "nuanceNote": "On the GMAT, 'contested' is often paired with 'controversial' or 'debated' in answer choices, but only 'contested' clearly indicates that there is an active challenge or dispute, not just strong opinions or public disagreement. Recognizing this scope distinction can help avoid RC and CR traps involving subtle differences in disagreement intensity.",
       "memoryHook": "Remember that 'contested' comes from the Latin 'contestari,' meaning 'to call to witness'—think of two sides in a GMAT argument both presenting evidence to formally challenge each other's claims, as in a legal contest or academic dispute."
+    },
+    "translations": {
+      "tr": "tartışmalı"
     }
   },
   {
@@ -1307,6 +1427,9 @@
       },
       "nuanceNote": "On the GMAT, 'discrete' is often contrasted with 'continuous' in quantitative or logical reasoning contexts. A common trap is confusing 'discrete' with 'discreet' or overlooking that 'discrete' implies no blending or gradation, which can affect how answer choices are evaluated in RC or CR questions.",
       "memoryHook": "Remember that 'discrete' comes from the Latin 'discretus,' meaning 'separated.' In GMAT math, discrete variables are like whole-number steps on a staircase, not a ramp—each step is separate, just as 'discrete' means not connected or blended."
+    },
+    "translations": {
+      "tr": "ayrı ve birbirinden bağımsız"
     }
   },
   {
@@ -1340,6 +1463,9 @@
       },
       "nuanceNote": "On the GMAT, 'discernible' may be contrasted with 'distinct' or 'apparent' in answer choices; test-takers should note that 'discernible' allows for subtlety or faintness, not requiring obvious or sharply defined differences. This precision is often tested in RC inference or CR evidence evaluation.",
       "memoryHook": "Remember that 'discernible' comes from the Latin 'discernere,' meaning 'to separate or distinguish.' On the GMAT, if you can just barely tell two things apart—such as a slight trend in data—they are discernible, even if not sharply distinct or obvious."
+    },
+    "translations": {
+      "tr": "fark edilebilir"
     }
   },
   {
@@ -1371,6 +1497,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'coherent' is often contrasted with 'cohesive' or 'consistent.' Test-takers may incorrectly equate surface-level unity (cohesion) with logical clarity (coherence); GMAT questions frequently exploit this by offering distractors that are cohesive but not logically sound.",
       "memoryHook": "Remember that 'coherent' comes from the Latin 'cohaerere,' meaning 'to stick together.' On the GMAT, a coherent argument is not just stuck together but flows logically, so every part makes sense in relation to the whole."
+    },
+    "translations": {
+      "tr": "tutarlı ve anlaşılır"
     }
   },
   {
@@ -1403,6 +1532,9 @@
       },
       "nuanceNote": "On the GMAT, 'proponent' is sometimes paired with 'advocate' or 'opponent' as distractors in answer choices. Test-takers should note that 'proponent' is neutral and refers to general support, not necessarily active campaigning or legal representation, which 'advocate' might imply in certain contexts.",
       "memoryHook": "Recall that 'proponent' comes from the Latin 'proponere,' meaning 'to put forth.' On the GMAT, a proponent is someone who puts forth or supports an idea, especially in passages discussing competing theories or policy proposals."
+    },
+    "translations": {
+      "tr": "savunucu"
     }
   },
   {
@@ -1436,6 +1568,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'detractor' often appears alongside more neutral terms like 'skeptic' or 'critic.' Test-takers may be trapped by not noticing that 'detractor' carries a stronger, more oppositional connotation, which can subtly shift the author's attitude or the argument's tone in answer choices.",
       "memoryHook": "Recall that 'detract' means to take away from or lessen the value of something; a 'detractor' is someone who tries to take away from the credibility or appeal of an idea—think of them as actively pulling support away, not just questioning."
+    },
+    "translations": {
+      "tr": "eleştirmen veya karşı çıkan kişi"
     }
   },
   {
@@ -1468,6 +1603,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'manifestation' is often used in scientific or analytical contexts to describe observable evidence of a process or trend. Test-takers may confuse it with 'symptom,' which is narrower and usually negative; GMAT questions may exploit this by offering 'symptom' as a tempting but incorrect answer choice.",
       "memoryHook": "Recall that 'manifestation' comes from the Latin 'manifestare,' meaning 'to make obvious.' On the GMAT, think of a theory becoming visible—like climate change manifesting as rising temperatures—so 'manifestation' signals when the abstract becomes concrete and measurable."
+    },
+    "translations": {
+      "tr": "belirti veya dışa vurum"
     }
   },
   {
@@ -1500,6 +1638,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'simplistic' is often a trap when contrasted with 'simple' or 'straightforward.' The test expects you to recognize that 'simplistic' implies a criticism of insufficient depth, not just ease or clarity. Watch for negative author tone or evaluative context.",
       "memoryHook": "Remember that 'simplistic' ends with '-istic,' signaling a tendency or characteristic; in GMAT passages, it signals a tendency to oversimplify, which is usually a flaw. If an argument is labeled 'simplistic,' look for what important factors it might be missing."
+    },
+    "translations": {
+      "tr": "aşırı basite indirgenmiş"
     }
   },
   {
@@ -1533,6 +1674,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'superficial' is often a trap when contrasted with words like 'thorough' or 'comprehensive.' Test-takers should note that 'superficial' critiques or explanations miss deeper causes or implications, which is crucial when evaluating the strength of arguments or analyses.",
       "memoryHook": "Recall that 'superficial' comes from the Latin 'superficies,' meaning 'surface.' On the GMAT, if an argument or explanation is labeled superficial, it means it only skims the surface—never digging into the deeper logic or evidence that matters for rigorous analysis."
+    },
+    "translations": {
+      "tr": "yüzeysel derinlemesine olmayan"
     }
   },
   {
@@ -1565,6 +1709,9 @@
       },
       "nuanceNote": "On the GMAT, 'reductive' is often used to criticize answer choices that gloss over complexity or fail to address all aspects of an argument. Test-takers may confuse it with 'simplified,' missing the negative implication that reductive explanations are inadequate or misleading in academic analysis.",
       "memoryHook": "Recall that 'reductive' comes from 'reduce,' meaning to make smaller or less complex. On GMAT RC or CR, a reductive answer usually strips away too much detail, leading to an incomplete or inaccurate summary—watch for this trap in answer choices that seem too broad or shallow."
+    },
+    "translations": {
+      "tr": "aşırı basitleştirici"
     }
   },
   {
@@ -1598,6 +1745,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'hallmark' often signals a feature that is essential or definitive, not merely present. Test-takers may be tempted by answer choices using broader terms like 'attribute' or 'feature,' but only 'hallmark' conveys the sense of a unique or distinguishing marker central to the passage's logic.",
       "memoryHook": "Think of a 'hallmark' as a stamp of authenticity once used on precious metals—on the GMAT, it marks the unique, defining trait that proves a theory, group, or process is genuine or exemplary, not just any ordinary characteristic."
+    },
+    "translations": {
+      "tr": "ayırt edici özellik"
     }
   },
   {
@@ -1631,6 +1781,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'canonical' often appears in contexts where the test-maker tests your ability to distinguish between what is widely recognized as standard versus what is merely traditional or popular. A common trap is to equate 'canonical' with 'classical' or 'conventional,' but these may differ in scope or authority.",
       "memoryHook": "Remember that 'canonical' comes from 'canon,' meaning a rule or standard. In GMAT reading passages, the 'canonical' theory is the one most scholars accept as the benchmark, even if newer or alternative theories exist."
+    },
+    "translations": {
+      "tr": "kabul görmüş standart"
     }
   },
   {
@@ -1664,6 +1817,9 @@
       },
       "nuanceNote": "On the GMAT, 'seminal' often appears in RC passages describing landmark studies or theories. Test-takers may confuse it with 'innovative,' but only 'seminal' guarantees broad, lasting impact; 'innovative' can refer to something merely new or creative without foundational influence.",
       "memoryHook": "Remember that 'seminal' shares a root with 'seed' (from Latin 'semen'), highlighting its role as the origin or starting point for future growth—just as a seed gives rise to a plant, a seminal work initiates a whole field of study."
+    },
+    "translations": {
+      "tr": "öncü ve etkili"
     }
   },
   {
@@ -1695,6 +1851,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'extant' is often contrasted with terms like 'lost,' 'destroyed,' or 'no longer extant.' A common trap is confusing 'extant' with 'existent'; only 'extant' implies survival against odds, which can affect the logical scope of an argument or inference.",
       "memoryHook": "Remember that 'extant' comes from the Latin 'exstare,' meaning 'to stand out' or 'to stand forth.' On the GMAT, an 'extant' manuscript stands out because it has survived while others have disappeared—a crucial distinction in historical or scientific passages."
+    },
+    "translations": {
+      "tr": "hala mevcut olan"
     }
   },
   {
@@ -1726,6 +1885,9 @@
       },
       "nuanceNote": "On the GMAT, 'nascent' is often paired with 'emerging' or 'novel' in answer choices. Test-takers may be trapped by the subtle difference: 'nascent' always implies a beginning phase, not just something new or innovative, so precision about developmental stage is crucial in RC and CR contexts.",
       "memoryHook": "Remember that 'nascent' comes from the Latin 'nasci,' meaning 'to be born.' On GMAT passages, when you see 'nascent,' think of something being born or just coming into existence—like a startup industry or a new scientific field."
+    },
+    "translations": {
+      "tr": "yeni ortaya çıkan"
     }
   },
   {
@@ -1758,6 +1920,9 @@
       },
       "nuanceNote": "On the GMAT, 'equivocal' is often tested against 'ambiguous' in Reading Comprehension and Critical Reasoning, where the subtle distinction of intentionality or strategic vagueness can determine the correct answer. Test-takers should note whether the context suggests deliberate avoidance of clarity or merely accidental lack of precision.",
       "memoryHook": "Remember that 'equivocal' contains 'equiv-', as in 'equal voices'—implying two or more possible meanings or sides, none of which dominate. On GMAT passages, if a position is equivocal, it is intentionally left open to interpretation, not simply unclear by accident."
+    },
+    "translations": {
+      "tr": "belirsiz veya iki anlamlı"
     }
   },
   {
@@ -1791,6 +1956,9 @@
       },
       "nuanceNote": "On the GMAT, 'tenuous' often appears in answer choices to signal a lack of sufficient evidence or logical support. Test-takers may confuse it with words like 'specious' or 'superficial,' but 'tenuous' emphasizes weakness in support, not intentional deception or mere surface-level analysis.",
       "memoryHook": "Recall that 'tenuous' comes from the Latin 'tenuis,' meaning 'thin'—think of a thin thread barely holding an argument together. In GMAT CR, a tenuous link is one that could easily snap under scrutiny, signaling a vulnerable or unsupported conclusion."
+    },
+    "translations": {
+      "tr": "zayıf dayanaklı"
     }
   },
   {
@@ -1822,6 +1990,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'tenable' often appears in answer choices that require a position to be logically sustainable, not merely possible or superficially credible. Test-takers may be trapped by confusing 'tenable' with weaker terms like 'plausible' or 'conceivable,' which lack the demand for rigorous justification.",
       "memoryHook": "Recall that 'tenable' shares a root with 'tenure'—professors with tenure hold positions that are secure and defensible. On the GMAT, a 'tenable' argument is one that can withstand critical scrutiny, much like a tenured professor withstands academic challenges."
+    },
+    "translations": {
+      "tr": "savunulabilir veya geçerliliği sürdürülebilir"
     }
   },
   {
@@ -1854,6 +2025,9 @@
       },
       "nuanceNote": "On the GMAT, 'disparate' is sometimes confused with 'discrete' due to their similar spelling; however, 'disparate' focuses on qualitative differences, while 'discrete' means separate but not necessarily different. Recognizing this distinction is crucial in RC and CR passages with nuanced argumentation about categories or data sets.",
       "memoryHook": "Remember that 'disparate' shares a root with 'separate,' but emphasizes difference in kind, not just separation. In GMAT RC passages, authors often use 'disparate' to highlight contrasts between groups, theories, or data sets that cannot be meaningfully compared."
+    },
+    "translations": {
+      "tr": "farklı türden olan"
     }
   },
   {
@@ -1885,6 +2059,9 @@
       },
       "nuanceNote": "On the GMAT, 'heterogeneous' is often contrasted with 'homogeneous' to test a reader’s attention to diversity versus uniformity in groups or samples. A common trap is to overlook the implications of heterogeneity for generalizability or consistency of results in RC or CR passages.",
       "memoryHook": "Remember that 'hetero-' means 'different' (as in 'heterosexual'), so 'heterogeneous' signals a mix of different types. On GMAT passages, a heterogeneous sample means the findings may be more broadly applicable, but also potentially less consistent."
+    },
+    "translations": {
+      "tr": "farklı parçalardan oluşan"
     }
   },
   {
@@ -1917,6 +2094,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'monolithic' is often contrasted with terms implying diversity or adaptability. A common trap is to equate 'monolithic' with 'hierarchical' or 'centralized,' but the GMAT tests for recognition that 'monolithic' specifically signals uniformity and resistance to internal variation or dissent.",
       "memoryHook": "Recall that 'mono-' means 'one' and 'lithic' relates to 'stone,' so 'monolithic' literally means 'one stone.' On the GMAT, think of a single, solid block—unchanging and undivided—when you see this term describing organizations or arguments."
+    },
+    "translations": {
+      "tr": "tek tip ve bütünleşik"
     }
   },
   {
@@ -1949,6 +2129,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'fragmentary' is often used to signal that an argument or explanation is limited by missing data—a common trap is to misinterpret it as merely uncertain ('tentative') rather than specifically incomplete. Recognizing this distinction can clarify why an answer is too weak or unsupported.",
       "memoryHook": "Think of 'fragmentary' as a puzzle with missing pieces: just as a fragmentary manuscript provides only parts of the original text, a GMAT argument based on fragmentary evidence lacks the full picture, making its conclusions vulnerable to challenge."
+    },
+    "translations": {
+      "tr": "parça parça olan"
     }
   },
   {
@@ -1982,6 +2165,9 @@
       },
       "nuanceNote": "On the GMAT, 'ad hoc' is often contrasted with terms like 'systematic' or 'comprehensive' in RC and CR questions. Test-takers may be trapped by answer choices that confuse a narrowly targeted, improvised solution with a broad, methodical approach; recognizing this scope distinction is critical.",
       "memoryHook": "Remember that 'ad hoc' comes from Latin meaning 'for this'; on the GMAT, it signals a solution or group created for one specific issue, not for ongoing or general use. If you see a committee or policy formed just to handle a unique problem, it's likely ad hoc."
+    },
+    "translations": {
+      "tr": "özel bir amaç için"
     }
   },
   {
@@ -2013,6 +2199,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'eclectic' is sometimes confused with 'comprehensive' or 'inclusive,' but the GMAT tests your ability to notice that 'eclectic' stresses variety and selection, not total coverage. Watch for answer choices that overstate the scope by implying exhaustiveness rather than diversity.",
       "memoryHook": "Remember that 'eclectic' comes from the Greek 'eklektikos,' meaning 'selective.' On the GMAT, an eclectic argument or methodology pulls from many fields, not just one—think of a scholar who picks the best ideas from multiple disciplines rather than following a single school of thought."
+    },
+    "translations": {
+      "tr": "farklı kaynaklardan seçilmiş"
     }
   },
   {
@@ -2045,6 +2234,9 @@
       },
       "nuanceNote": "On GMAT RC and CR, 'doctrinaire' often appears in contexts where inflexibility is a flaw, and can be confused with 'orthodox' or 'principled.' The test may use 'doctrinaire' to signal an extreme or impractical position, so recognizing its negative, rigid connotation is key to avoiding trap answers.",
       "memoryHook": "Remember that 'doctrinaire' comes from 'doctrine'—but unlike someone who simply follows doctrine (orthodox), a doctrinaire insists on applying doctrine rigidly, even when it’s not practical. On the GMAT, this word flags inflexible, theory-driven reasoning that ignores real-world complexity."
+    },
+    "translations": {
+      "tr": "katı görüşlü"
     }
   },
   {
@@ -2077,6 +2269,9 @@
       },
       "nuanceNote": "On the GMAT, 'vestige' is sometimes contrasted with broader terms like 'reminder' or 'evidence.' Test-takers should note that 'vestige' always implies a surviving fragment of something mostly lost, whereas distractors may refer to general indications or cues, which lack the sense of rarity or partial survival.",
       "memoryHook": "The word 'vestige' comes from the Latin 'vestigium,' meaning 'footprint.' On the GMAT, think of a vestige as a faint footprint left behind—a subtle but concrete sign that something larger once existed, now mostly vanished."
+    },
+    "translations": {
+      "tr": "kalıntı iz"
     }
   }
 ]

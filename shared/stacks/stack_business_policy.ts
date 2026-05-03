@@ -30,6 +30,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT CR and RC, 'incentive' often appears in arguments about policy effectiveness or behavioral change. A common trap is equating 'incentive' with only monetary rewards, when it can include any motivator, such as recognition or reduced effort, which broadens the possible correct answer choices.",
       "memoryHook": "Remember that 'incentive' comes from the Latin 'incendere,' meaning 'to set on fire.' On the GMAT, think of an incentive as the spark that ignites action—whether that spark is money, recognition, or another motivator."
+    },
+    "translations": {
+      "tr": "teşvik edici unsur"
     }
   },
   {
@@ -59,6 +62,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'incumbent' is sometimes paired with 'predecessor' or 'successor' in answer choices, requiring test-takers to distinguish between current and past/future role-holders. Additionally, the word often appears in formal or academic contexts, so recognizing its register helps eliminate less formal distractors.",
       "memoryHook": "Think of 'incumbent' as someone currently 'in' (the prefix 'in-') a position and 'cumbent' from Latin 'cumbere' (to lie down), suggesting the person presently 'lying in' or occupying the office—unlike a predecessor, who has already left."
+    },
+    "translations": {
+      "tr": "görevdeki yetkili"
     }
   },
   {
@@ -90,6 +96,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'subsidy' is often contrasted with terms like 'tax break' or 'grant,' and test-takers may be trapped by confusing direct payments with indirect financial advantages. Recognizing that a subsidy always involves actual government expenditure is crucial for precise RC and CR reasoning.",
       "memoryHook": "Remember that 'subsidy' comes from the Latin 'subsidium,' meaning 'help' or 'assistance.' On GMAT passages, look for it in the context of government payments that actively support industries, unlike tax incentives, which simply reduce what is owed."
+    },
+    "translations": {
+      "tr": "devlet mali yardımı"
     }
   },
   {
@@ -119,6 +128,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'tariff' is often contrasted with 'quota' or 'subsidy' in answer choices; test-takers may confuse these terms because all relate to government intervention in trade, but tariffs specifically involve taxation, not quantity limits or financial support.",
       "memoryHook": "Recall that 'tariff' comes from the Italian 'tariffa,' meaning a list of prices or taxes. In GMAT passages, tariffs always involve money charged on goods crossing borders, unlike quotas, which set numeric limits without directly imposing a fee."
+    },
+    "translations": {
+      "tr": "ithalat vergisi"
     }
   },
   {
@@ -148,6 +160,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, deregulation is often contrasted with terms like 'privatization' or 'liberalization,' and answer choices may test whether you understand that deregulation is about removing rules, not necessarily changing ownership or funding. Watch for scope: deregulation targets regulation, not broader government involvement.",
       "memoryHook": "Remember that deregulation means 'de-' (removal) plus 'regulation' (rules), so it literally means taking away rules. In GMAT economics passages, deregulation often precedes increased competition, but does not mean the government sells off assets—that’s privatization."
+    },
+    "translations": {
+      "tr": "devlet düzenlemelerinin kaldırılması"
     }
   },
   {
@@ -178,6 +193,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'regulation' often appears alongside 'law' or 'policy' in answer choices; test-takers must distinguish that regulations are typically detailed rules set by agencies, not general legislative acts. Be alert for passages where the scope of authority or specificity of the rule is the key to the correct answer.",
       "memoryHook": "Remember that 'regulation' stems from the Latin 'regula,' meaning a straight stick or rule—think of regulatory agencies as the entities that keep industries 'straight' by setting specific rules, unlike broad laws passed by legislatures. On the GMAT, this distinction can be crucial in inference or detail questions."
+    },
+    "translations": {
+      "tr": "resmi kural veya düzenleme"
     }
   },
   {
@@ -208,6 +226,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'scarcity' is often contrasted with 'rarity' or 'poverty' in answer choices. Test-takers should note that 'scarcity' specifically refers to limited supply relative to demand, not just something being uncommon or the presence of poverty, which can be a subtle but critical distinction in RC and CR questions.",
       "memoryHook": "Remember that 'scarcity' comes from the Latin 'scarcitas,' meaning 'limited supply.' In GMAT economics passages, scarcity explains why choices must be made—resources are never unlimited, so allocation and prioritization are necessary. This focus on limitation distinguishes it from mere rarity."
+    },
+    "translations": {
+      "tr": "kıtlık veya yetersizlik"
     }
   },
   {
@@ -237,6 +258,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'monopoly' is sometimes confused with 'oligopoly' or 'cartel' in answer choices; test-takers should note that monopoly implies single-firm control, not merely limited competition. Recognizing this scope is essential for accurately interpreting economic arguments in RC and CR passages.",
       "memoryHook": "Remember that 'monopoly' comes from the Greek roots 'mono-' (one) and 'polein' (to sell), highlighting that only one seller dominates the market—this aligns with GMAT passages discussing single-entity control over supply, unlike markets with several large players."
+    },
+    "translations": {
+      "tr": "piyasa üzerinde tam kontrol"
     }
   },
   {
@@ -267,6 +291,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'stakeholder' is often contrasted with 'shareholder' in answer choices, testing whether you recognize that stakeholders include employees, customers, and communities, not just investors. Precision matters: a correct answer will reflect the broader or narrower scope required by the question’s context.",
       "memoryHook": "Remember that 'stakeholder' comes from 'stake,' meaning 'interest' or 'involvement.' On the GMAT, if a question asks about the impact of a policy on all those affected—not just owners—think 'stakeholder,' which covers a wider range of people than 'shareholder.'"
+    },
+    "translations": {
+      "tr": "çıkar sahibi"
     }
   },
   {
@@ -297,6 +324,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'governance' is often paired with 'government' in answer choices; test-takers should note that governance refers to the broader process or system, not just the ruling body. Recognizing this distinction is crucial when evaluating RC or CR questions about institutional effectiveness or organizational structure.",
       "memoryHook": "Remember that 'governance' comes from the same root as 'to govern,' but it is about the overall system or framework, not just the people in charge. For example, a GMAT passage might discuss 'corporate governance'—not about the board members themselves, but the rules and processes guiding their decisions."
+    },
+    "translations": {
+      "tr": "yönetim biçimi"
     }
   },
   {
@@ -326,6 +356,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, test-takers often conflate 'opportunity cost' with direct monetary loss or with 'sunk cost.' RC and CR questions may hinge on recognizing that opportunity cost is about potential future gains given up, not past investments or explicit financial outlays.",
       "memoryHook": "Recall that 'opportunity cost' is about the 'opportunity' you miss out on by making a choice. In GMAT CR passages, when a company chooses one project over another, the lost benefits of the unchosen project represent the true opportunity cost."
+    },
+    "translations": {
+      "tr": "alternatifin kaybedilen getirisi"
     }
   },
   {
@@ -356,6 +389,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'marginal' often appears in economic or analytical contexts, where it refers to incremental changes (e.g., marginal cost, marginal benefit). Test-takers may confuse it with 'nominal' or 'minimal,' but 'marginal' specifically signals something at the edge or relating to small additional amounts, which can alter the logical scope of an argument or passage.",
       "memoryHook": "Recall 'marginal' from economics: marginal cost is the extra cost for one more unit. On GMAT RC, 'marginal' always signals 'on the edge' or 'just a little more,' not just 'small'—think of the margin of a page, which is the outer edge."
+    },
+    "translations": {
+      "tr": "çok az düzeyde"
     }
   },
   {
@@ -385,6 +421,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, elasticity is often paired with flexibility or adaptability as a distractor, but only elasticity refers to a measurable, often numerical, economic relationship. Test-takers should watch for answer choices that confuse general adaptability with the precise, ratio-based meaning required in economic passages or critical reasoning questions.",
       "memoryHook": "Remember that 'elasticity' comes from 'elastic,' like a rubber band that stretches in response to force. In GMAT economics passages, elasticity measures exactly how much something (like demand) stretches or contracts when another factor (like price) changes."
+    },
+    "translations": {
+      "tr": "esneklik derecesi"
     }
   },
   {
@@ -414,6 +453,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'externality' often appears alongside terms like 'opportunity cost' or 'public good' in answer choices, tempting test-takers to conflate their meanings. The test frequently exploits the scope difference: only externalities refer to third-party effects, not merely costs or benefits to participants.",
       "memoryHook": "Recall that 'externality' contains 'external,' which signals effects that extend outside the immediate parties in a transaction. On the GMAT, externalities often appear in passages about pollution, vaccination, or urban planning—any scenario where actions affect people not directly involved in the original decision."
+    },
+    "translations": {
+      "tr": "dışsal etki"
     }
   },
   {
@@ -443,6 +485,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'diminishing returns' is often a trap when test-takers confuse it with 'no returns' or 'negative returns.' The phrase always implies continued, but reduced, positive output—not a complete halt or a reversal—so precision about the degree of effect is critical.",
       "memoryHook": "Recall the economic context: after a certain point, adding more workers to a fixed-size factory makes each new worker less productive. The root idea is 'diminish' (to become less), so 'diminishing returns' means the benefit from each extra input keeps shrinking, but never turns negative."
+    },
+    "translations": {
+      "tr": "azalan verim"
     }
   },
   {
@@ -472,6 +517,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'economies of scale' is sometimes confused with general efficiency or with cost-cutting that is not tied to increased production volume. Be alert for answer choices that misapply the term to situations where scale is not the driver of reduced costs.",
       "memoryHook": "Remember that 'scale' in this phrase means the size of production. In GMAT business passages, look for references to spreading fixed costs over more units—this spreading is the essence of economies of scale and distinguishes it from unrelated efficiency gains."
+    },
+    "translations": {
+      "tr": "ölçek ekonomileri avantajı"
     }
   },
   {
@@ -502,6 +550,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'barriers to entry' often appears in Reading Comprehension passages about economics or business strategy, and test-takers may be tempted by answer choices that confuse general market challenges with specific, structural obstacles that deter new entrants—precision about what constitutes a true barrier is critical.",
       "memoryHook": "Remember that 'barriers to entry' literally means things that block the 'entry' of new firms into a market—think of a locked gate around an industry, keeping out newcomers unless they can overcome costs, regulations, or other hurdles."
+    },
+    "translations": {
+      "tr": "pazara giriş engelleri"
     }
   },
   {
@@ -531,6 +582,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, answer choices often confuse oligopoly with monopoly or perfect competition; be alert to the number of firms and the nature of competition described in the passage. Recognizing the subtle difference in market influence and strategic interdependence is key to selecting the correct answer, especially in inference or strengthen/weaken questions.",
       "memoryHook": "Remember that 'oligo-' means 'few' in Greek, so an oligopoly is a market controlled by a few firms. On GMAT passages about economics, look for references to industries with several dominant players—this signals oligopoly, not monopoly or perfect competition."
+    },
+    "translations": {
+      "tr": "az sayıda şirketin piyasa hakimiyeti"
     }
   },
   {
@@ -561,6 +615,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'antitrust' is often contrasted with broader regulatory or government intervention terms; a common trap is to conflate general regulation with laws specifically aimed at maintaining competition. Carefully distinguish 'antitrust' as focused on anti-monopoly and competition, not all forms of business oversight.",
       "memoryHook": "Remember that 'antitrust' literally means 'against trust'—where 'trust' refers to large business combinations or monopolies. GMAT passages often discuss antitrust actions in the context of preventing one company from unfairly dominating a market, especially when evaluating mergers or anti-competitive behavior."
+    },
+    "translations": {
+      "tr": "tekel karşıtı"
     }
   },
   {
@@ -591,6 +648,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'concentration' is often confused with 'intensity' or 'focus,' especially in CR and RC passages involving scientific or economic data. Test-takers must note that 'concentration' refers to measurable quantity within a whole, not the strength or focus of an effort or phenomenon.",
       "memoryHook": "Recall that 'concentration' in chemistry means how much of a substance is dissolved in a solution—just as in GMAT passages, it measures 'how much' of something is present relative to the total, not how 'strong' or 'focused' it is."
+    },
+    "translations": {
+      "tr": "bir karışımdaki miktar oranı"
     }
   },
   {
@@ -621,6 +681,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'consolidation' often appears in passages about business strategy or financial restructuring, where it implies a formal, structural combination. Test-takers may confuse it with 'aggregation,' which lacks the sense of integration or increased strength that 'consolidation' carries in these contexts.",
       "memoryHook": "Think of 'consolidation' as solidifying or making something more solid—its Latin root 'solidare' means 'to make solid.' On the GMAT, when companies consolidate, they don't just gather assets; they fuse them into a stronger, unified structure."
+    },
+    "translations": {
+      "tr": "birleşme ve güçlenme"
     }
   },
   {
@@ -650,6 +713,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, protectionism is sometimes paired with 'isolationism' or 'self-sufficiency' as distractors; test-takers must note that protectionism specifically concerns trade policy, not broader political or cultural isolation. Recognizing this scope distinction is crucial for accurately answering RC and CR questions about economic policies.",
       "memoryHook": "Remember that 'protectionism' comes from 'protect,' highlighting its purpose: to shield domestic industries from foreign competition. On the GMAT, passages discussing tariffs or quotas as government interventions are often referencing protectionist policies, so link the term directly to these trade-restricting actions."
+    },
+    "translations": {
+      "tr": "korumacı ticaret politikası"
     }
   },
   {
@@ -679,6 +745,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'equilibrium' is often paired with distractors like 'equality' or 'homeostasis.' Test-takers should note that equilibrium does not necessarily mean all parts are identical or equal—just that forces or influences are balanced, which is crucial in RC passages discussing systems or markets.",
       "memoryHook": "Think of a GMAT economics passage describing market equilibrium: when supply and demand are balanced, prices stabilize. The root 'equilibr-' comes from Latin for 'equal balance,' helping you remember that equilibrium is about opposing forces being in stable balance, not necessarily being identical."
+    },
+    "translations": {
+      "tr": "denge noktası"
     }
   },
   {
@@ -708,6 +777,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'structural' often appears in questions about the role or organization of ideas, not their content or function. A common trap is to select an answer that describes what a part does (its function) rather than how it fits into the passage’s overall structure.",
       "memoryHook": "Remember that 'structural' comes from the Latin 'structura,' meaning 'a fitting together, building.' On the GMAT, if a question asks about 'structural' elements, focus on how the argument or passage is built, not what it accomplishes or asserts."
+    },
+    "translations": {
+      "tr": "yapısal özelliklerle ilgili"
     }
   },
   {
@@ -738,6 +810,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'cyclical' is frequently contrasted with 'sporadic' or 'random' in answer choices. Test-takers should pay attention to whether the passage describes regular, predictable patterns (cyclical) or irregular, unpredictable occurrences, as this distinction is often tested in inference and detail questions.",
       "memoryHook": "Recall that 'cyclical' comes from the root 'cycle,' meaning a circle or recurring sequence. On the GMAT, cyclical trends—such as economic booms and busts—repeat in a pattern, unlike sporadic events, which occur without any predictable order."
+    },
+    "translations": {
+      "tr": "döngüsel olarak tekrar eden"
     }
   },
   {
@@ -767,6 +842,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'zero-sum' is often contrasted with 'positive-sum' or 'non-zero-sum' in answer choices, tempting test-takers to overlook whether the passage actually describes a fixed-pie scenario. Carefully check if the context truly precludes mutual benefit or expansion of resources.",
       "memoryHook": "Remember that in a GMAT passage about negotiations, a 'zero-sum' deal means every dollar one side gains is lost by the other—think of dividing a fixed pie, where no extra slices can be created, only redistributed."
+    },
+    "translations": {
+      "tr": "toplam kazanç sıfır olan"
     }
   },
   {
@@ -796,6 +874,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, answer choices may conflate 'rational actor' with any affected party or assume all actors behave rationally; however, some passages or arguments hinge on exceptions where actors do not act logically. Recognizing this distinction is crucial for accurately evaluating assumptions and logical flaws in CR and RC questions.",
       "memoryHook": "Recall that in GMAT Critical Reasoning, arguments often fail when they assume all parties are rational actors—yet real-world examples (like voters or consumers) sometimes act irrationally. Linking 'rational actor' to economic models helps you spot when the test expects you to challenge that assumption."
+    },
+    "translations": {
+      "tr": "rasyonel karar verici"
     }
   },
   {
@@ -825,6 +906,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, answer choices may conflate 'public good' with any widely beneficial service or confuse it with 'common resource,' which is rivalrous. Recognizing that a true public good is both non-excludable and non-rivalrous is crucial for accurately interpreting RC and CR passages on economics.",
       "memoryHook": "Remember that 'public good' in GMAT economics means something everyone can use without limiting others, like a lighthouse or street lighting. Unlike a 'common resource' (e.g., fisheries), public goods do not get depleted by individual use—a key distinction often tested."
+    },
+    "translations": {
+      "tr": "kamusal yarar"
     }
   },
   {
@@ -855,6 +939,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'free rider' can be confused with 'stakeholder' or 'beneficiary,' but only 'free rider' implies benefiting without contribution. RC and CR questions may test your ability to spot this subtlety, especially in economics or public policy contexts where collective action problems are discussed.",
       "memoryHook": "Recall that in GMAT economics passages, a 'free rider' is like someone who rides the bus without paying the fare—enjoying the service at the expense of those who actually contribute, which can lead to underfunding or inefficiency in public goods."
+    },
+    "translations": {
+      "tr": "bedavacı yararlanan kişi"
     }
   },
   {
@@ -884,6 +971,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'collective action' is often contrasted with individual or unilateral efforts, and answer choices may try to blur the distinction by suggesting that group outcomes can be achieved without cooperation. Test-takers should pay close attention to whether the passage emphasizes group coordination or individual agency.",
       "memoryHook": "Remember that 'collective' comes from the Latin 'collectivus,' meaning 'gathered together.' In GMAT passages, collective action typically appears in economics or social science contexts, such as when multiple firms or countries must work together to solve a problem that no one entity can address alone."
+    },
+    "translations": {
+      "tr": "ortak hareket"
     }
   },
   {
@@ -913,6 +1003,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'price signal' is sometimes paired with distractors like 'price control' or 'price floor,' which refer to regulatory mechanisms rather than market-driven information. Test-takers must distinguish between natural market communication and imposed restrictions, especially in RC passages about economic policy.",
       "memoryHook": "Recall that in economics, 'signal' means information transmission. In a GMAT passage about oil prices rising, the price signal tells producers to drill more and consumers to conserve—it's the market's way of sending a message without words."
+    },
+    "translations": {
+      "tr": "fiyat sinyali"
     }
   },
   {
@@ -944,6 +1037,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'leverage' often appears in business or strategy passages, where it implies not just having resources but using them effectively. Test-takers may misinterpret it as merely possessing assets, missing the nuance of strategic application or amplification.",
       "memoryHook": "Recall that in finance, 'leverage' comes from the idea of a lever—using a small force to move a much larger object. On the GMAT, think of 'leverage' as using what you have to achieve much greater results, not just owning resources."
+    },
+    "translations": {
+      "tr": "avantaj sağlamak için kullanma"
     }
   },
   {
@@ -973,6 +1069,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, liquidity is often paired with solvency as a distractor, since both relate to financial health but differ in time frame and asset type. Be alert to whether the question is about immediate cash needs (liquidity) or long-term debt obligations (solvency).",
       "memoryHook": "Recall that 'liquid' assets flow easily, just like water, meaning they can be quickly turned into cash. On GMAT finance passages, liquidity is about speed and ease of conversion, not the overall amount of assets or long-term financial health."
+    },
+    "translations": {
+      "tr": "nakde kolayca çevrilebilme"
     }
   },
   {
@@ -1003,6 +1102,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "GMAT questions frequently test whether you can distinguish between 'equity' (fairness, possibly requiring unequal treatment) and 'equality' (identical treatment). Answer choices may exploit this by presenting 'equality' as a synonym for 'equity,' so pay close attention to context and intended meaning in RC and CR passages.",
       "memoryHook": "Remember that 'equity' comes from the Latin 'aequitas,' meaning fairness or evenness. In GMAT passages, 'equity' often appears when discussing just distribution of resources or financial stake—think of a company’s 'equity' as what’s fairly owned after debts are paid."
+    },
+    "translations": {
+      "tr": "adalet veya mülkiyet değeri"
     }
   },
   {
@@ -1033,6 +1135,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'liability' is frequently paired with 'asset' to test understanding of financial terminology. A common trap is confusing a liability (a negative or obligation) with an asset (a positive or resource), especially when the passage discusses corporate balance sheets or risk factors.",
       "memoryHook": "Recall that 'liability' comes from the Latin 'ligare,' meaning 'to bind,' which relates to being bound by an obligation or debt. In GMAT passages about business or law, 'liability' signals what a company must pay or what puts it at a disadvantage."
+    },
+    "translations": {
+      "tr": "mali yükümlülük"
     }
   },
   {
@@ -1063,6 +1168,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'capital-intensive' is often contrasted with 'labor-intensive' to test understanding of economic structures. A common trap is assuming 'capital-intensive' simply means 'expensive,' when it specifically refers to the proportion of capital versus labor required, which affects strategic decisions and risk profiles.",
       "memoryHook": "Recall that 'capital' refers to financial resources or assets, not a city. On the GMAT, a capital-intensive industry like automobile manufacturing requires vast investments in factories and machinery, unlike a labor-intensive industry such as hospitality, which relies more on human workers."
+    },
+    "translations": {
+      "tr": "yüksek sermaye gerektiren"
     }
   },
   {
@@ -1093,6 +1201,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, diversification is sometimes paired with specialization as a distractor, especially in RC passages about business strategy. Test-takers should note that diversification implies risk reduction through variety, whereas specialization implies depth in a single area, which may increase risk if that area falters.",
       "memoryHook": "Think of a mutual fund: its value lies in diversification, holding many types of assets to minimize the impact if any one investment performs poorly. On the GMAT, remember that diversification means not putting all your eggs in one basket."
+    },
+    "translations": {
+      "tr": "çeşitlendirme stratejisi"
     }
   },
   {
@@ -1123,6 +1234,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'hedge' often appears in answer choices that refer to an author's tone or argument structure; test-takers may confuse it with 'qualify,' but 'hedge' signals a lack of full commitment rather than just adding conditions. Recognizing this subtlety can help avoid trap answers that overstate certainty.",
       "memoryHook": "Think of a hedge as a barrier or fence—just as a literal hedge creates a boundary, to 'hedge' in argumentation means to put up verbal barriers, preventing a statement from being fully exposed or committed. On GMAT passages, this often signals cautious or noncommittal reasoning."
+    },
+    "translations": {
+      "tr": "net cevap vermekten kaçınmak"
     }
   },
   {
@@ -1153,6 +1267,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, answer choices involving 'speculation' often tempt test-takers by presenting plausible but unsupported extensions of the passage. Recognizing when an option is speculative, rather than a warranted inference, is crucial for avoiding trap answers that go beyond the text’s scope.",
       "memoryHook": "Recall that 'speculation' comes from the Latin 'speculari,' meaning 'to observe.' On the GMAT, however, speculation is what happens when you move from mere observation to unsupported guessing—so beware of answer choices that leap beyond the evidence."
+    },
+    "translations": {
+      "tr": "kanıtsız varsayım"
     }
   },
   {
@@ -1182,6 +1299,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'bubble' is sometimes paired with 'boom' or 'growth' as a distractor, but only 'bubble' implies an imminent collapse due to lack of underlying support. Recognizing this negative implication is crucial for accurately interpreting passages about economic phenomena.",
       "memoryHook": "Recall the image of a soap bubble: it expands quickly and looks impressive, but its structure is fragile and it bursts suddenly—just like a financial 'bubble' that grows rapidly without real support and then collapses, a pattern often discussed in GMAT economics passages."
+    },
+    "translations": {
+      "tr": "ani fiyat artışı ve çöküşü"
     }
   },
   {
@@ -1211,6 +1331,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, deflation is sometimes paired with 'disinflation' as a distractor; test-takers must recognize that deflation involves an absolute drop in prices, not just a slower rate of increase. RC and CR passages may exploit this subtlety to test economic reasoning or vocabulary precision.",
       "memoryHook": "Remember that 'deflation' shares the root 'de-' (meaning down or away) with 'decrease,' which matches its economic meaning: prices are going down. On the GMAT, look for context clues about falling prices or negative inflation rates to confirm deflation."
+    },
+    "translations": {
+      "tr": "genel fiyatlarda düşüş"
     }
   },
   {
@@ -1240,6 +1363,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'fiscal' is often contrasted with 'monetary' in reading comprehension and critical reasoning passages. Test-takers may incorrectly treat these as interchangeable, but 'fiscal' always refers to budgets and spending, not central bank actions or money supply.",
       "memoryHook": "Recall that 'fiscal' comes from the Latin 'fiscus,' meaning treasury or purse. On the GMAT, if you see references to government budgets, spending, or taxation, 'fiscal' is the precise term, while 'monetary' would signal central bank or currency issues."
+    },
+    "translations": {
+      "tr": "maliyle ilgili"
     }
   },
   {
@@ -1270,6 +1396,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'monetary' is often contrasted with 'fiscal' to test understanding of economic terminology. A common trap is confusing the scope: 'monetary' is about central banking and money supply, not government budgets or taxation, which are 'fiscal' matters.",
       "memoryHook": "Remember 'monetary' by linking it to 'money'—both share the Latin root 'moneta,' meaning coin or mint. On the GMAT, if a passage discusses central banks or money supply, 'monetary' is the precise term, not 'fiscal.'"
+    },
+    "translations": {
+      "tr": "parasal"
     }
   },
   {
@@ -1300,6 +1429,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'commodity' is often contrasted with 'finished goods' or 'manufactured products'—a distinction that can be critical for answering questions about supply chains or economic arguments. Watch for answer choices that conflate commodities with all types of goods; GMAT passages use the term with precision.",
       "memoryHook": "Recall that 'commodity' comes from the Latin 'commoditas,' meaning 'convenience' or 'usefulness.' On the GMAT, think of oil, wheat, or gold—raw materials traded globally and valued for their interchangeability, not uniqueness. This standardization is what distinguishes commodities from other goods."
+    },
+    "translations": {
+      "tr": "ticari mal"
     }
   },
   {
@@ -1329,6 +1461,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, a common trap is confusing monopsony with monopoly, especially in passages discussing market power; the test may present both terms as answer choices, requiring careful attention to whether the passage discusses buyers or sellers. Precision in identifying the direction of market control is crucial for correct answers.",
       "memoryHook": "The word 'monopsony' combines 'mono-' (one) and '-opsony' (purchase), highlighting a market with one buyer. In GMAT RC passages about labor markets, look for contexts where a single employer sets wages—this signals a monopsony, not a monopoly."
+    },
+    "translations": {
+      "tr": "tek alıcının egemen olduğu piyasa"
     }
   },
   {
@@ -1358,6 +1493,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, test-takers may confuse 'countercyclical' with 'procyclical' due to their similar forms and economic context. RC and CR questions often hinge on whether a policy stabilizes or amplifies economic swings, so precision in identifying directional relationships is crucial for correct answers.",
       "memoryHook": "Recall that 'counter-' means 'against' and 'cyclical' refers to cycles. In GMAT passages, countercyclical policies act as a brake during booms and a boost during busts, countering the natural ups and downs of the economic cycle."
+    },
+    "translations": {
+      "tr": "ekonomik döngüye ters hareket eden"
     }
   },
   {
@@ -1388,6 +1526,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'secular' is sometimes paired with 'profane' as a distractor, but only 'secular' is appropriate for neutral, non-religious contexts. Test-takers should also note that 'secular' does not mean 'anti-religious' or 'disrespectful,' a trap sometimes exploited in answer choices.",
       "memoryHook": "Recall that 'secular' comes from the Latin 'saeculum,' meaning 'world' or 'age.' On the GMAT, think of 'secular' as describing worldly trends—such as economic cycles or social changes—that are independent of religious or spiritual factors."
+    },
+    "translations": {
+      "tr": "dünyevi"
     }
   },
   {
@@ -1417,6 +1558,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'path-dependent' is often contrasted with terms like 'deterministic' or 'random,' and test-takers may be trapped by answer choices that ignore the importance of sequence. Recognizing that path-dependence requires attention to the order of events is crucial in RC and CR contexts.",
       "memoryHook": "Remember that 'path-dependent' comes from economics and social sciences, where it describes situations—such as technology adoption—where early choices lock in future options. On the GMAT, if a passage stresses how earlier events constrain later outcomes, 'path-dependent' is the precise term."
+    },
+    "translations": {
+      "tr": "önceki adımlara bağlı gelişen"
     }
   },
   {
@@ -1446,6 +1590,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'rent-seeking' is often contrasted with legitimate business activity; answer choices may conflate it with general profit motives or entrepreneurship. Recognizing that rent-seeking specifically involves gaining advantage through non-productive, often political, means is crucial for distinguishing correct answers in RC and CR passages.",
       "memoryHook": "Remember that 'rent' in 'rent-seeking' comes from economics, where it means unearned income. On the GMAT, think of companies lobbying for special tax breaks—not by innovating, but by manipulating rules to extract extra profit without creating new value."
+    },
+    "translations": {
+      "tr": "ayrıcalık elde etme çabası"
     }
   },
   {
@@ -1475,6 +1622,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'arbitrage' is often contrasted with 'speculation' in answer choices; test-takers may be tempted to conflate the two, but arbitrage specifically refers to risk-free profit from price discrepancies, not merely betting on market movements. Recognizing this precision is critical in RC and CR questions involving economics.",
       "memoryHook": "Remember that 'arbitrage' comes from the French 'arbitrer,' meaning 'to judge'—think of an arbitrageur as a judge who spots unfair prices in different markets and acts to balance them, profiting from the difference without taking on risk."
+    },
+    "translations": {
+      "tr": "fiyat farkından kazanç sağlama"
     }
   },
   {
@@ -1505,6 +1655,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'fungible' is often contrasted with terms like 'unique' or 'distinct,' especially in RC passages about economics or law. Test-takers may be tempted by answer choices that conflate interchangeability with mere similarity, but 'fungible' specifically requires complete substitutability—a scope distinction critical for precise GMAT reasoning.",
       "memoryHook": "Remember that 'fungible' comes from the Latin 'fungi,' meaning 'to perform'—so fungible assets can 'perform' the same function as any other identical unit. In GMAT RC, commodities like gold or oil are classic examples: any ounce is as good as any other."
+    },
+    "translations": {
+      "tr": "değiştirilebilir varlık"
     }
   },
   {
@@ -1534,6 +1687,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'counterfactual' often appears in arguments or passages that hinge on alternative outcomes; a common trap is confusing it with 'hypothetical,' which is broader and does not always require contradiction of fact. Precision matters: 'counterfactual' always involves an explicit departure from what actually happened.",
       "memoryHook": "Remember that 'counterfactual' literally means 'counter to the facts.' On the GMAT, it signals reasoning based on what did not happen but could have under different conditions, such as 'If X had occurred, Y would not have resulted,' which is a frequent structure in critical reasoning questions."
+    },
+    "translations": {
+      "tr": "gerçekleşmemiş varsayımsal durumlarla ilgili"
     }
   },
   {
@@ -1563,6 +1719,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'ceteris paribus' is often used to signal that an argument’s logic depends on isolating variables; answer choices that ignore this constraint or assume additional changes can be traps, especially in critical reasoning questions about causality or predictions.",
       "memoryHook": "Remember that 'ceteris paribus' literally means 'other things equal' in Latin; on the GMAT, it flags that you must not assume any hidden variable is changing—just like a scientist running a controlled experiment with only one variable altered."
+    },
+    "translations": {
+      "tr": "diğer her şey sabitken"
     }
   },
   {
@@ -1592,6 +1751,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'asymmetric information' is often paired with 'imperfect information' as a distractor; test-takers must recognize that only the former implies a systematic advantage for one party. RC and CR questions may hinge on this distinction to test your understanding of economic reasoning.",
       "memoryHook": "Recall that 'asymmetric' means 'not symmetric'—the information is not equally shared. In GMAT economics passages, look for scenarios where sellers know something buyers do not (like used car markets), which is classic asymmetric information leading to adverse selection."
+    },
+    "translations": {
+      "tr": "bilgi asimetrisi"
     }
   },
   {
@@ -1621,6 +1783,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, 'moral hazard' often appears alongside 'adverse selection' as a distractor; test-takers must distinguish whether the risk arises from post-agreement behavior (moral hazard) or pre-agreement hidden information (adverse selection). Precision in identifying timing and causality is frequently tested.",
       "memoryHook": "Remember that 'moral hazard' involves a 'hazard' (risk) to 'morals' (behavior), specifically when someone is tempted to act irresponsibly because they won’t bear the full consequences—like a bank making risky loans knowing it will be bailed out, a classic GMAT example."
+    },
+    "translations": {
+      "tr": "ahlaki tehlike riski"
     }
   },
   {
@@ -1650,6 +1815,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, adverse selection is frequently paired with 'moral hazard' as a distractor; test-takers must distinguish whether the scenario involves pre-contract hidden information (adverse selection) or post-contract risky behavior (moral hazard). Precision in identifying the timing and nature of the information asymmetry is critical.",
       "memoryHook": "Remember that 'adverse' means 'harmful,' and in adverse selection, the 'harm' comes from the wrong people (often the riskiest) being selected due to hidden information—like unhealthy individuals seeking insurance. GMAT passages often use insurance or financial markets to illustrate this hidden risk."
+    },
+    "translations": {
+      "tr": "asimetrik bilgi sorunu"
     }
   },
   {
@@ -1679,6 +1847,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, bounded rationality is often contrasted with perfect rationality in answer choices, especially in passages discussing economic models or behavioral science. Test-takers must recognize that bounded rationality introduces realistic constraints, which can alter conclusions or weaken arguments based on idealized assumptions.",
       "memoryHook": "Think of 'bounded' as setting boundaries around rational thinking—real people make decisions within limits, unlike economic models that assume unlimited reasoning. On the GMAT, bounded rationality often appears in passages explaining why actual choices deviate from theoretical predictions."
+    },
+    "translations": {
+      "tr": "sınırlı rasyonellik"
     }
   },
   {
@@ -1708,6 +1879,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, answer choices may conflate 'principal-agent' with general stakeholder or partnership concepts. Test-takers must recognize that 'principal-agent' specifically involves delegated authority and potential misaligned incentives, which is narrower than broader terms like 'stakeholder' or 'partner' often used as distractors.",
       "memoryHook": "Recall that in economics and business GMAT passages, 'principal-agent' issues often involve managers (agents) making decisions for owners (principals), with problems arising when their goals differ—think of a CEO (agent) spending company money in ways shareholders (principals) might not prefer."
+    },
+    "translations": {
+      "tr": "vekil-asil ilişkisi"
     }
   },
   {
@@ -1737,6 +1911,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, 'tragedy of the commons' is often paired with 'free rider problem' as a distractor, since both involve public goods but differ in mechanism—overuse versus under-contribution. Recognizing this distinction is critical, especially in RC or CR questions about policy or collective behavior.",
       "memoryHook": "Remember that 'commons' refers to shared resources, like communal grazing land. On the GMAT, this phrase often appears in passages about environmental policy, where unregulated use by individuals leads to depletion, illustrating how rational individual choices can yield collectively irrational outcomes."
+    },
+    "translations": {
+      "tr": "ortak kaynakların aşırı kullanımı sorunu"
     }
   },
   {
@@ -1766,6 +1943,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On GMAT RC and CR, solvency is sometimes confused with liquidity, but the former addresses long-term financial health, not just immediate cash flow. Test-takers must identify whether the passage or argument is about enduring obligations or short-term payments to avoid a common distractor.",
       "memoryHook": "Recall that 'solvency' shares its root with 'solve,' meaning to untangle or resolve. In GMAT finance passages, solvency is about whether an entity can 'solve' its debts over the long haul, not just pay bills today—that’s liquidity."
+    },
+    "translations": {
+      "tr": "ödeme gücü"
     }
   },
   {
@@ -1795,6 +1975,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, answer choices often conflate comparative advantage with absolute advantage; test-takers must focus on opportunity cost rather than sheer productivity. RC and CR questions may hinge on recognizing that specialization should be based on comparative, not absolute, advantage for optimal outcomes.",
       "memoryHook": "Recall that 'comparative' signals a comparison of opportunity costs, not total output. In GMAT passages about trade, look for scenarios where parties benefit by specializing, even if one is less efficient at everything—this highlights the subtle but crucial role of comparative advantage."
+    },
+    "translations": {
+      "tr": "karşılaştırmalı üstünlük"
     }
   },
   {
@@ -1824,6 +2007,9 @@ export const STACK_PACK: readonly StackPackRow[] = [
       },
       "nuanceNote": "On the GMAT, regulatory capture is often contrasted with concepts like impartial regulation or self-regulation. A common trap is to conflate any industry involvement in rule-making with capture, but the GMAT uses the term only when a public agency’s independence is compromised, not merely when industry voices are present.",
       "memoryHook": "Recall that 'capture' here means the agency is 'taken over' by the industry it regulates, much like a referee in a game secretly joining one team. In GMAT passages, watch for signs that regulators are no longer acting independently but are serving private interests."
+    },
+    "translations": {
+      "tr": "düzenleyici kurumların sektör etkisi altına girmesi"
     }
   }
 ]
