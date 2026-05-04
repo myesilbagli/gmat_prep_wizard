@@ -77,6 +77,11 @@ export type VocabItem = {
   translations?: Record<string, string>
   status: VocabStatus
   flagged: boolean
+  /**
+   * User-applied reserved tags (e.g. `'known'`); see `shared/wordTags.ts`.
+   * Independent of `flagged`. Optional on legacy docs that predate the field.
+   */
+  tags?: string[]
   /** Weighted exposure count; drives `status` with `MASTERED_MIN_SCORE` in exposureScore.ts */
   exposureScore: number
   /** YYYY-MM-DD (user timezone) when MCQ was answered correctly; deduped ascending */

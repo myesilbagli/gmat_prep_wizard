@@ -2,6 +2,7 @@ import { formatDateKeyInTimezone } from './dateInTimezone'
 import { bucketFromWord } from './learningBuckets'
 import { MASTERED_MIN_SCORE, timestampToMillis } from './exposureScore'
 import type { VocabItem } from './types'
+import { isKnownWord } from './wordTags'
 
 const DEFAULT_BATCH = 5
 
@@ -16,7 +17,8 @@ function isLearning(item: VocabItem): boolean {
  * Pool: learning only. Priorities: (1) recently wrong, (2) lowest score / oldest save,
  * (3) longest unseen (null lastSeenAt first).
  */
-export function pickSessionBatchFive(items: VocabItem[], max: number = DEFAULT_BATCH): VocabItem[] {
+export function pickSessionBatchFive(allItems: VocabItem[], max: number = DEFAULT_BATCH): VocabItem[] {
+  const items = allItems.filter((w) => !isKnownWord(w))
   const pool = items.filter(isLearning)
   if (pool.length <= max) return pool.slice()
 
@@ -89,9 +91,10 @@ export function formatSessionBatchComposition(slots: { role: SessionSlotRole }[]
 }
 
 export function pickSessionBatchTwelve(
-  items: VocabItem[],
+  allItems: VocabItem[],
   args: { nowMs: number; userTimezone: string },
 ): SessionBatchTwelve {
+  const items = allItems.filter((w) => !isKnownWord(w))
   const { nowMs, userTimezone } = args
   const todayKey = formatDateKeyInTimezone(new Date(nowMs), userTimezone)
 
@@ -233,9 +236,10 @@ export type SessionBatchTen = {
  * Same ranking functions and deficit logic as `pickSessionBatchTwelve`; only caps and total size differ.
  */
 export function pickSessionBatchTen(
-  items: VocabItem[],
+  allItems: VocabItem[],
   args: { nowMs: number; userTimezone: string },
 ): SessionBatchTen {
+  const items = allItems.filter((w) => !isKnownWord(w))
   const { nowMs, userTimezone } = args
   const todayKey = formatDateKeyInTimezone(new Date(nowMs), userTimezone)
 

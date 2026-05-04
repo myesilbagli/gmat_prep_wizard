@@ -13,6 +13,7 @@ import {
 import type { GeneratedResult } from '@shared/types'
 import { getStackImportResult } from '@shared/wordStackContent'
 import { mergeTranslationsForSave } from '@shared/vocab'
+import { WORD_TAG_KNOWN } from '@shared/wordTags'
 import { auth, db } from './firebase'
 
 function requireUserId(): string {
@@ -34,6 +35,8 @@ export async function saveWordFromStackImport(params: {
   mainLanguage?: string
   stackId: string
   stackPosition: number
+  /** When true, persists the reserved `'known'` tag so the word is excluded from sessions. */
+  markKnown?: boolean
 }) {
   return saveWord({
     text: params.text,
@@ -42,6 +45,7 @@ export async function saveWordFromStackImport(params: {
     source: 'stack',
     stackId: params.stackId,
     stackPosition: params.stackPosition,
+    markKnown: params.markKnown,
   })
 }
 
@@ -56,6 +60,12 @@ export async function saveWord(params: {
   stackPosition?: number
   /** User-created stacks; omit on update to preserve existing membership. */
   userStackIds?: string[]
+  /**
+   * When `true`, ensures the reserved `'known'` tag is present on the saved doc.
+   * Write-only signal: `false`/`undefined` is identical and never removes an
+   * existing `'known'` tag — use `toggleWordKnown(id, false)` to remove.
+   */
+  markKnown?: boolean
 }) {
   const uid = requireUserId()
   const normalizedText = params.text.trim().replace(/\s+/g, ' ')
@@ -171,7 +181,13 @@ export async function saveWord(params: {
       const prev = prevData
       const mergedWordSource =
         params.source === 'stack' ? 'word_stack' : (prev.wordSource as string) || wordSource
-      const preservedTags = Array.isArray(prev.tags) ? prev.tags : []
+      const preservedTags: string[] = Array.isArray(prev.tags)
+        ? prev.tags.map((x: unknown) => String(x).trim()).filter(Boolean)
+        : []
+      const nextTags =
+        params.markKnown === true && !preservedTags.includes(WORD_TAG_KNOWN)
+          ? [...preservedTags, WORD_TAG_KNOWN]
+          : preservedTags
       transaction.update(wordRef, {
         ...contentPayload,
         ...legacyStripOnUpdate,
@@ -199,7 +215,7 @@ export async function saveWord(params: {
             ? prev.lastSessionSwipe
             : undefined,
         status: typeof prev.status === 'string' ? prev.status : 'learning',
-        tags: preservedTags,
+        tags: nextTags,
       })
       return { id: existingId }
     }
@@ -216,7 +232,7 @@ export async function saveWord(params: {
       ...(params.stackId != null ? { stackId: params.stackId } : {}),
       ...(params.stackPosition != null ? { stackPosition: params.stackPosition } : {}),
       userStackIds: nextUserStackIds,
-      tags: [],
+      tags: params.markKnown === true ? [WORD_TAG_KNOWN] : [],
       createdAt: serverTimestamp(),
     })
     return { id: wordRef.id }

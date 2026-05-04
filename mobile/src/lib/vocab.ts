@@ -23,6 +23,7 @@ import {
   normalizeRawVocabDoc,
   rawStatusNeedsFirestoreMigration,
 } from '@shared/vocab'
+import { WORD_TAG_KNOWN } from '@shared/wordTags'
 import { auth, db } from './firebase'
 import { ensureUserProfileDefaults, getTodayKey } from './userProfile'
 
@@ -80,6 +81,32 @@ export async function toggleVocabFlagged(params: { id: string; flagged: boolean 
   const uid = requireUserId()
   const ref = doc(db, 'users', uid, 'words', params.id)
   await updateDoc(ref, { flagged: params.flagged, updatedAt: serverTimestamp() })
+}
+
+/**
+ * Add or remove the reserved `'known'` tag on a word. Independent of `flagged`
+ * (a word can be both starred and known). Known words are excluded from session
+ * pickers; see `shared/sessionPlanner.ts` and `shared/wordTags.ts`.
+ *
+ * Transactional so we dedupe / remove without clobbering concurrent tag writes.
+ */
+export async function toggleWordKnown(wordId: string, known: boolean): Promise<void> {
+  const uid = requireUserId()
+  const ref = doc(db, 'users', uid, 'words', wordId)
+  await runTransaction(db, async (transaction) => {
+    const snap = await transaction.get(ref)
+    if (!snap.exists()) throw new Error('Word not found.')
+    const data = snap.data() as Record<string, unknown>
+    const prev: string[] = Array.isArray(data.tags)
+      ? data.tags.map((x: unknown) => String(x).trim()).filter(Boolean)
+      : []
+    const has = prev.includes(WORD_TAG_KNOWN)
+    let next: string[]
+    if (known && !has) next = [...prev, WORD_TAG_KNOWN]
+    else if (!known && has) next = prev.filter((t) => t !== WORD_TAG_KNOWN)
+    else return
+    transaction.update(ref, { tags: next, updatedAt: serverTimestamp() })
+  })
 }
 
 export async function deleteVocabItem(id: string) {

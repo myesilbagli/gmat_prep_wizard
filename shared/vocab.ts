@@ -158,6 +158,10 @@ export function normalizeRawVocabDoc(id: string, data: any): VocabItem {
     ? data.userStackIds.map((x: unknown) => String(x).trim()).filter(Boolean)
     : []
 
+  const tags: string[] = Array.isArray(data.tags)
+    ? data.tags.map((x: unknown) => String(x).trim()).filter(Boolean)
+    : []
+
   const correctDaysCount = normalizeCorrectDaysCount(data.correctDaysCount)
   const lastIntroducedAt =
     data.lastIntroducedAt === null || data.lastIntroducedAt === undefined ? null : data.lastIntroducedAt
@@ -213,6 +217,7 @@ export function normalizeRawVocabDoc(id: string, data: any): VocabItem {
     ...(stackId !== undefined ? { stackId } : {}),
     ...(stackPosition !== undefined ? { stackPosition } : {}),
     userStackIds,
+    ...(tags.length ? { tags } : {}),
     createdAt: data.createdAt,
     updatedAt: data.updatedAt,
   }

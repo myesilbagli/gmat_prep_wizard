@@ -1,10 +1,16 @@
 import type { LearningBucket, VocabItem } from './types'
+import { isKnownWord } from './wordTags'
 
 export type DeckBucketCounts = {
   new: number
   learning: number
   familiar: number
   mastered: number
+  /**
+   * Words carrying the reserved `'known'` tag. Excluded from the four learning
+   * buckets above to avoid double-counting; see `countDeckBuckets`.
+   */
+  known: number
   flagged: number
 }
 
@@ -41,14 +47,24 @@ export function countDeckBuckets(items: VocabItem[]): DeckBucketCounts {
   let l = 0
   let f = 0
   let m = 0
+  let k = 0
   let flagged = 0
   for (const i of items) {
+    if (isKnownWord(i)) {
+      k += 1
+      // `flagged` counts all starred words regardless of known status — the two
+      // are independent user intents (review priority vs session exclusion).
+      if (i.flagged) flagged += 1
+      continue
+    }
     const b = bucketFromWord(i)
     if (b === 'new') n += 1
     else if (b === 'learning') l += 1
     else if (b === 'familiar') f += 1
     else m += 1
+    // `flagged` counts all starred words regardless of known status — the two
+    // are independent user intents (review priority vs session exclusion).
     if (i.flagged) flagged += 1
   }
-  return { new: n, learning: l, familiar: f, mastered: m, flagged }
+  return { new: n, learning: l, familiar: f, mastered: m, known: k, flagged }
 }
