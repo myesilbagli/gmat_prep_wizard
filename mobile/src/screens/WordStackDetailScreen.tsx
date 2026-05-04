@@ -1,32 +1,32 @@
-import { useMemo, useState } from 'react'
-import { ActivityIndicator, Alert, FlatList, Pressable, Text, View } from 'react-native'
+import { useMemo } from 'react'
+import { FlatList, Pressable, Text, View } from 'react-native'
 import { MaterialIcons } from '@expo/vector-icons'
-import { FREE_MAX_SAVED_WORDS, WORD_STACK_CATALOG, canAccessStack } from '@shared/freemium'
+import { WORD_STACK_CATALOG, canAccessStack } from '@shared/freemium'
 import { getWordsForStack } from '@shared/wordStackContent'
 import type { VocabItem } from '@shared/types'
 import { GlassScreenRoot, useGlassFonts } from '../components/GlassUi'
 import { useSubscription } from '../context/SubscriptionContext'
-import { saveWordFromStackImport } from '../lib/words'
 import type { AppTheme } from '../theme'
 
 export function WordStackDetailScreen({
   theme,
   stackId,
-  mainLanguage,
   items,
   onBack,
-  onReload,
+  onOpenTriage,
 }: {
   theme: AppTheme
   stackId: string
-  mainLanguage: string
+  /** Preserved for parent-prop compatibility; unused now that triage owns the import flow. */
+  mainLanguage?: string
   items: VocabItem[]
   onBack: () => void
-  onReload: () => Promise<void>
+  /** Preserved for parent-prop compatibility; triage screen handles its own re-load on per-card commits. */
+  onReload?: () => Promise<void>
+  onOpenTriage: (stackId: string) => void
 }) {
   const { fontBody, fontHeadlineSm, fontLabelBold } = useGlassFonts()
   const { isPro, openPaywall } = useSubscription()
-  const [adding, setAdding] = useState(false)
 
   const stack = useMemo(() => WORD_STACK_CATALOG.find((s) => s.id === stackId), [stackId])
   const words = useMemo(() => getWordsForStack(stackId), [stackId])
@@ -37,55 +37,6 @@ export function WordStackDetailScreen({
     const set = new Set(items.map((i) => (i.textLower ?? i.text.trim().toLowerCase())))
     return (w: string) => set.has(w.trim().toLowerCase())
   }, [items])
-
-  async function addAllToDeck() {
-    if (!stack || !unlocked) {
-      openPaywall()
-      return
-    }
-    setAdding(true)
-    let added = 0
-    let skippedDup = 0
-    let stoppedForLimit = false
-
-    try {
-      let deckCount = items.length
-      for (let idx = 0; idx < words.length; idx++) {
-        const w = words[idx]!
-        const key = w.trim().toLowerCase()
-        if (inDeck(w)) {
-          skippedDup++
-          continue
-        }
-        if (!isPro && deckCount >= FREE_MAX_SAVED_WORDS) {
-          openPaywall()
-          stoppedForLimit = true
-          break
-        }
-        await saveWordFromStackImport({ text: w, mainLanguage, stackId, stackPosition: idx })
-        deckCount += 1
-        added++
-      }
-      await onReload()
-      if (stoppedForLimit) {
-        Alert.alert(
-          'Word limit',
-          `Added ${added} new word${added === 1 ? '' : 's'}. Upgrade to Pro for unlimited saves and all stacks.`,
-        )
-      } else if (added > 0) {
-        Alert.alert(
-          'Added to deck',
-          `Imported ${added} word${added === 1 ? '' : 's'}.${skippedDup ? ` ${skippedDup} were already in your deck.` : ''}`,
-        )
-      } else if (skippedDup === words.length) {
-        Alert.alert('Already saved', 'Every word in this pack is already in your deck.')
-      }
-    } catch (e) {
-      Alert.alert('Could not add', e instanceof Error ? e.message : 'Something went wrong.')
-    } finally {
-      setAdding(false)
-    }
-  }
 
   if (!stack) {
     return (
@@ -99,8 +50,6 @@ export function WordStackDetailScreen({
       </GlassScreenRoot>
     )
   }
-
-  const notYetInDeck = words.filter((w) => !inDeck(w)).length
 
   return (
     <GlassScreenRoot theme={theme}>
@@ -138,9 +87,9 @@ export function WordStackDetailScreen({
               openPaywall()
               return
             }
-            void addAllToDeck()
+            onOpenTriage(stackId)
           }}
-          disabled={adding || words.length === 0 || (unlocked && notYetInDeck === 0)}
+          disabled={words.length === 0}
           style={{
             flexDirection: 'row',
             alignItems: 'center',
@@ -149,20 +98,14 @@ export function WordStackDetailScreen({
             paddingVertical: 14,
             borderRadius: 14,
             backgroundColor: unlocked ? theme.learnAccent : theme.learnOutline,
-            opacity: adding || words.length === 0 || (unlocked && notYetInDeck === 0) ? 0.55 : 1,
+            opacity: words.length === 0 ? 0.55 : 1,
             marginBottom: 16,
           }}
         >
-          {adding ? (
-            <ActivityIndicator color={theme.learnPillActiveText} />
-          ) : (
-            <>
-              <MaterialIcons name="playlist-add" size={22} color={theme.learnPillActiveText} />
-              <Text style={{ fontFamily: fontLabelBold, fontSize: 16, color: theme.learnPillActiveText, fontWeight: '800' }}>
-                {!unlocked ? 'Unlock with Pro' : notYetInDeck === 0 ? 'All words in deck' : `Add ${notYetInDeck} to my deck`}
-              </Text>
-            </>
-          )}
+          <MaterialIcons name="playlist-add" size={22} color={theme.learnPillActiveText} />
+          <Text style={{ fontFamily: fontLabelBold, fontSize: 16, color: theme.learnPillActiveText, fontWeight: '800' }}>
+            {!unlocked ? 'Unlock with Pro' : 'Triage and add'}
+          </Text>
         </Pressable>
 
         {!unlocked ? (

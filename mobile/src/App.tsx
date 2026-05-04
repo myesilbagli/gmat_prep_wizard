@@ -30,6 +30,7 @@ import { LearnScreen } from './screens/LearnScreen'
 import { WordStackBrowseScreen } from './screens/WordStackBrowseScreen'
 import { UserStackDetailScreen } from './screens/UserStackDetailScreen'
 import { WordStackDetailScreen } from './screens/WordStackDetailScreen'
+import { StackTriageScreen } from './screens/StackTriageScreen'
 import { SignInScreen } from './screens/SignInScreen'
 import { SignUpScreen } from './screens/SignUpScreen'
 import { createReadingSession, type ReadingSession } from './reading/readingSession'
@@ -147,6 +148,7 @@ type LearnFlow =
   | { screen: 'stacks' }
   | { screen: 'detail'; stackId: string }
   | { screen: 'userStack'; userStackId: string }
+  | { screen: 'stack_triage'; stackId: string }
 
 type PracticeFlow =
   | { screen: 'hub' }
@@ -385,6 +387,18 @@ function MainTabs({
                     onBack={() => setLearnFlow({ screen: 'main' })}
                     onReload={reloadItems}
                   />
+                ) : learnFlow.screen === 'stack_triage' ? (
+                  <StackTriageScreen
+                    theme={theme}
+                    stackId={learnFlow.stackId}
+                    mainLanguage={mainLanguage}
+                    items={items}
+                    onClose={() =>
+                      setLearnFlow({ screen: 'detail', stackId: learnFlow.stackId })
+                    }
+                    onReload={reloadItems}
+                    onSwitchToTodayTab={() => setTab('today')}
+                  />
                 ) : (
                   <WordStackDetailScreen
                     theme={theme}
@@ -393,6 +407,9 @@ function MainTabs({
                     items={items}
                     onBack={() => setLearnFlow({ screen: 'stacks' })}
                     onReload={reloadItems}
+                    onOpenTriage={(sid) =>
+                      setLearnFlow({ screen: 'stack_triage', stackId: sid })
+                    }
                   />
                 )
               ) : null}
