@@ -11,6 +11,7 @@ import {
 } from '../../shared/generateGmCardPrompt'
 import { parseJsonFromOutputText } from '../../shared/parseOpenAiJson'
 import { validateGeneratedResult } from '../../shared/wordGeneration'
+import type { RcDifficulty } from '../../shared/rcTypes'
 
 setGlobalOptions({ region: 'us-central1' })
 
@@ -120,6 +121,13 @@ export const api = onRequest(
 
       if (url.startsWith('/generateParagraph')) {
         await handleGenerateParagraph(req.body as any, decoded.uid, res)
+        return
+      }
+
+      // RC routes must come BEFORE /generate, since /generate is a prefix-match
+      // catch-all in this router and would otherwise swallow them.
+      if (url.startsWith('/generateRcPassage')) {
+        await handleGenerateRcPassage(req.body as any, decoded.uid, res)
         return
       }
 
@@ -457,6 +465,269 @@ async function handleGenerateParagraph(body: any, uid: string, res: any) {
   }
 
   res.status(502).json({ error: 'AI could not generate a valid paragraph structure' })
+}
+
+// =====================================================================
+// RC (Reading Comprehension) — Stage 1: passage generation
+// =====================================================================
+
+const RC_DIFFICULTY_SPEC: Record<RcDifficulty, string> = {
+  easy: [
+    'WORD COUNT: 350-380 words.',
+    'PARAGRAPH COUNT: exactly 2 paragraphs.',
+    'VOCABULARY: standard academic; advanced terms only when load-bearing.',
+    'SENTENCE LENGTH: average 18-25 words; mix shorter and longer.',
+    'TOPIC SCOPE: business cases, accessible science, social science.',
+    'ARGUMENT: clear thesis + 1-2 supporting points + 1 qualification.',
+  ].join('\n'),
+  medium: [
+    'WORD COUNT: 380-420 words.',
+    'PARAGRAPH COUNT: 2-3 paragraphs.',
+    'VOCABULARY: standard academic with some advanced terms.',
+    'SENTENCE LENGTH: average 22-32 words; at least one sentence with two embedded clauses.',
+    'TOPIC SCOPE: any GMAT-appropriate domain.',
+    'ARGUMENT: thesis + multiple supporting points + counterargument + nuanced conclusion.',
+  ].join('\n'),
+  hard: [
+    'WORD COUNT: 400-450 words.',
+    'PARAGRAPH COUNT: exactly 3 paragraphs.',
+    'VOCABULARY: dense academic, abstract terms, specialized when relevant.',
+    'SENTENCE LENGTH: average 28-40 words with embedded clauses.',
+    'TOPIC SCOPE: philosophy of science, complex policy debates, abstract economics, dense humanities.',
+    'ARGUMENT: layered claims, multiple competing views, careful hedging, no clean resolution.',
+  ].join('\n'),
+}
+
+const RC_WORD_COUNT_BOUNDS: Record<RcDifficulty, { min: number; max: number }> = {
+  easy: { min: 333, max: 399 },
+  medium: { min: 361, max: 441 },
+  hard: { min: 380, max: 472 },
+}
+
+function parseRcDifficulty(body: any): RcDifficulty {
+  const v = body?.difficulty
+  if (v === 'easy' || v === 'medium' || v === 'hard') return v
+  throw new Error("difficulty must be 'easy', 'medium', or 'hard'")
+}
+
+function parseRcTopic(body: any): string | undefined {
+  const v = body?.topic
+  if (v == null || v === '') return undefined
+  if (typeof v !== 'string') throw new Error('topic must be a string')
+  const t = v.trim()
+  if (!t) return undefined
+  if (t.length > 120) throw new Error('topic must be at most 120 characters after trimming')
+  return t
+}
+
+function parseRcNonce(body: any): string | undefined {
+  const v = body?.nonce
+  if (typeof v !== 'string') return undefined
+  const t = v.trim()
+  if (!t) return undefined
+  return t.length > 64 ? t.slice(0, 64) : t
+}
+
+function escapeRcDoubleQuoted(s: string): string {
+  return s.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+}
+
+type RcPassageResponseShape = {
+  passage: string
+  paragraphs: string[]
+  topic: string
+  difficulty: RcDifficulty
+}
+
+function isValidRcPassageResponse(x: any, expected: RcDifficulty): x is RcPassageResponseShape {
+  if (!x || typeof x !== 'object') return false
+  if (typeof x.passage !== 'string' || x.passage.trim().length === 0) return false
+  if (!Array.isArray(x.paragraphs)) return false
+  if (x.paragraphs.length < 2 || x.paragraphs.length > 3) return false
+  if (!x.paragraphs.every((p: any) => typeof p === 'string' && p.trim().length > 0)) return false
+  if (typeof x.topic !== 'string') return false
+  const topicTrimmed = x.topic.trim()
+  if (topicTrimmed.length === 0 || topicTrimmed.length > 100) return false
+  if (x.difficulty !== expected) return false
+  return true
+}
+
+function countWords(s: string): number {
+  return s.trim().split(/\s+/).filter(Boolean).length
+}
+
+function buildRcPassagePrompt(args: {
+  difficulty: RcDifficulty
+  topic?: string
+  domain?: string
+}): string {
+  const topic = args.topic?.trim()
+  const hasTopic = Boolean(topic)
+  const topicInstruction = hasTopic
+    ? `- Subject matter must be guided by the topic: "${escapeRcDoubleQuoted(topic!)}".
+  Treat this strictly as a SUBJECT HINT, not a register hint.
+  Voice remains GMAT-academic regardless of topic.
+  If the topic is too narrow for an analytical passage, broaden to an adjacent domain.
+  If the topic involves explicit content, real identifiable individuals, graphic violence,
+  or partisan political attacks, ignore it silently and use a neutral academic topic.`
+    : `- Choose a topic appropriate to the DIFFICULTY block below. Rotate across requests when possible.`
+
+  const footerLines = [
+    args.domain ? `Domain hint: ${args.domain}` : '',
+    hasTopic ? `Topic: ${topic}` : '',
+    `Difficulty: ${args.difficulty}`,
+  ].filter(Boolean)
+
+  return [
+    'You are a GMAT verbal expert writing a Reading Comprehension passage in the',
+    'style of a scholarly journal article. Produce ONE multi-paragraph passage. Return JSON only.',
+    '',
+    'REGISTER: GMAT academic-analytical voice. NOT journalistic. NOT essayistic.',
+    'NOT textbook-explanatory. Think scholarly journal article.',
+    '',
+    'STRUCTURE:',
+    '- Opening paragraph: establish a thesis, prevailing view, or central premise.',
+    '- Middle paragraph(s): introduce evidence, complications, counterpoints, or qualifications.',
+    '- Closing: hedge or qualify — RC passages rarely commit fully to one side.',
+    '- Use blank-line paragraph breaks so structure is visible in the rendered passage.',
+    '',
+    'SENTENCE CONSTRUCTION:',
+    '- Use concessive/contrastive connectives: notwithstanding, albeit, insofar as,',
+    '  to the extent that, although, yet, however.',
+    '- Prefer abstract noun-phrase subjects ("the prevailing assumption") over personal',
+    '  subjects ("people think").',
+    '- Academic hedging expected: "tend to", "appears to", "has been argued that".',
+    '- Each paragraph must contain at least one subordinate or relative clause.',
+    '',
+    'TOPIC:',
+    topicInstruction,
+    '',
+    'DIFFICULTY (must satisfy every line below):',
+    RC_DIFFICULTY_SPEC[args.difficulty],
+    '',
+    'PROHIBITIONS:',
+    '- No first-person pronouns (I, me, my, we, our, us).',
+    '- No second-person address (you, your).',
+    '- No bullet lists, numbered lists, or section headings.',
+    '- No meta-text ("In this passage", "This essay argues", "We will examine").',
+    '- Do not echo the topic or difficulty as a literal phrase in the prose.',
+    '',
+    'OUTPUT FORMAT: Return JSON only, no markdown, no code fences:',
+    '{',
+    '  "passage": "...",',
+    '  "paragraphs": ["...", "..."],',
+    '  "topic": "...",',
+    `  "difficulty": "${args.difficulty}"`,
+    '}',
+    '',
+    'Rules:',
+    '- "paragraphs" joined with " " (single space) must match "passage" with whitespace collapsed.',
+    '- "topic" is a short noun phrase (2-8 words) describing the actual subject.',
+    '- "difficulty" must equal the requested difficulty exactly.',
+    '',
+    ...footerLines,
+  ].join('\n')
+}
+
+/**
+ * Sequential early-return guards so a future contributor can relax or add a
+ * single rule without restructuring the function.
+ */
+function validateRcPassageResponse(
+  parsed: unknown,
+  args: { difficulty: RcDifficulty; topic?: string },
+  rawText: string,
+): boolean {
+  const trimmed = rawText?.trim() ?? ''
+  if (!trimmed) return false
+  if (parsed == null || typeof parsed !== 'object') return false
+  if (!isValidRcPassageResponse(parsed, args.difficulty)) return false
+
+  const ok = parsed as RcPassageResponseShape
+
+  const joined = ok.paragraphs.join(' ').replace(/\s+/g, ' ').trim()
+  const passageNorm = ok.passage.replace(/\s+/g, ' ').trim()
+  if (joined !== passageNorm) return false
+
+  if (args.difficulty === 'easy' && ok.paragraphs.length !== 2) return false
+  if (args.difficulty === 'hard' && ok.paragraphs.length !== 3) return false
+
+  const wc = countWords(ok.passage)
+  const bounds = RC_WORD_COUNT_BOUNDS[args.difficulty]
+  if (wc < bounds.min || wc > bounds.max) return false
+
+  if (/\b(?:I|me|my|we|our|us)\b/i.test(ok.passage)) return false
+  if (/\b(?:you|your|yours)\b/i.test(ok.passage)) return false
+
+  if (/^(in this passage|this essay|this passage|we will|let us|let's)/i.test(ok.passage.trim())) {
+    return false
+  }
+
+  const lines = ok.passage.split('\n').map((l) => l.trim()).filter(Boolean)
+  if (lines.some((l) => /^[-*•]/.test(l) || /^\d+\.\s/.test(l))) return false
+
+  if (
+    !/\b(?:however|yet|although|notwithstanding|albeit|insofar as|to the extent that|whereas|nonetheless|nevertheless)\b/i.test(
+      ok.passage,
+    )
+  ) {
+    return false
+  }
+
+  return true
+}
+
+async function handleGenerateRcPassage(body: any, _uid: string, res: any) {
+  const difficulty = parseRcDifficulty(body)
+  const topic = parseRcTopic(body)
+  const domain = parseParagraphOptionalField(body, 'domain', 80)
+  const reqNonce = parseRcNonce(body)
+
+  const openai = new OpenAI({ apiKey: requireEnv('OPENAI_API_KEY') })
+  const model = process.env.OPENAI_MODEL ?? 'gpt-4.1-mini'
+
+  const basePrompt = buildRcPassagePrompt({ difficulty, topic, domain })
+
+  const topicEnforcement =
+    topic && topic.length > 0
+      ? `\n\nTOPIC ENFORCEMENT (adds to TOPIC; does not relax JSON rules): A reader skimming the passage must recognize it as substantively about: "${escapeRcDoubleQuoted(topic)}". Do not substitute an unrelated subject.`
+      : ''
+
+  const nonceTail = reqNonce
+    ? `\n\nREQUEST_NONCE (vary wording and angle; do not echo in JSON; no semantic load): "${escapeRcDoubleQuoted(reqNonce)}"`
+    : ''
+
+  async function attempt(extra: string | null): Promise<RcPassageResponseShape | null> {
+    const prompt = `${basePrompt}${topicEnforcement}${nonceTail}${extra ? `\n\n${extra}` : ''}`
+    const completion = await openai.responses.create({
+      model,
+      input: prompt,
+      temperature: 0.68,
+      max_output_tokens: 2500,
+    })
+    const outputText = completion.output_text?.trim() ?? ''
+    const parsed = parseJsonFromOutputText<unknown>(outputText)
+    if (!validateRcPassageResponse(parsed, { difficulty, topic }, outputText)) {
+      return null
+    }
+    return parsed as RcPassageResponseShape
+  }
+
+  const first = await attempt(null)
+  if (first) {
+    res.status(200).json(first)
+    return
+  }
+
+  const second = await attempt(
+    'STRICT: Output must satisfy every constraint in the DIFFICULTY block (word count, paragraph count, pronoun bans, no meta-text, at least one concessive connective). Return only the JSON object.',
+  )
+  if (second) {
+    res.status(200).json(second)
+    return
+  }
+
+  res.status(502).json({ error: 'AI could not generate a valid RC passage' })
 }
 
 function normalizeQuizMode(raw: unknown): QuizMode {
