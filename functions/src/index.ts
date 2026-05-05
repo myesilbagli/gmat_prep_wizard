@@ -11,7 +11,7 @@ import {
 } from '../../shared/generateGmCardPrompt'
 import { parseJsonFromOutputText } from '../../shared/parseOpenAiJson'
 import { validateGeneratedResult } from '../../shared/wordGeneration'
-import type { RcDifficulty } from '../../shared/rcTypes'
+import type { RcDifficulty, RcQuestionType } from '../../shared/rcTypes'
 
 setGlobalOptions({ region: 'us-central1' })
 
@@ -128,6 +128,11 @@ export const api = onRequest(
       // catch-all in this router and would otherwise swallow them.
       if (url.startsWith('/generateRcPassage')) {
         await handleGenerateRcPassage(req.body as any, decoded.uid, res)
+        return
+      }
+
+      if (url.startsWith('/generateRcQuestionSet')) {
+        await handleGenerateRcQuestionSet(req.body as any, decoded.uid, res)
         return
       }
 
@@ -728,6 +733,315 @@ async function handleGenerateRcPassage(body: any, _uid: string, res: any) {
   }
 
   res.status(502).json({ error: 'AI could not generate a valid RC passage' })
+}
+
+// =====================================================================
+// RC (Reading Comprehension) — Stage 2: question-set generation
+// =====================================================================
+
+const RC_QUESTION_TYPES: ReadonlyArray<RcQuestionType> = [
+  'main_idea',
+  'inference',
+  'detail',
+  'function',
+  'tone',
+  'application',
+] as const
+
+const RC_QUESTION_TYPE_RULES = [
+  'main_idea: tests the central argument or primary purpose of the WHOLE passage,',
+  '  not a single sentence. Correct answer is a noun phrase or full sentence that captures the thesis',
+  '  with appropriate hedging.',
+  'inference: requires synthesis of two or more passage statements. Cannot be a verbatim',
+  '  restatement of any single sentence. The correct answer follows logically from the passage but',
+  '  is not stated outright.',
+  'detail: explicitly answerable from a single passage sentence or short span. The correct',
+  '  answer rephrases that span; distractors twist a different span.',
+  'function: tests why the author mentioned X or what role sentence/paragraph Y plays. The',
+  '  correct answer names a rhetorical purpose ("to qualify the preceding claim", "to introduce a',
+  '  counterexample") rather than a topic.',
+  'tone: tests author attitude. Correct answer is a calibrated phrase ("cautiously optimistic",',
+  '  "skeptical of received opinion") defensible from specific word choices.',
+  'application: extends passage logic to a NEW scenario not in the passage. The correct',
+  '  answer applies the same reasoning consistently; distractors apply it loosely or invert it.',
+].join('\n')
+
+const RC_ANSWER_CHOICE_RULES = [
+  'Exactly 5 choices per question.',
+  'Exactly one is correct.',
+  'Distractors must fall into one of these archetypes; ideally use a mix across the 4:',
+  '- Subtle factual error: close to the passage but reverses or misstates a detail.',
+  '- Scope error: too broad (over-generalizes) or too narrow (focuses on a peripheral point).',
+  '- Opposite emphasis: the right facts but the wrong rhetorical role (e.g. presents a',
+  '  counterargument as the thesis).',
+  '- Out of scope: introduces information that is plausible but not in the passage.',
+  'Distractors must be plausible-but-wrong, not obviously wrong.',
+  'Vary choice lengths naturally — do not pad short choices to match a long correct answer,',
+  '  and do not truncate well-formed answers to match a terse distractor.',
+  'Do not repeat passage phrasing verbatim in the correct answer for inference, function, tone,',
+  '  or application questions; verbatim quotes are acceptable for detail questions only.',
+  'Do not start multiple choices with the same 4-word prefix.',
+  'Vary the position of the correct answer across the question set (do not put it at the same',
+  '  index for every question).',
+].join('\n')
+
+const RC_EXPLANATION_RULES = [
+  'Explanation must be at least 2 sentences and at least 100 characters.',
+  'Sentence 1: state why the correct answer is correct, citing the relevant passage location',
+  '  ("the second paragraph hedges...") rather than restating the choice.',
+  'Sentences 2+: address each wrong choice. Name the distractor archetype and the specific',
+  '  failure (e.g. "Choice B inverts the relationship described in sentence 3").',
+  'Tone: instructive, not condescending. No phrases like "obviously", "clearly", "any reader',
+  '  can see".',
+].join('\n')
+
+function parseRcQuestionCount(body: any, difficulty: RcDifficulty): 3 | 4 {
+  const v = body?.questionCount
+  if (typeof v !== 'number' || !Number.isInteger(v)) {
+    throw new Error('questionCount must be an integer')
+  }
+  if (difficulty === 'easy') {
+    if (v !== 3) throw new Error("easy difficulty requires questionCount === 3")
+    return 3
+  }
+  if (v !== 4) throw new Error(`${difficulty} difficulty requires questionCount === 4`)
+  return 4
+}
+
+function parseRcPassageString(body: any): string {
+  const v = body?.passage
+  if (typeof v !== 'string') throw new Error('passage must be a string')
+  const t = v.trim()
+  if (t.length < 200) throw new Error('passage must be at least 200 characters after trimming')
+  if (t.length > 4000) throw new Error('passage must be at most 4000 characters after trimming')
+  return v
+}
+
+function parseRcParagraphs(body: any): string[] {
+  const v = body?.paragraphs
+  if (!Array.isArray(v)) throw new Error('paragraphs must be an array')
+  if (v.length < 2 || v.length > 3) throw new Error('paragraphs must have length 2 or 3')
+  for (const p of v) {
+    if (typeof p !== 'string' || p.trim().length === 0) {
+      throw new Error('every paragraph must be a non-empty string')
+    }
+  }
+  return v as string[]
+}
+
+type RcQuestionShape = {
+  type: RcQuestionType
+  questionText: string
+  choices: string[]
+  correctIndex: number
+  explanation: string
+}
+
+type RcQuestionSetResponseShape = { questions: RcQuestionShape[] }
+
+function isRcQuestionType(v: unknown): v is RcQuestionType {
+  return typeof v === 'string' && (RC_QUESTION_TYPES as readonly string[]).includes(v)
+}
+
+function isValidRcQuestionSetResponse(
+  x: any,
+  expectedCount: 3 | 4,
+): x is RcQuestionSetResponseShape {
+  if (!x || typeof x !== 'object') return false
+  if (!Array.isArray(x.questions)) return false
+  if (x.questions.length !== expectedCount) return false
+  for (const q of x.questions) {
+    if (!q || typeof q !== 'object') return false
+    if (!isRcQuestionType(q.type)) return false
+    if (typeof q.questionText !== 'string' || q.questionText.trim().length === 0) return false
+    if (!Array.isArray(q.choices) || q.choices.length !== 5) return false
+    if (!q.choices.every((c: any) => typeof c === 'string' && c.trim().length > 0)) return false
+    if (
+      typeof q.correctIndex !== 'number' ||
+      !Number.isInteger(q.correctIndex) ||
+      q.correctIndex < 0 ||
+      q.correctIndex > 4
+    ) {
+      return false
+    }
+    if (typeof q.explanation !== 'string' || q.explanation.trim().length === 0) return false
+  }
+  return true
+}
+
+function buildRcQuestionSetPrompt(args: {
+  passage: string
+  topic: string
+  difficulty: RcDifficulty
+  questionCount: 3 | 4
+}): string {
+  const distribution =
+    args.difficulty === 'easy'
+      ? 'PREFERRED: main_idea + detail + inference. Pick types that genuinely fit the passage.'
+      : args.difficulty === 'medium'
+        ? 'PREFERRED: main_idea + detail + inference + (function or tone). Pick types that genuinely fit the passage.'
+        : 'PREFERRED: main_idea + inference + function + application. Function and application are the workhorse hard-passage types; choose them when the passage supports them.'
+
+  return [
+    'You are a GMAT question writer creating Reading Comprehension questions for the',
+    'passage below. Each question tests a specific reading skill. Return JSON only.',
+    '',
+    `DIFFICULTY: ${args.difficulty}`,
+    `QUESTION COUNT: ${args.questionCount}`,
+    '',
+    'PASSAGE:',
+    `"""${escapeRcDoubleQuoted(args.passage)}"""`,
+    '',
+    `PASSAGE TOPIC (for context only, do not write a question that simply asks the topic): ${args.topic}`,
+    '',
+    'QUESTION TYPE DISTRIBUTION:',
+    'HARD RULES (must satisfy or response is rejected):',
+    '- Include exactly ONE main_idea question.',
+    '- Include at least 2 distinct types across the set.',
+    '- No single type appears more than 2 times.',
+    distribution,
+    '',
+    'QUESTION TYPE RULES (one rule per type; questions of each type must match):',
+    RC_QUESTION_TYPE_RULES,
+    '',
+    'ANSWER CHOICE QUALITY:',
+    RC_ANSWER_CHOICE_RULES,
+    '',
+    'EXPLANATION FORMAT:',
+    RC_EXPLANATION_RULES,
+    '',
+    'PROHIBITIONS:',
+    '- No "all of the above" / "none of the above" choices.',
+    '- No questions that quote the passage and ask "true or false".',
+    '- No questions that ask the reader to evaluate writing style or grammar.',
+    '- correctIndex MUST be an integer 0-4.',
+    '',
+    'OUTPUT FORMAT: Return JSON only, no markdown, no code fences:',
+    '{',
+    '  "questions": [',
+    '    {',
+    '      "type": "main_idea",',
+    '      "questionText": "...",',
+    '      "choices": ["...", "...", "...", "...", "..."],',
+    '      "correctIndex": 0,',
+    '      "explanation": "..."',
+    '    }',
+    '  ]',
+    '}',
+  ].join('\n')
+}
+
+function firstFourWordPrefix(s: string): string {
+  return s
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .slice(0, 4)
+    .join(' ')
+}
+
+function validateRcQuestionSetResponse(
+  parsed: unknown,
+  args: { questionCount: 3 | 4 },
+  rawText: string,
+): boolean {
+  const trimmed = rawText?.trim() ?? ''
+  if (!trimmed) return false
+  if (parsed == null || typeof parsed !== 'object') return false
+  if (!isValidRcQuestionSetResponse(parsed, args.questionCount)) return false
+
+  const ok = parsed as RcQuestionSetResponseShape
+
+  // Distribution guard: hard rules.
+  const typeCounts = new Map<RcQuestionType, number>()
+  for (const q of ok.questions) {
+    typeCounts.set(q.type, (typeCounts.get(q.type) ?? 0) + 1)
+  }
+  if ((typeCounts.get('main_idea') ?? 0) !== 1) return false
+  if (typeCounts.size < 2) return false
+  for (const c of typeCounts.values()) {
+    if (c > 2) return false
+  }
+
+  // Per-question heuristic guards.
+  for (const q of ok.questions) {
+    const qt = q.questionText.trim()
+    if (qt.length < 10 || qt.length > 300) return false
+    if (q.explanation.trim().length < 100) return false
+
+    const prefixes = q.choices.map(firstFourWordPrefix).filter(Boolean)
+    const seen = new Set<string>()
+    for (const pf of prefixes) {
+      if (seen.has(pf)) return false
+      seen.add(pf)
+    }
+
+    const correctChoice = q.choices[q.correctIndex]?.trim().toLowerCase() ?? ''
+    if (correctChoice && qt.toLowerCase().includes(correctChoice)) return false
+  }
+
+  // Correct-index spread guard: not all the same index.
+  const indexes = new Set(ok.questions.map((q) => q.correctIndex))
+  const required = args.questionCount === 3 ? 2 : 3
+  if (indexes.size < required) return false
+
+  return true
+}
+
+async function handleGenerateRcQuestionSet(body: any, _uid: string, res: any) {
+  const difficulty = parseRcDifficulty(body)
+  const passage = parseRcPassageString(body)
+  const paragraphs = parseRcParagraphs(body)
+  const topic = parseRcTopic(body)
+  if (!topic) throw new Error('topic is required for /generateRcQuestionSet')
+  const questionCount = parseRcQuestionCount(body, difficulty)
+  const reqNonce = parseRcNonce(body)
+
+  // paragraphs is validated server-side but we don't pass it into the prompt
+  // (the model sees the joined passage). It still defends against malformed
+  // requests and lets us extend the prompt later.
+  void paragraphs
+
+  const openai = new OpenAI({ apiKey: requireEnv('OPENAI_API_KEY') })
+  const model = process.env.OPENAI_MODEL ?? 'gpt-4.1-mini'
+
+  const basePrompt = buildRcQuestionSetPrompt({ passage, topic, difficulty, questionCount })
+
+  const nonceTail = reqNonce
+    ? `\n\nREQUEST_NONCE (vary wording and angle; do not echo in JSON; no semantic load): "${escapeRcDoubleQuoted(reqNonce)}"`
+    : ''
+
+  async function attempt(extra: string | null): Promise<RcQuestionSetResponseShape | null> {
+    const prompt = `${basePrompt}${nonceTail}${extra ? `\n\n${extra}` : ''}`
+    const completion = await openai.responses.create({
+      model,
+      input: prompt,
+      temperature: 0.4,
+      max_output_tokens: 4000,
+    })
+    const outputText = completion.output_text?.trim() ?? ''
+    const parsed = parseJsonFromOutputText<unknown>(outputText)
+    if (!validateRcQuestionSetResponse(parsed, { questionCount }, outputText)) {
+      return null
+    }
+    return parsed as RcQuestionSetResponseShape
+  }
+
+  const first = await attempt(null)
+  if (first) {
+    res.status(200).json(first)
+    return
+  }
+
+  const second = await attempt(
+    `STRICT: The questions array must contain exactly ${questionCount} entries with exactly ONE main_idea question, at least 2 distinct types, and no type appearing more than twice. Return only the JSON object.`,
+  )
+  if (second) {
+    res.status(200).json(second)
+    return
+  }
+
+  res.status(502).json({ error: 'AI could not generate a valid RC question set' })
 }
 
 function normalizeQuizMode(raw: unknown): QuizMode {
