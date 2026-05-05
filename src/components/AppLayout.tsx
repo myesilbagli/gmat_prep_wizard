@@ -223,6 +223,19 @@ export function AppLayout() {
               Test
             </NavLink>
             <NavLink
+              to="/exam"
+              style={({ isActive }) => ({
+                textDecoration: 'none',
+                padding: '8px 14px',
+                fontSize: 14,
+                fontWeight: 600,
+                color: isActive ? 'var(--text)' : 'var(--muted)',
+                borderBottom: isActive ? '2px solid var(--text)' : '2px solid transparent',
+              })}
+            >
+              Exam
+            </NavLink>
+            <NavLink
               to="/"
               style={({ isActive }) => ({
                 textDecoration: 'none',

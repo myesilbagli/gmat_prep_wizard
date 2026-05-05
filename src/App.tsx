@@ -6,6 +6,10 @@ import { WordDetailPage } from './pages/WordDetailPage'
 import { LearnPage } from './pages/LearnPage'
 import { TestPage } from './pages/TestPage'
 import { SessionPage } from './pages/SessionPage'
+import { ExamHubPage } from './pages/ExamHubPage'
+import { RcSetupPage } from './pages/RcSetupPage'
+import { RcPracticePage } from './pages/RcPracticePage'
+import { RcReviewPage } from './pages/RcReviewPage'
 import { LandingPage } from './pages/LandingPage'
 import { SignInPage } from './pages/SignInPage'
 import { SignUpPage } from './pages/SignUpPage'
@@ -19,6 +23,7 @@ function App() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/landing" element={<Navigate to="/" replace />} />
       <Route path="/session" element={<SessionPage />} />
+      <Route path="/exam/rc/practice/:attemptId" element={<RcPracticePage />} />
       <Route path="/sign-in" element={<SignInPage />} />
       <Route path="/sign-up" element={<SignUpPage />} />
       <Route path="/privacy" element={<PrivacyPolicyPage />} />
@@ -29,6 +34,9 @@ function App() {
         <Route path="/words/:wordId" element={<WordDetailPage />} />
         <Route path="/learn" element={<LearnPage />} />
         <Route path="/test" element={<TestPage />} />
+        <Route path="/exam" element={<ExamHubPage />} />
+        <Route path="/exam/rc/setup" element={<RcSetupPage />} />
+        <Route path="/exam/rc/review/:attemptId" element={<RcReviewPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
