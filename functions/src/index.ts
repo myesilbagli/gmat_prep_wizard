@@ -39,6 +39,42 @@ function requireEnv(name: string): string {
   return v
 }
 
+/**
+ * Path only (no query/hash), without trailing slash. Used so the vocab card
+ * endpoint matches ONLY `/generate` — not `/generateRcPassage`, which also
+ * begins with the string "/generate" under naive startsWith routing.
+ */
+function requestPathOnly(raw: string | undefined): string {
+  const u = raw ?? '/'
+  const noQuery = u.split('?')[0].split('#')[0]
+  if (noQuery.length > 1 && noQuery.endsWith('/')) {
+    return noQuery.slice(0, -1)
+  }
+  return noQuery || '/'
+}
+
+/** Express / Cloud Run may set `originalUrl` (full path) while `url` is relative to a mount. */
+function inferRequestPath(req: { url?: string; originalUrl?: string }): string {
+  const o = req.originalUrl
+  if (typeof o === 'string' && o.length > 0) return o
+  const u = req.url
+  if (typeof u === 'string' && u.length > 0) return u
+  return '/'
+}
+
+/** Final URL segment for POST routing (decoded). Works with arbitrary gateway prefixes. */
+function pathRouteBasename(pathOnly: string): string {
+  const noTrailing =
+    pathOnly.length > 1 && pathOnly.endsWith('/') ? pathOnly.slice(0, -1) : pathOnly
+  const idx = noTrailing.lastIndexOf('/')
+  const seg = idx >= 0 ? noTrailing.slice(idx + 1) : noTrailing
+  try {
+    return decodeURIComponent(seg)
+  } catch {
+    return seg
+  }
+}
+
 type QuizMode = 'context' | 'verbal'
 
 type QuizQuestion = {
@@ -103,7 +139,8 @@ export const api = onRequest(
       return
     }
 
-    const url = req.url ?? '/'
+    const pathOnly = requestPathOnly(inferRequestPath(req))
+    const routeBase = pathRouteBasename(pathOnly)
 
     try {
       const token = getBearerToken(req.headers.authorization)
@@ -114,29 +151,27 @@ export const api = onRequest(
 
       const decoded = await admin.auth().verifyIdToken(token)
 
-      if (url.startsWith('/generateQuiz')) {
+      if (routeBase === 'generateQuiz') {
         await handleGenerateQuiz(req.body as any, decoded.uid, res)
         return
       }
 
-      if (url.startsWith('/generateParagraph')) {
+      if (routeBase === 'generateParagraph') {
         await handleGenerateParagraph(req.body as any, decoded.uid, res)
         return
       }
 
-      // RC routes must come BEFORE /generate, since /generate is a prefix-match
-      // catch-all in this router and would otherwise swallow them.
-      if (url.startsWith('/generateRcPassage')) {
+      if (routeBase === 'generateRcPassage') {
         await handleGenerateRcPassage(req.body as any, decoded.uid, res)
         return
       }
 
-      if (url.startsWith('/generateRcQuestionSet')) {
+      if (routeBase === 'generateRcQuestionSet') {
         await handleGenerateRcQuestionSet(req.body as any, decoded.uid, res)
         return
       }
 
-      if (url.startsWith('/generate')) {
+      if (routeBase === 'generate') {
         await handleGenerate(req.body as any, req.ip ?? 'unknown', res)
         return
       }
@@ -255,14 +290,77 @@ function isValidParagraphResponse(x: any): x is ParagraphResponse {
   })
 }
 
-function countTargets(parts: ParagraphPart[]): Map<string, number> {
+/** For matching & counting: trim + lower case (vocab and model may differ in casing). */
+function normTargetKey(s: string): string {
+  return s.trim().toLowerCase()
+}
+
+function countTargetNorms(parts: ParagraphPart[]): Map<string, number> {
   const m = new Map<string, number>()
-  parts.forEach((p) => {
-    if (p.kind !== 'target') return
-    const k = p.text
-    m.set(k, (m.get(k) ?? 0) + 1)
-  })
+  for (const p of parts) {
+    if (p.kind !== 'target') continue
+    const n = normTargetKey(p.text)
+    m.set(n, (m.get(n) ?? 0) + 1)
+  }
   return m
+}
+
+/** Return client spelling for each target part so the app matches `picked` / vocab text. */
+function canonicalizeTargetParts(
+  parts: ParagraphPart[],
+  targets: string[],
+): ParagraphPart[] {
+  const firstByNorm = new Map<string, string>()
+  for (const t of targets) {
+    const n = normTargetKey(t)
+    if (!firstByNorm.has(n)) firstByNorm.set(n, t)
+  }
+  return parts.map((p) => {
+    if (p.kind !== 'target') return p
+    const n = normTargetKey(p.text)
+    const canon = firstByNorm.get(n)
+    return canon != null ? { kind: 'target' as const, text: canon } : p
+  })
+}
+
+/**
+ * Each requested target must appear exactly once as a target part; compare by trim + case.
+ * Model casing may differ; output is normalized to requested strings in `canonicalizeTargetParts`.
+ */
+function validateParagraphResponse(
+  parsed: unknown,
+  targets: string[],
+  rawText: string,
+): boolean {
+  const trimmed = rawText?.trim() ?? ''
+  if (!trimmed) {
+    return false
+  }
+  if (parsed == null) {
+    return false
+  }
+  if (!isValidParagraphResponse(parsed)) {
+    return false
+  }
+  const parts = parsed.parts
+  const normCounts = countTargetNorms(parts)
+  const reqNorms = new Set(targets.map(normTargetKey))
+
+  for (const t of targets) {
+    const n = normTargetKey(t)
+    const c = normCounts.get(n) ?? 0
+    if (c !== 1) return false
+  }
+
+  for (const p of parts) {
+    if (p.kind !== 'target') continue
+    const n = normTargetKey(p.text)
+    if (!reqNorms.has(n)) {
+      return false
+    }
+  }
+
+  return true
 }
 
 function parseParagraphTheme(body: any): string | undefined {
@@ -291,6 +389,15 @@ function parseFocusedPassageMeta(body: any): { focusedIndex?: number; totalPassa
   if (typeof fi !== 'number' || !Number.isInteger(fi) || fi < 0) return {}
   if (typeof tp !== 'number' || !Number.isInteger(tp) || tp <= 1) return {}
   return { focusedIndex: fi, totalPassages: tp }
+}
+
+function parseRequestNonce(body: any): string | undefined {
+  const v = body?.nonce
+  if (v == null || v === '') return undefined
+  if (typeof v !== 'string') return undefined
+  const t = v.trim()
+  if (!t) return undefined
+  return t.length > 64 ? t.slice(0, 64) : t
 }
 
 function escapeForDoubleQuotedPrompt(s: string): string {
@@ -366,7 +473,8 @@ function buildLockedParagraphPrompt(args: {
     '- intermediate (default): standard GMAT density',
     '- advanced: more embedded clauses, denser hedging, layered qualifications',
     '',
-    'TARGETS: Each listed target appears EXACTLY once, EXACT spelling. Targets must be',
+    'TARGETS: Each listed target appears EXACTLY once, same word form/letters as the list (casing in',
+    '  target parts is normalized to the list on the server). Targets must be',
     "load-bearing in the argument — if removed, the sentence's logical structure would",
     'change. Do not use targets decoratively.',
     '',
@@ -396,8 +504,9 @@ async function handleGenerateParagraph(body: any, uid: string, res: any) {
   const theme = parseParagraphTheme(body)
   const domain = parseParagraphOptionalField(body, 'domain', 80)
   const difficulty = parseParagraphOptionalField(body, 'difficulty', 40)
-  const lengthHint = parseParagraphOptionalField(body, 'lengthHint', 120)
+  const lengthHint = parseParagraphOptionalField(body, 'lengthHint', 480)
   const { focusedIndex, totalPassages } = parseFocusedPassageMeta(body)
+  const reqNonce = parseRequestNonce(body)
 
   const openai = new OpenAI({ apiKey: requireEnv('OPENAI_API_KEY') })
   const model = process.env.OPENAI_MODEL ?? 'gpt-4.1-mini'
@@ -411,46 +520,37 @@ async function handleGenerateParagraph(body: any, uid: string, res: any) {
     totalPassages,
   })
 
+  const themeEnforcement =
+    theme && theme.length > 0
+      ? `\n\nTHEME ENFORCEMENT (adds to TOPIC; does not relax JSON or target rules): A reader skimming must recognize the passage as substantively about: "${escapeForDoubleQuotedPrompt(theme)}". Do not substitute an unrelated subject; weave the listed vocabulary targets into this thematic frame where linguistically plausible.`
+      : ''
+
   const lengthTail =
     lengthHint && lengthHint.length > 0
       ? `\n\nLENGTH HINT (authoritative for density, still respect 150-200 words): ${lengthHint}`
       : ''
 
-  function textPartsContainNoTargets(parts: ParagraphPart[]): boolean {
-    for (const p of parts) {
-      if (p.kind !== 'text') continue
-      for (const t of targets) {
-        if (p.value.includes(t)) return false
-      }
-    }
-    return true
-  }
+  const nonceTail = reqNonce
+    ? `\n\nREQUEST_NONCE (vary wording and angle; do not echo in JSON; no semantic load): ${escapeForDoubleQuotedPrompt(reqNonce)}`
+    : ''
 
   async function attempt(extra: string | null): Promise<ParagraphResponse | null> {
-    const prompt = `${basePrompt}${lengthTail}${extra ? `\n\n${extra}` : ''}`
+    const prompt = `${basePrompt}${themeEnforcement}${lengthTail}${nonceTail}${extra ? `\n\n${extra}` : ''}`
     const completion = await openai.responses.create({
       model,
       input: prompt,
-      temperature: 0.5,
+      temperature: 0.68,
       max_output_tokens: 1500,
     })
     const outputText = completion.output_text?.trim() ?? ''
     const parsed = parseJsonFromOutputText<unknown>(outputText)
-    if (!isValidParagraphResponse(parsed)) return null
 
-    const counts = countTargets(parsed.parts)
-    for (const t of targets) {
-      if ((counts.get(t) ?? 0) !== 1) return null
-    }
-    // ensure no extra targets not in list (helps keep UI consistent)
-    for (const [k] of counts.entries()) {
-      if (!targets.includes(k)) return null
+    if (!validateParagraphResponse(parsed, targets, outputText)) {
+      return null
     }
 
-    // Ensure targets are interleaved, not duplicated inside a big text blob.
-    if (!textPartsContainNoTargets(parsed.parts)) return null
-
-    return parsed
+    const ok = parsed as ParagraphResponse
+    return { parts: canonicalizeTargetParts(ok.parts, targets) }
   }
 
   // First try
@@ -475,6 +575,11 @@ async function handleGenerateParagraph(body: any, uid: string, res: any) {
 // =====================================================================
 // RC (Reading Comprehension) — Stage 1: passage generation
 // =====================================================================
+
+/** RC Stage 1 (`/generateRcPassage`) only. Stage 2 uses `OPENAI_MODEL`. */
+function rcPassageModel(): string {
+  return process.env.OPENAI_RC_PASSAGE_MODEL ?? 'gpt-5'
+}
 
 const RC_DIFFICULTY_SPEC: Record<RcDifficulty, string> = {
   easy: [
@@ -501,12 +606,6 @@ const RC_DIFFICULTY_SPEC: Record<RcDifficulty, string> = {
     'TOPIC SCOPE: philosophy of science, complex policy debates, abstract economics, dense humanities.',
     'ARGUMENT: layered claims, multiple competing views, careful hedging, no clean resolution.',
   ].join('\n'),
-}
-
-const RC_WORD_COUNT_BOUNDS: Record<RcDifficulty, { min: number; max: number }> = {
-  easy: { min: 333, max: 399 },
-  medium: { min: 361, max: 441 },
-  hard: { min: 380, max: 472 },
 }
 
 function parseRcDifficulty(body: any): RcDifficulty {
@@ -544,21 +643,105 @@ type RcPassageResponseShape = {
   difficulty: RcDifficulty
 }
 
-function isValidRcPassageResponse(x: any, expected: RcDifficulty): x is RcPassageResponseShape {
-  if (!x || typeof x !== 'object') return false
-  if (typeof x.passage !== 'string' || x.passage.trim().length === 0) return false
-  if (!Array.isArray(x.paragraphs)) return false
-  if (x.paragraphs.length < 2 || x.paragraphs.length > 3) return false
-  if (!x.paragraphs.every((p: any) => typeof p === 'string' && p.trim().length > 0)) return false
-  if (typeof x.topic !== 'string') return false
-  const topicTrimmed = x.topic.trim()
-  if (topicTrimmed.length === 0 || topicTrimmed.length > 100) return false
-  if (x.difficulty !== expected) return false
-  return true
+/** OpenAI strict json_schema for RC passage (matches RcPassageResponseShape). */
+const RC_PASSAGE_JSON_SCHEMA: Record<string, unknown> = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['passage', 'paragraphs', 'topic', 'difficulty'],
+  properties: {
+    passage: { type: 'string' },
+    paragraphs: {
+      type: 'array',
+      minItems: 2,
+      maxItems: 3,
+      items: { type: 'string' },
+    },
+    topic: { type: 'string' },
+    difficulty: { type: 'string', enum: ['easy', 'medium', 'hard'] },
+  },
 }
 
-function countWords(s: string): number {
-  return s.trim().split(/\s+/).filter(Boolean).length
+function buildRcQuestionSetJsonSchema(expectedCount: 3 | 4): Record<string, unknown> {
+  return {
+    type: 'object',
+    additionalProperties: false,
+    required: ['questions'],
+    properties: {
+      questions: {
+        type: 'array',
+        minItems: expectedCount,
+        maxItems: expectedCount,
+        items: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['type', 'questionText', 'choices', 'correctIndex', 'explanation'],
+          properties: {
+            type: {
+              type: 'string',
+              enum: ['main_idea', 'inference', 'detail', 'function', 'tone', 'application'],
+            },
+            questionText: { type: 'string' },
+            choices: {
+              type: 'array',
+              minItems: 5,
+              maxItems: 5,
+              items: { type: 'string' },
+            },
+            correctIndex: { type: 'integer', minimum: 0, maximum: 4 },
+            explanation: { type: 'string' },
+          },
+        },
+      },
+    },
+  }
+}
+
+/** Parse model output: prefer strict JSON string; recover from decorated output only if needed. */
+function parseRcModelJson(outputText: string): unknown | null {
+  const t = outputText.trim()
+  if (!t) return null
+  try {
+    return JSON.parse(t) as unknown
+  } catch {
+    return parseJsonFromOutputText<unknown>(outputText)
+  }
+}
+
+/** Granular RC passage validation for debugging and precise 502 payloads. */
+function validateRcPassageResponseResult(
+  parsed: unknown,
+  args: { difficulty: RcDifficulty; topic?: string },
+  rawText: string,
+): { ok: true } | { ok: false; stage: string } {
+  const trimmed = rawText?.trim() ?? ''
+  if (!trimmed) return { ok: false, stage: 'empty_output' }
+  if (parsed == null || typeof parsed !== 'object') return { ok: false, stage: 'not_object' }
+
+  const x = parsed as Record<string, unknown>
+  if (typeof x.passage !== 'string' || x.passage.trim().length === 0) {
+    return { ok: false, stage: 'passage_empty' }
+  }
+  if (!Array.isArray(x.paragraphs)) return { ok: false, stage: 'paragraphs_not_array' }
+  if (x.paragraphs.length < 2 || x.paragraphs.length > 3) {
+    return { ok: false, stage: 'paragraph_count_range' }
+  }
+  if (!x.paragraphs.every((p: unknown) => typeof p === 'string' && p.trim().length > 0)) {
+    return { ok: false, stage: 'paragraph_nonempty' }
+  }
+  if (typeof x.topic !== 'string') return { ok: false, stage: 'topic_type' }
+  const topicTrimmed = x.topic.trim()
+  if (topicTrimmed.length === 0 || topicTrimmed.length > 100) {
+    return { ok: false, stage: 'topic_length' }
+  }
+  if (x.difficulty !== args.difficulty) return { ok: false, stage: 'difficulty_mismatch' }
+
+  const ok = parsed as RcPassageResponseShape
+
+  const joined = ok.paragraphs.join(' ').replace(/\s+/g, ' ').trim()
+  const passageNorm = ok.passage.replace(/\s+/g, ' ').trim()
+  if (joined !== passageNorm) return { ok: false, stage: 'passage_paragraphs_join_mismatch' }
+
+  return { ok: true }
 }
 
 function buildRcPassagePrompt(args: {
@@ -634,54 +817,6 @@ function buildRcPassagePrompt(args: {
   ].join('\n')
 }
 
-/**
- * Sequential early-return guards so a future contributor can relax or add a
- * single rule without restructuring the function.
- */
-function validateRcPassageResponse(
-  parsed: unknown,
-  args: { difficulty: RcDifficulty; topic?: string },
-  rawText: string,
-): boolean {
-  const trimmed = rawText?.trim() ?? ''
-  if (!trimmed) return false
-  if (parsed == null || typeof parsed !== 'object') return false
-  if (!isValidRcPassageResponse(parsed, args.difficulty)) return false
-
-  const ok = parsed as RcPassageResponseShape
-
-  const joined = ok.paragraphs.join(' ').replace(/\s+/g, ' ').trim()
-  const passageNorm = ok.passage.replace(/\s+/g, ' ').trim()
-  if (joined !== passageNorm) return false
-
-  if (args.difficulty === 'easy' && ok.paragraphs.length !== 2) return false
-  if (args.difficulty === 'hard' && ok.paragraphs.length !== 3) return false
-
-  const wc = countWords(ok.passage)
-  const bounds = RC_WORD_COUNT_BOUNDS[args.difficulty]
-  if (wc < bounds.min || wc > bounds.max) return false
-
-  if (/\b(?:I|me|my|we|our|us)\b/i.test(ok.passage)) return false
-  if (/\b(?:you|your|yours)\b/i.test(ok.passage)) return false
-
-  if (/^(in this passage|this essay|this passage|we will|let us|let's)/i.test(ok.passage.trim())) {
-    return false
-  }
-
-  const lines = ok.passage.split('\n').map((l) => l.trim()).filter(Boolean)
-  if (lines.some((l) => /^[-*•]/.test(l) || /^\d+\.\s/.test(l))) return false
-
-  if (
-    !/\b(?:however|yet|although|notwithstanding|albeit|insofar as|to the extent that|whereas|nonetheless|nevertheless)\b/i.test(
-      ok.passage,
-    )
-  ) {
-    return false
-  }
-
-  return true
-}
-
 async function handleGenerateRcPassage(body: any, _uid: string, res: any) {
   const difficulty = parseRcDifficulty(body)
   const topic = parseRcTopic(body)
@@ -689,7 +824,7 @@ async function handleGenerateRcPassage(body: any, _uid: string, res: any) {
   const reqNonce = parseRcNonce(body)
 
   const openai = new OpenAI({ apiKey: requireEnv('OPENAI_API_KEY') })
-  const model = process.env.OPENAI_MODEL ?? 'gpt-4.1-mini'
+  const model = rcPassageModel()
 
   const basePrompt = buildRcPassagePrompt({ difficulty, topic, domain })
 
@@ -702,37 +837,56 @@ async function handleGenerateRcPassage(body: any, _uid: string, res: any) {
     ? `\n\nREQUEST_NONCE (vary wording and angle; do not echo in JSON; no semantic load): "${escapeRcDoubleQuoted(reqNonce)}"`
     : ''
 
-  async function attempt(extra: string | null): Promise<RcPassageResponseShape | null> {
+  type AttemptResult =
+    | { ok: true; value: RcPassageResponseShape }
+    | { ok: false; fail: 'parse' }
+    | { ok: false; fail: 'validate'; stage: string }
+
+  async function attempt(extra: string | null): Promise<AttemptResult> {
     const prompt = `${basePrompt}${topicEnforcement}${nonceTail}${extra ? `\n\n${extra}` : ''}`
     const completion = await openai.responses.create({
       model,
       input: prompt,
-      temperature: 0.68,
-      max_output_tokens: 2500,
+      max_output_tokens: 3500,
+      text: {
+        format: {
+          type: 'json_schema',
+          name: 'rc_passage',
+          schema: RC_PASSAGE_JSON_SCHEMA,
+          strict: true,
+        },
+      },
     })
     const outputText = completion.output_text?.trim() ?? ''
-    const parsed = parseJsonFromOutputText<unknown>(outputText)
-    if (!validateRcPassageResponse(parsed, { difficulty, topic }, outputText)) {
-      return null
-    }
-    return parsed as RcPassageResponseShape
+    const parsed = parseRcModelJson(outputText)
+    if (parsed == null) return { ok: false, fail: 'parse' }
+    const vr = validateRcPassageResponseResult(parsed, { difficulty, topic }, outputText)
+    if (!vr.ok) return { ok: false, fail: 'validate', stage: vr.stage }
+    return { ok: true, value: parsed as RcPassageResponseShape }
   }
 
   const first = await attempt(null)
-  if (first) {
-    res.status(200).json(first)
+  if (first.ok) {
+    res.status(200).json(first.value)
     return
   }
 
-  const second = await attempt(
-    'STRICT: Output must satisfy every constraint in the DIFFICULTY block (word count, paragraph count, pronoun bans, no meta-text, at least one concessive connective). Return only the JSON object.',
-  )
-  if (second) {
-    res.status(200).json(second)
+  const second = await attempt('STRICT: Output must conform to the JSON schema')
+  if (second.ok) {
+    res.status(200).json(second.value)
     return
   }
 
-  res.status(502).json({ error: 'AI could not generate a valid RC passage' })
+  const last = second
+  const code = last.fail === 'parse' ? 'RC_PARSE' : 'RC_VALIDATE'
+  const payload: Record<string, unknown> = {
+    error: 'AI could not generate a valid RC passage',
+    code,
+  }
+  if (last.fail === 'validate') {
+    payload.validationStage = last.stage
+  }
+  res.status(502).json(payload)
 }
 
 // =====================================================================
@@ -931,61 +1085,19 @@ function buildRcQuestionSetPrompt(args: {
   ].join('\n')
 }
 
-function firstFourWordPrefix(s: string): string {
-  return s
-    .trim()
-    .toLowerCase()
-    .split(/\s+/)
-    .slice(0, 4)
-    .join(' ')
-}
-
-function validateRcQuestionSetResponse(
+function validateRcQuestionSetResponseResult(
   parsed: unknown,
   args: { questionCount: 3 | 4 },
   rawText: string,
-): boolean {
+): { ok: true } | { ok: false; stage: string } {
   const trimmed = rawText?.trim() ?? ''
-  if (!trimmed) return false
-  if (parsed == null || typeof parsed !== 'object') return false
-  if (!isValidRcQuestionSetResponse(parsed, args.questionCount)) return false
-
-  const ok = parsed as RcQuestionSetResponseShape
-
-  // Distribution guard: hard rules.
-  const typeCounts = new Map<RcQuestionType, number>()
-  for (const q of ok.questions) {
-    typeCounts.set(q.type, (typeCounts.get(q.type) ?? 0) + 1)
-  }
-  if ((typeCounts.get('main_idea') ?? 0) !== 1) return false
-  if (typeCounts.size < 2) return false
-  for (const c of typeCounts.values()) {
-    if (c > 2) return false
+  if (!trimmed) return { ok: false, stage: 'qs_empty_output' }
+  if (parsed == null || typeof parsed !== 'object') return { ok: false, stage: 'qs_not_object' }
+  if (!isValidRcQuestionSetResponse(parsed, args.questionCount)) {
+    return { ok: false, stage: 'qs_invalid_shape' }
   }
 
-  // Per-question heuristic guards.
-  for (const q of ok.questions) {
-    const qt = q.questionText.trim()
-    if (qt.length < 10 || qt.length > 300) return false
-    if (q.explanation.trim().length < 100) return false
-
-    const prefixes = q.choices.map(firstFourWordPrefix).filter(Boolean)
-    const seen = new Set<string>()
-    for (const pf of prefixes) {
-      if (seen.has(pf)) return false
-      seen.add(pf)
-    }
-
-    const correctChoice = q.choices[q.correctIndex]?.trim().toLowerCase() ?? ''
-    if (correctChoice && qt.toLowerCase().includes(correctChoice)) return false
-  }
-
-  // Correct-index spread guard: not all the same index.
-  const indexes = new Set(ok.questions.map((q) => q.correctIndex))
-  const required = args.questionCount === 3 ? 2 : 3
-  if (indexes.size < required) return false
-
-  return true
+  return { ok: true }
 }
 
 async function handleGenerateRcQuestionSet(body: any, _uid: string, res: any) {
@@ -1004,6 +1116,7 @@ async function handleGenerateRcQuestionSet(body: any, _uid: string, res: any) {
 
   const openai = new OpenAI({ apiKey: requireEnv('OPENAI_API_KEY') })
   const model = process.env.OPENAI_MODEL ?? 'gpt-4.1-mini'
+  const qsSchema = buildRcQuestionSetJsonSchema(questionCount)
 
   const basePrompt = buildRcQuestionSetPrompt({ passage, topic, difficulty, questionCount })
 
@@ -1011,37 +1124,67 @@ async function handleGenerateRcQuestionSet(body: any, _uid: string, res: any) {
     ? `\n\nREQUEST_NONCE (vary wording and angle; do not echo in JSON; no semantic load): "${escapeRcDoubleQuoted(reqNonce)}"`
     : ''
 
-  async function attempt(extra: string | null): Promise<RcQuestionSetResponseShape | null> {
+  type QsAttemptResult =
+    | { ok: true; value: RcQuestionSetResponseShape }
+    | { ok: false; fail: 'parse' }
+    | { ok: false; fail: 'validate'; stage: string }
+
+  async function attempt(extra: string | null): Promise<QsAttemptResult> {
     const prompt = `${basePrompt}${nonceTail}${extra ? `\n\n${extra}` : ''}`
     const completion = await openai.responses.create({
       model,
       input: prompt,
       temperature: 0.4,
-      max_output_tokens: 4000,
+      max_output_tokens: 5500,
+      text: {
+        format: {
+          type: 'json_schema',
+          name: 'rc_question_set',
+          schema: qsSchema,
+          strict: true,
+        },
+      },
     })
     const outputText = completion.output_text?.trim() ?? ''
-    const parsed = parseJsonFromOutputText<unknown>(outputText)
-    if (!validateRcQuestionSetResponse(parsed, { questionCount }, outputText)) {
-      return null
-    }
-    return parsed as RcQuestionSetResponseShape
+    const parsed = parseRcModelJson(outputText)
+    if (parsed == null) return { ok: false, fail: 'parse' }
+    const vr = validateRcQuestionSetResponseResult(parsed, { questionCount }, outputText)
+    if (!vr.ok) return { ok: false, fail: 'validate', stage: vr.stage }
+    return { ok: true, value: parsed as RcQuestionSetResponseShape }
   }
 
   const first = await attempt(null)
-  if (first) {
-    res.status(200).json(first)
+  if (first.ok) {
+    res.status(200).json(first.value)
     return
   }
 
   const second = await attempt(
     `STRICT: The questions array must contain exactly ${questionCount} entries with exactly ONE main_idea question, at least 2 distinct types, and no type appearing more than twice. Return only the JSON object.`,
   )
-  if (second) {
-    res.status(200).json(second)
+  if (second.ok) {
+    res.status(200).json(second.value)
     return
   }
 
-  res.status(502).json({ error: 'AI could not generate a valid RC question set' })
+  const third = await attempt(
+    `FINAL ATTEMPT: Conform to the JSON schema. Exactly ${questionCount} questions with five non-empty choices each. Return only the JSON object.`,
+  )
+  if (third.ok) {
+    res.status(200).json(third.value)
+    return
+  }
+
+  const last = third
+  const code = last.fail === 'parse' ? 'RC_PARSE' : 'RC_VALIDATE'
+  const payload: Record<string, unknown> = {
+    error: 'AI could not generate a valid RC question set',
+    code,
+  }
+  if (last.fail === 'validate') {
+    payload.validationStage = last.stage
+  }
+  res.status(502).json(payload)
 }
 
 function normalizeQuizMode(raw: unknown): QuizMode {
