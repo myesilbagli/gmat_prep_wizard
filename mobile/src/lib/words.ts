@@ -101,15 +101,27 @@ export async function saveWord(params: {
     ? { exampleSentence: deleteField(), gmatUsageNote: deleteField() }
     : {}
 
-  const newShapeFields = {
-    ...(useNewCardShape
-      ? {
-          examples: params.result.examples,
-          wordTags: params.result.wordTags ?? [],
-          contrastWord: params.result.contrastWord,
-          memoryHook: params.result.memoryHook ?? '',
-        }
-      : {}),
+  /** Flatten hook/contrast/examples tags whenever present — not only when `examples.length === 2` (legacy saves hid nested tutor fields). */
+  const topFromResult: Record<string, unknown> = {}
+  if (useNewCardShape) {
+    topFromResult.examples = params.result.examples
+    topFromResult.wordTags = params.result.wordTags ?? []
+  }
+  const mhTrim =
+    typeof params.result.memoryHook === 'string' ? params.result.memoryHook.trim() : ''
+  if (mhTrim) topFromResult.memoryHook = mhTrim
+  const cw = params.result.contrastWord
+  if (
+    cw &&
+    typeof cw.word === 'string' &&
+    cw.word.trim() &&
+    typeof cw.explanation === 'string' &&
+    cw.explanation.trim()
+  ) {
+    topFromResult.contrastWord = {
+      word: cw.word.trim(),
+      explanation: cw.explanation.trim(),
+    }
   }
 
   const contentPayload = {
@@ -122,7 +134,7 @@ export async function saveWord(params: {
     ...legacyExampleFields,
     synonyms: Array.isArray(params.result.synonyms) ? params.result.synonyms : [],
     nuanceNote: params.result.nuanceNote ?? '',
-    ...newShapeFields,
+    ...topFromResult,
     source: params.source ?? 'gpt',
     result: params.result,
     ...(translations ? { translations } : {}),
@@ -207,13 +219,17 @@ export async function saveWord(params: {
         lastSeenAt: prev.lastSeenAt ?? null,
         lastAnsweredAt: prev.lastAnsweredAt ?? null,
         lastCorrect: prev.lastCorrect === true || prev.lastCorrect === false ? prev.lastCorrect : null,
-        seenCount: typeof prev.seenCount === 'number' ? prev.seenCount : undefined,
+        // Firestore update() rejects undefined — legacy docs may omit these fields.
+        seenCount:
+          typeof prev.seenCount === 'number' && Number.isFinite(prev.seenCount) ? prev.seenCount : 0,
         meaningQuizStreak:
-          typeof prev.meaningQuizStreak === 'number' ? prev.meaningQuizStreak : undefined,
+          typeof prev.meaningQuizStreak === 'number' && Number.isFinite(prev.meaningQuizStreak)
+            ? prev.meaningQuizStreak
+            : 0,
         lastSessionSwipe:
           prev.lastSessionSwipe === 'weak' || prev.lastSessionSwipe === 'strong'
             ? prev.lastSessionSwipe
-            : undefined,
+            : null,
         status: typeof prev.status === 'string' ? prev.status : 'learning',
         tags: nextTags,
       })

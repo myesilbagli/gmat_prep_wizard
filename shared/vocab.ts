@@ -16,7 +16,56 @@ export function rawStatusNeedsFirestoreMigration(raw: unknown): boolean {
   return raw === 'do_not_know' || raw === 'know'
 }
 
+function trimStr(v: unknown): string | undefined {
+  if (typeof v !== 'string') return undefined
+  const t = v.trim()
+  return t || undefined
+}
+
+/** Normalize Firestore `examples` whether stored as array or occasional legacy map-shaped blobs. */
+function parseExamplesList(raw: unknown): string[] {
+  if (raw == null) return []
+  if (Array.isArray(raw)) return raw.map((x) => String(x).trim()).filter(Boolean)
+  if (typeof raw === 'object') {
+    return Object.values(raw as Record<string, unknown>)
+      .map((x) => String(x).trim())
+      .filter(Boolean)
+  }
+  return []
+}
+
+/** Union ordered lists (top-level doc fields first), dropping duplicate sentences. */
+function mergeExampleLists(a: string[], b: string[]): string[] {
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const s of [...a, ...b]) {
+    if (seen.has(s)) continue
+    seen.add(s)
+    out.push(s)
+  }
+  return out
+}
+
+/** Nested `GeneratedResult` on Firestore docs — usually a map; occasionally stored as JSON string. */
+function unwrapResult(data: any): Record<string, unknown> | null {
+  const r = data?.result
+  if (r == null) return null
+  if (typeof r === 'string') {
+    try {
+      const parsed = JSON.parse(r) as unknown
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return parsed as Record<string, unknown>
+    } catch {
+      return null
+    }
+    return null
+  }
+  if (typeof r === 'object' && !Array.isArray(r)) return r as Record<string, unknown>
+  return null
+}
+
 export function normalizeRawVocabDoc(id: string, data: any): VocabItem {
+  const res = unwrapResult(data)
+
   const text: string =
     typeof data.text === 'string' && data.text.trim()
       ? data.text
@@ -30,36 +79,32 @@ export function normalizeRawVocabDoc(id: string, data: any): VocabItem {
   let definition = ''
   if (typeof data.definition === 'string' && data.definition.trim()) {
     definition = data.definition.trim()
-  } else if (typeof data.result?.definition === 'string' && data.result.definition.trim()) {
-    definition = data.result.definition.trim()
-  } else if (Array.isArray(data.result?.definitions) && data.result.definitions[0]) {
-    definition = String(data.result.definitions[0])
+  } else if (typeof res?.definition === 'string' && String(res.definition).trim()) {
+    definition = String(res.definition).trim()
+  } else if (Array.isArray(res?.definitions) && (res.definitions as unknown[])[0] != null) {
+    definition = String((res.definitions as unknown[])[0])
   }
 
   const simpleDefinition: string =
     typeof data.simpleDefinition === 'string' && data.simpleDefinition.trim()
       ? data.simpleDefinition.trim()
-      : typeof data.result?.simpleDefinition === 'string' && data.result.simpleDefinition.trim()
-        ? data.result.simpleDefinition.trim()
+      : typeof res?.simpleDefinition === 'string' && String(res.simpleDefinition).trim()
+        ? String(res.simpleDefinition).trim()
         : definition
 
-  const examplesFromDoc = (): string[] | undefined => {
-    const top = Array.isArray(data.examples) ? data.examples.map((x: unknown) => String(x).trim()).filter(Boolean) : []
-    const fromResult = Array.isArray(data.result?.examples)
-      ? data.result.examples.map((x: unknown) => String(x).trim()).filter(Boolean)
-      : []
-    const merged = top.length ? top : fromResult
-    return merged.length ? merged : undefined
-  }
-
-  const examples = examplesFromDoc()
+  const topEx = parseExamplesList(data.examples)
+  const fromResultEx = parseExamplesList(res?.examples)
+  const mergedExamples = mergeExampleLists(topEx, fromResultEx)
+  const examples = mergedExamples.length ? mergedExamples : undefined
 
   let exampleSentence: string | undefined =
     typeof data.exampleSentence === 'string' && data.exampleSentence.trim()
       ? data.exampleSentence.trim()
-      : typeof data.result?.exampleSentence === 'string' && data.result.exampleSentence.trim()
-        ? data.result.exampleSentence.trim()
-        : undefined
+      : typeof res?.exampleSentence === 'string' && String(res.exampleSentence).trim()
+        ? String(res.exampleSentence).trim()
+        : typeof data.example === 'string' && data.example.trim()
+          ? data.example.trim()
+          : undefined
 
   if (!exampleSentence && examples?.length) {
     exampleSentence = examples[0]
@@ -67,38 +112,39 @@ export function normalizeRawVocabDoc(id: string, data: any): VocabItem {
 
   const wordTagsRaw = Array.isArray(data.wordTags)
     ? data.wordTags
-    : Array.isArray(data.result?.wordTags)
-      ? data.result.wordTags
+    : Array.isArray(res?.wordTags)
+      ? res.wordTags
       : undefined
   const wordTags =
     wordTagsRaw && wordTagsRaw.length
       ? wordTagsRaw.map((t: unknown) => String(t).trim()).filter(Boolean)
       : undefined
 
-  const contrastFromTop = data.contrastWord ?? data.result?.contrastWord
+  const contrastRaw =
+    data.contrastWord ?? data.contrast_word ?? res?.contrastWord ?? res?.contrast_word
   const contrastWord =
-    contrastFromTop &&
-    typeof contrastFromTop === 'object' &&
-    typeof (contrastFromTop as { word?: unknown }).word === 'string' &&
-    typeof (contrastFromTop as { explanation?: unknown }).explanation === 'string'
-      ? {
-          word: String((contrastFromTop as { word: string }).word).trim(),
-          explanation: String((contrastFromTop as { explanation: string }).explanation).trim(),
-        }
+    contrastRaw && typeof contrastRaw === 'object' && contrastRaw !== null
+      ? (() => {
+          const o = contrastRaw as Record<string, unknown>
+          const w = trimStr(o.word) ?? trimStr(o.contrast_word)
+          const ex = trimStr(o.explanation) ?? trimStr(o.explanation_text)
+          return w && ex ? { word: w, explanation: ex } : undefined
+        })()
       : undefined
 
   const memoryHookRaw =
-    typeof data.memoryHook === 'string' && data.memoryHook.trim()
-      ? data.memoryHook.trim()
-      : typeof data.result?.memoryHook === 'string' && data.result.memoryHook.trim()
-        ? data.result.memoryHook.trim()
-        : undefined
+    trimStr(data.memoryHook) ??
+    trimStr(data.memory_hook) ??
+    trimStr(res?.memoryHook) ??
+    trimStr(res?.memory_hook)
 
-  const synonyms: string[] = Array.isArray(data.synonyms)
+  const topSyn = Array.isArray(data.synonyms)
     ? data.synonyms.map((s: unknown) => String(s)).filter(Boolean)
-    : Array.isArray(data.result?.synonyms)
-      ? data.result.synonyms.map((s: unknown) => String(s)).filter(Boolean)
-      : []
+    : []
+  const resSyn = Array.isArray(res?.synonyms)
+    ? (res.synonyms as unknown[]).map((s: unknown) => String(s)).filter(Boolean)
+    : []
+  const synonyms: string[] = mergeExampleLists(topSyn, resSyn)
 
   const seenCount =
     typeof data.seenCount === 'number' && Number.isFinite(data.seenCount)
@@ -169,15 +215,15 @@ export function normalizeRawVocabDoc(id: string, data: any): VocabItem {
   const nuanceNote =
     typeof data.nuanceNote === 'string' && data.nuanceNote.trim()
       ? data.nuanceNote.trim()
-      : typeof data.result?.nuanceNote === 'string' && data.result.nuanceNote.trim()
-        ? data.result.nuanceNote.trim()
+      : typeof res?.nuanceNote === 'string' && String(res.nuanceNote).trim()
+        ? String(res.nuanceNote).trim()
         : undefined
 
   const partOfSpeechRaw =
     typeof data.partOfSpeech === 'string' && data.partOfSpeech.trim()
       ? data.partOfSpeech.trim()
-      : typeof data.result?.partOfSpeech === 'string' && data.result.partOfSpeech.trim()
-        ? String(data.result.partOfSpeech).trim()
+      : typeof res?.partOfSpeech === 'string' && String(res.partOfSpeech).trim()
+        ? String(res.partOfSpeech).trim()
         : undefined
 
   return {
@@ -198,8 +244,8 @@ export function normalizeRawVocabDoc(id: string, data: any): VocabItem {
     gmatUsageNote:
       typeof data.gmatUsageNote === 'string' && data.gmatUsageNote.trim()
         ? data.gmatUsageNote.trim()
-        : typeof data.result?.gmatUsageNote === 'string' && data.result.gmatUsageNote.trim()
-          ? data.result.gmatUsageNote.trim()
+        : typeof res?.gmatUsageNote === 'string' && String(res.gmatUsageNote).trim()
+          ? String(res.gmatUsageNote).trim()
           : undefined,
     translations,
     status,

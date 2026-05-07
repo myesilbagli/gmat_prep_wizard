@@ -5,9 +5,6 @@ import { CANONICAL_STACK_ORDER } from './canonicalStacks'
 export const FREE_MAX_SAVED_WORDS = 50
 export const FREE_MAX_SESSION_STARTS_PER_DAY = 3
 
-/** Default onboarding / “starter” stack — canonical id only (no aliases). */
-export const BASICS_STACK_ID = 'stack_arg_architecture'
-
 /** Free tier can open these stack ids (first three LoreLabs packs). */
 export const FREE_BASIC_STACK_IDS = [
   'stack_arg_architecture',

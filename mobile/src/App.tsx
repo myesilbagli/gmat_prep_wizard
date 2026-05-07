@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { User } from 'firebase/auth'
-import { ActivityIndicator, Animated, Easing, Pressable, Text, View } from 'react-native'
-import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import { ActivityIndicator, Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native'
 import { MaterialIcons } from '@expo/vector-icons'
 import type { VocabItem } from '@shared/types'
 import * as SystemUI from 'expo-system-ui'
 import { StatusBar } from 'expo-status-bar'
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context'
+import Constants from 'expo-constants'
 import { ProfileSheet } from './components/ProfileSheet'
 import { SubscriptionPaywall } from './components/SubscriptionPaywall'
 import { AuthProvider, useAuth } from './context/AuthContext'
@@ -41,6 +41,24 @@ import { ReadingSetupScreen } from './screens/ReadingSetupScreen'
 import { TestScreen } from './screens/TestScreen'
 import { WelcomeScreen } from './screens/WelcomeScreen'
 import type { AppTheme } from './theme'
+
+const isExpoGo = Constants.appOwnership === 'expo'
+
+const GestureRoot: React.ComponentType<{ style?: any; children: React.ReactNode }> = (() => {
+  // Physical device + Expo Go cannot reliably catch native JSI HostFunction crashes.
+  // In Expo Go, avoid requiring gesture-handler entirely; dev-client / TestFlight builds can use it.
+  if (isExpoGo) {
+    return View
+  }
+  try {
+    const gh = require('react-native-gesture-handler') as { GestureHandlerRootView?: unknown }
+    const C = gh?.GestureHandlerRootView
+    if (typeof C === 'function') return C as any
+  } catch (e) {
+    // ignore (fallback to View)
+  }
+  return View
+})()
 
 function ShellBackground({ theme, children }: { theme: AppTheme; children: React.ReactNode }) {
   return <View style={{ flex: 1, backgroundColor: theme.learnScreenBg }}>{children}</View>
@@ -289,7 +307,7 @@ function MainTabs({
     <View style={{ flex: 1, backgroundColor: theme.learnScreenBg }}>
       <ShellBackground theme={theme}>
         {sessionOpen ? (
-          <GestureHandlerRootView style={{ flex: 1 }}>
+          <GestureRoot style={{ flex: 1 }}>
             <SessionScreen
               key={sessionRemountKey}
               theme={theme}
@@ -304,7 +322,7 @@ function MainTabs({
                 if (opened) setSessionRemountKey((k) => k + 1)
               }}
             />
-          </GestureHandlerRootView>
+          </GestureRoot>
         ) : (
           <>
             <View
@@ -525,7 +543,7 @@ function AppStatusBar() {
 
 export default function App() {
   return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: AUTH.bgBase }}>
+    <GestureRoot style={{ flex: 1, backgroundColor: AUTH.bgBase }}>
       <SafeAreaProvider style={{ flex: 1, backgroundColor: AUTH.bgBase }}>
         <ThemeProvider>
           <AuthProvider>
@@ -533,7 +551,7 @@ export default function App() {
           </AuthProvider>
         </ThemeProvider>
       </SafeAreaProvider>
-    </GestureHandlerRootView>
+    </GestureRoot>
   )
 }
 
@@ -594,36 +612,82 @@ function AppChrome() {
   const { theme } = useAppTheme()
   const { loading, user } = useAuth()
   const rootBg = user ? theme.learnScreenBg : AUTH.bgBase
+  const [showAnimatedSplash, setShowAnimatedSplash] = useState(!isExpoGo)
+  const [splashUnavailable, setSplashUnavailable] = useState(false)
 
   useEffect(() => {
     void SystemUI.setBackgroundColorAsync(rootBg)
   }, [rootBg])
 
+  const underlying = loading ? (
+    <View
+      style={{
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: rootBg,
+        paddingTop: insets.top,
+        paddingBottom: insets.bottom,
+      }}
+    >
+      <ActivityIndicator color={theme.primary} />
+    </View>
+  ) : user ? (
+    <SubscriptionProvider userId={user.uid}>
+      <PostAuthApp user={user} />
+    </SubscriptionProvider>
+  ) : (
+    <AuthNavigator />
+  )
+
   return (
     <View style={{ flex: 1, backgroundColor: rootBg }}>
       <AppStatusBar />
-      {loading ? (
-        <View
-          style={{
-            flex: 1,
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: rootBg,
-            paddingTop: insets.top,
-            paddingBottom: insets.bottom,
-          }}
-        >
-          <ActivityIndicator color={theme.primary} />
+      <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, opacity: showAnimatedSplash ? 0 : 1 }} pointerEvents={showAnimatedSplash ? 'none' : 'auto'}>
+          {underlying}
         </View>
-      ) : user ? (
-        <SubscriptionProvider userId={user.uid}>
-          <PostAuthApp user={user} />
-        </SubscriptionProvider>
-      ) : (
-        <AuthNavigator />
-      )}
+        {showAnimatedSplash && !splashUnavailable ? (
+          <View style={{ ...StyleSheet.absoluteFillObject }} pointerEvents="auto">
+            <LazyAnimatedSplash
+              onFinish={() => setShowAnimatedSplash(false)}
+              onUnavailable={() => {
+                setSplashUnavailable(true)
+                setShowAnimatedSplash(false)
+              }}
+            />
+          </View>
+        ) : null}
+      </View>
     </View>
   )
+}
+
+function LazyAnimatedSplash({ onFinish, onUnavailable }: { onFinish: () => void; onUnavailable: () => void }) {
+  // Expo Go on physical devices can crash on Reanimated native worklets.
+  // Keep the app usable by skipping the animated splash entirely in Expo Go.
+  useEffect(() => {
+    if (isExpoGo) onUnavailable()
+  }, [onUnavailable])
+
+  if (isExpoGo) return null
+
+  const Comp = useMemo(() => {
+    try {
+      const mod = require('./screens/AnimatedSplashScreen') as { AnimatedSplashScreen?: unknown }
+      const C = mod?.AnimatedSplashScreen
+      return (typeof C === 'function' ? (C as (p: { onFinish: () => void }) => React.ReactNode) : null)
+    } catch (e) {
+      return null
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!Comp) onUnavailable()
+  }, [Comp, onUnavailable])
+
+  if (!Comp) return null
+  return <>{Comp({ onFinish })}</>
 }
 
 function TabButton({

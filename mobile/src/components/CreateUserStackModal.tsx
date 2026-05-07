@@ -5,6 +5,7 @@ import {
   Modal,
   Platform,
   Pressable,
+  StyleSheet,
   Text,
   TextInput,
   View,
@@ -68,25 +69,23 @@ export function CreateUserStackModal({ theme, visible, onClose, onCreated }: Pro
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
       >
-        <Pressable
-          style={{
-            flex: 1,
-            backgroundColor: 'rgba(0,0,0,0.55)',
-            justifyContent: 'flex-end',
-          }}
-          onPress={() => !creating && resetAndClose()}
-        >
-          <Pressable onPress={(e) => e.stopPropagation()} style={{ flex: 0 }}>
-            <View
-              style={{
-                paddingBottom: Math.max(insets.bottom, 16),
-                paddingHorizontal: 20,
-                paddingTop: 12,
-                borderTopLeftRadius: 20,
-                borderTopRightRadius: 20,
-                backgroundColor: theme.learnScreenBg,
-              }}
-            >
+        <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+          <Pressable
+            accessibilityRole="button"
+            style={[StyleSheet.absoluteFillObject, { backgroundColor: 'rgba(0,0,0,0.55)' }]}
+            onPress={() => !creating && resetAndClose()}
+          />
+          <View
+            style={{
+              width: '100%',
+              paddingBottom: Math.max(insets.bottom, 16),
+              paddingHorizontal: 20,
+              paddingTop: 12,
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              backgroundColor: theme.learnScreenBg,
+            }}
+          >
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Text style={{ fontFamily: fontHeadline, fontSize: 18, fontWeight: '800', color: theme.learnOnSurface }}>
                     New stack
@@ -172,8 +171,7 @@ export function CreateUserStackModal({ theme, visible, onClose, onCreated }: Pro
                   </Text>
                 </Pressable>
               </View>
-          </Pressable>
-        </Pressable>
+        </View>
       </KeyboardAvoidingView>
     </Modal>
   )

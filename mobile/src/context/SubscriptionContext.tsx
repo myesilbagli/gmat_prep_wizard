@@ -44,6 +44,30 @@ function isPurchaseCancelled(e: unknown): boolean {
 }
 
 export function SubscriptionProvider({ userId, children }: { userId: string; children: ReactNode }) {
+  // Dev switch: bypass all monetization/paywalls (useful for TestFlight while iterating).
+  // Enable via EAS env var: EXPO_PUBLIC_DISABLE_PAYWALLS=1
+  const paywallsDisabled = (process.env.EXPO_PUBLIC_DISABLE_PAYWALLS ?? '').trim() === '1'
+
+  if (paywallsDisabled) {
+    const value: SubscriptionContextValue = {
+      isPro: true,
+      loading: false,
+      paywallVisible: false,
+      openPaywall: () => {},
+      closePaywall: () => {},
+      purchaseMonthly: async () => {},
+      purchaseYearly: async () => {},
+      restore: async () => {},
+      refreshCustomerInfo: async () => {},
+      monthlyPriceLabel: 'Monthly',
+      yearlyPriceLabel: 'Yearly',
+      busy: false,
+      error: null,
+      clearError: () => {},
+    }
+    return <SubscriptionContext.Provider value={value}>{children}</SubscriptionContext.Provider>
+  }
+
   const [isPro, setIsPro] = useState(false)
   const [loading, setLoading] = useState(true)
   const [paywallVisible, setPaywallVisible] = useState(false)

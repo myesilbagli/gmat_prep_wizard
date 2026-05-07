@@ -44,7 +44,8 @@ export function RcSetupPage() {
       const attemptId = await createRcAttempt(passage)
       navigate(`/exam/rc/practice/${attemptId}`)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to start practice.')
+      const msg = e instanceof Error ? e.message : 'Failed to start practice.'
+      setError(msg)
       setSubmitting(false)
     }
   }

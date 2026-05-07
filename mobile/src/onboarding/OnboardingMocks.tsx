@@ -88,39 +88,34 @@ export function MockTodayCaptureCard({ theme, fontBody, fontHeadline }: { theme:
   )
 }
 
-/** Word stacks list — mimics Learn → stacks. */
+/** Word stacks list — mimics Learn → one featured stack. */
 export function MockStacksList({ theme, fontBody }: { theme: AppTheme; fontBody?: string }) {
-  const rows = [
-    { title: 'Argument Architecture', sub: '80 words · Basic', icon: 'library-books' as const, accent: true },
-    { title: 'Academic Register', sub: '65 words · Basic', icon: 'library-books' as const, accent: false },
-    { title: 'Near-Synonym Discriminator', sub: '78 words · Basic', icon: 'library-books' as const, accent: false },
-  ]
   return (
     <View style={{ gap: 10, marginTop: 4 }}>
-      {rows.map((row) => (
-        <View
-          key={row.title}
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 12,
-            paddingVertical: 12,
-            paddingHorizontal: 14,
-            borderRadius: 14,
-            borderWidth: 1,
-            borderColor: theme.learnGlassBorder,
-            backgroundColor: theme.learnSearchBg,
-            opacity: row.accent ? 1 : 0.85,
-          }}
-        >
-          <MaterialIcons name={row.icon} size={22} color={row.accent ? theme.learnAccent : theme.learnOutline} />
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontFamily: fontBody, fontSize: 15, fontWeight: '700', color: theme.learnOnSurface }}>{row.title}</Text>
-            <Text style={{ fontFamily: fontBody, fontSize: 12, color: theme.learnOnSurfaceVariant, marginTop: 2 }}>{row.sub}</Text>
-          </View>
-          <MaterialIcons name="chevron-right" size={20} color={theme.learnOutline} />
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 12,
+          paddingVertical: 12,
+          paddingHorizontal: 14,
+          borderRadius: 14,
+          borderWidth: 1,
+          borderColor: theme.learnGlassBorder,
+          backgroundColor: theme.learnSearchBg,
+        }}
+      >
+        <MaterialIcons name="library-books" size={22} color={theme.learnAccent} />
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontFamily: fontBody, fontSize: 15, fontWeight: '700', color: theme.learnOnSurface }}>
+            The Argument Architecture Lexicon
+          </Text>
+          <Text style={{ fontFamily: fontBody, fontSize: 12, color: theme.learnOnSurfaceVariant, marginTop: 2 }}>
+            80 words · Curated pack
+          </Text>
         </View>
-      ))}
+        <MaterialIcons name="chevron-right" size={20} color={theme.learnOutline} />
+      </View>
     </View>
   )
 }

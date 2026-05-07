@@ -6,6 +6,7 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   View,
@@ -165,21 +166,26 @@ export function StackAssignmentSheet({
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={() => !saving && onCancel()}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <Pressable
-          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'flex-end' }}
-          onPress={() => !saving && !creatingStack && onCancel()}
-        >
-          <Pressable onPress={(e) => e.stopPropagation()} style={{ maxHeight: sheetMaxHeight }}>
-            <View
-              style={{
-                backgroundColor: theme.learnScreenBg,
-                borderTopLeftRadius: 20,
-                borderTopRightRadius: 20,
-                paddingBottom: Math.max(insets.bottom, 16),
-                paddingHorizontal: 20,
-                paddingTop: 14,
-              }}
-            >
+        <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+          <Pressable
+            accessibilityRole="button"
+            style={[StyleSheet.absoluteFillObject, { backgroundColor: 'rgba(0,0,0,0.55)' }]}
+            onPress={() => {
+              if (!saving && !creatingStack) onCancel()
+            }}
+          />
+          <View
+            style={{
+              maxHeight: sheetMaxHeight,
+              width: '100%',
+              backgroundColor: theme.learnScreenBg,
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              paddingBottom: Math.max(insets.bottom, 16),
+              paddingHorizontal: 20,
+              paddingTop: 14,
+            }}
+          >
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Text style={{ fontFamily: fontHeadline, fontSize: 18, fontWeight: '800', color: theme.learnOnSurface }}>
                   {membershipEdit ? 'Stacks for this word' : 'Save to deck'}
@@ -370,8 +376,7 @@ export function StackAssignmentSheet({
                 </Text>
               </Pressable>
             </View>
-          </Pressable>
-        </Pressable>
+        </View>
       </KeyboardAvoidingView>
     </Modal>
   )

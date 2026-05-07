@@ -35,6 +35,8 @@ export type GenerateParagraphOptions = {
   theme?: string
   focusedIndex?: number
   totalPassages?: number
+  /** Optional client nonce so each request differs (reduces stale / repetitive completions). */
+  nonce?: string
 }
 
 export async function generateParagraph(items: VocabItem[], options?: GenerateParagraphOptions) {
@@ -56,6 +58,7 @@ export async function generateParagraph(items: VocabItem[], options?: GeneratePa
   if (typeof options?.totalPassages === 'number' && Number.isInteger(options.totalPassages)) {
     payload.totalPassages = options.totalPassages
   }
+  if (options?.nonce?.trim()) payload.nonce = String(options.nonce).trim().slice(0, 64)
 
   const baseUrl = requireFunctionsBaseUrl()
   const res = await fetch(`${baseUrl}/generateParagraph`, {

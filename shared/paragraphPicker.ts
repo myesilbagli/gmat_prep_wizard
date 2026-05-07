@@ -5,6 +5,16 @@ import type { VocabItem } from './types'
 const DAY_MS = 24 * 60 * 60 * 1000
 const IDEAL_CENTER = 8
 
+/** Fisher–Yates; mutates `arr`. */
+function shuffleArray<T>(arr: T[], rng: () => number): void {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1))
+    const t = arr[i]!
+    arr[i] = arr[j]!
+    arr[j] = t
+  }
+}
+
 function isLearning(item: VocabItem): boolean {
   return item.exposureScore < MASTERED_MIN_SCORE
 }
@@ -105,6 +115,10 @@ function rankForUpper(source: VocabItem[], nowMs: number, upper: number): VocabI
  * Pool (when set): **From Learning** = bucket `learning` only (excludes `new`);
  * **From Familiar** = `familiar`; **Mixed** = `learning` ∪ `familiar`. Mastered never matches these buckets.
  * When `pool` is omitted, uses legacy filter: all non-mastered words (`isLearning`), matching older web behavior.
+ *
+ * Builds a **ranked** eligible list (tier order preserved), then draws `max` words from a **shuffled pool**:
+ * when there are many candidates, uses a random sliding window over the ranked list (so runs are not stuck on the
+ * same top-25 slice), then Fisher–Yates shuffle and take `max`.
  */
 export function pickParagraphWords(
   items: VocabItem[],
@@ -118,39 +132,41 @@ export function pickParagraphWords(
   const universe = applyStackCohesion(pooled)
 
   const seen = new Set<string>()
-  const out: VocabItem[] = []
+  const ranked: VocabItem[] = []
 
   for (const w of rankForUpper(universe, nowMs, 15)) {
-    if (out.length >= max) break
     if (seen.has(w.id)) continue
-    out.push(w)
     seen.add(w.id)
+    ranked.push(w)
   }
-  if (out.length < max) {
-    for (const w of rankForUpper(universe, nowMs, 20)) {
-      if (out.length >= max) break
-      if (seen.has(w.id)) continue
-      out.push(w)
-      seen.add(w.id)
-    }
+  for (const w of rankForUpper(universe, nowMs, 20)) {
+    if (seen.has(w.id)) continue
+    seen.add(w.id)
+    ranked.push(w)
   }
-  if (out.length < max) {
-    const fallback = universe.filter((i) => {
-      if (i.exposureScore <= 0) return false
-      if (timestampToMillis(i.lastSeenAt) == null) return false
-      return true
-    })
-    fallback.sort(
-      (a, b) =>
-        Math.abs(a.exposureScore - IDEAL_CENTER) - Math.abs(b.exposureScore - IDEAL_CENTER),
-    )
-    for (const w of fallback) {
-      if (out.length >= max) break
-      if (seen.has(w.id)) continue
-      out.push(w)
-      seen.add(w.id)
-    }
+  const fallback = universe.filter((i) => {
+    if (i.exposureScore <= 0) return false
+    if (timestampToMillis(i.lastSeenAt) == null) return false
+    return true
+  })
+  fallback.sort(
+    (a, b) =>
+      Math.abs(a.exposureScore - IDEAL_CENTER) - Math.abs(b.exposureScore - IDEAL_CENTER),
+  )
+  for (const w of fallback) {
+    if (seen.has(w.id)) continue
+    seen.add(w.id)
+    ranked.push(w)
   }
 
-  return out.slice(0, max)
+  const poolCap = Math.min(50, ranked.length)
+  let pool: VocabItem[]
+  if (ranked.length <= poolCap) {
+    pool = ranked.slice()
+  } else {
+    const start = Math.floor(Math.random() * (ranked.length - poolCap + 1))
+    pool = ranked.slice(start, start + poolCap)
+  }
+  shuffleArray(pool, Math.random)
+  return pool.slice(0, max)
 }

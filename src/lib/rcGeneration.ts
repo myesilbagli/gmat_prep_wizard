@@ -41,7 +41,9 @@ function buildNonce(): string {
 async function postJson<T>(path: string, body: unknown): Promise<T> {
   const baseUrl = getFunctionsBaseUrl()
   const token = await getIdToken()
-  const res = await fetch(`${baseUrl}${path}`, {
+  const fullUrl = `${baseUrl}${path}`
+
+  const res = await fetch(fullUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -49,6 +51,7 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
     },
     body: JSON.stringify(body),
   })
+
   if (!res.ok) {
     let serverMessage = ''
     try {
@@ -57,6 +60,7 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
     } catch {
       serverMessage = await res.text().catch(() => '')
     }
+
     throw new Error(serverMessage || `Request failed (${res.status})`)
   }
   return (await res.json()) as T

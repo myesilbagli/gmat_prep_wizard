@@ -31,24 +31,28 @@ function pickReadingDomain(seed: string, index: number): string {
 
 function buildParagraphRequestOptions(session: ReadingSession): GenerateParagraphOptions {
   const { config, currentIndex, totalPassages } = session
-  const lengthHint =
+  let lengthHint =
     config.length === 'quick'
       ? 'Single quick read; one cohesive paragraph (150-200 words).'
       : config.length === 'focused'
         ? 'Part of a three-passage focused set; vary angle while keeping register (150-200 words).'
         : 'Timed single passage; keep density scannable under time pressure (150-200 words).'
 
-  const theme = config.theme?.trim()
+  const userTheme = config.theme?.trim()
+  if (userTheme) {
+    lengthHint += ` THEME LOCK-IN: Most of the passage must clearly develop the user's theme "${userTheme}" (concrete context, debate, or mechanism under that theme). Do not replace it with a generic unrelated subject; integrate each vocabulary target in a way that still reads as about this theme where linguistically plausible.`
+  }
+
   const seed = session.usedWordIds.join('|') || 'deck'
   const domain =
-    theme && theme.length > 0 ? undefined : pickReadingDomain(`${seed}|${currentIndex}`, currentIndex)
+    userTheme && userTheme.length > 0 ? undefined : pickReadingDomain(`${seed}|${currentIndex}`, currentIndex)
 
   const opts: GenerateParagraphOptions = {
     difficulty: 'intermediate',
     lengthHint,
   }
   if (domain) opts.domain = domain
-  if (theme) opts.theme = theme
+  if (userTheme) opts.theme = userTheme
   if (totalPassages > 1) {
     opts.focusedIndex = currentIndex
     opts.totalPassages = totalPassages
@@ -118,8 +122,10 @@ export function ReadingScreen({
       if (!picked.length) {
         throw new Error('No eligible words for this pool. Try another pool or study more words first.')
       }
+
       const apiOpts = buildParagraphRequestOptions(session)
-      const resp = await generateParagraph(picked, apiOpts)
+      const nonce = `n-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`
+      const resp = await generateParagraph(picked, { ...apiOpts, nonce })
       if (!resp.parts?.length) throw new Error('Empty paragraph response.')
 
       /**
@@ -193,6 +199,8 @@ export function ReadingScreen({
   const glossExample =
     glossaryWord?.examples?.[0] ?? glossaryWord?.exampleSentence ?? ''
 
+  const sessionTheme = session.config.theme?.trim()
+
   return (
     <GlassScreenRoot theme={theme}>
       <View style={{ flex: 1 }}>
@@ -252,6 +260,20 @@ export function ReadingScreen({
           >
             Reading
           </Text>
+          {sessionTheme ? (
+            <Text
+              style={{
+                fontFamily: fontBody,
+                fontSize: 13,
+                lineHeight: 19,
+                color: theme.learnAccent,
+                marginBottom: 10,
+              }}
+              accessibilityLabel={`Active theme: ${sessionTheme}`}
+            >
+              Theme: {sessionTheme}
+            </Text>
+          ) : null}
           {timed ? (
             <Text style={{ fontFamily: fontBody, fontSize: 13, color: theme.learnOnSurfaceVariant, marginBottom: 12 }}>
               Glossary unlocks when the timer reaches 0.

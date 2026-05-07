@@ -189,7 +189,8 @@ export async function saveExamDateIso(iso: string | null) {
 
 export async function completeOnboardingProfile(params: {
   examDateIso: string | null
-  firstStackId: string
+  /** Set when the user chose to import a starter stack during onboarding. */
+  firstStackId: string | null
 }) {
   const uid = requireUid()
   const ref = doc(db, 'users', uid, ...PROFILE_PATH)

@@ -11,7 +11,8 @@ import {
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { MaterialIcons } from '@expo/vector-icons'
-import { BASICS_STACK_ID } from '@shared/freemium'
+import { WORD_STACK_CATALOG } from '@shared/freemium'
+import { CANONICAL_STACK_ORDER } from '@shared/canonicalStacks'
 import { getWordsForStack } from '@shared/wordStackContent'
 import { DEFAULT_MAIN_LANGUAGE, normalizeMainLanguageCode } from '@shared/languages'
 import { formatDateKeyInTimezone } from '@shared/dateInTimezone'
@@ -35,6 +36,8 @@ import {
 
 const STEPS = 7
 
+const ONBOARDING_STACK_ID = 'stack_arg_architecture' as const
+
 type Props = {
   theme: AppTheme
   onComplete: () => void
@@ -53,6 +56,11 @@ export function OnboardingFlow({ theme, onComplete, onReloadWords }: Props) {
     formatDateKeyInTimezone(new Date(), Intl.DateTimeFormat().resolvedOptions().timeZone || DEFAULT_TIMEZONE),
   )
   const [mainLanguage, setMainLanguage] = useState(DEFAULT_MAIN_LANGUAGE)
+  const [addArgStackToVocabs, setAddArgStackToVocabs] = useState(true)
+
+  const argStackTitle =
+    CANONICAL_STACK_ORDER.find((s) => s.id === ONBOARDING_STACK_ID)?.title ?? 'Argument Architecture'
+  const argStackWordCount = WORD_STACK_CATALOG.find((s) => s.id === ONBOARDING_STACK_ID)?.wordCount ?? 0
 
   const fade = useRef(new Animated.Value(1)).current
   const slide = useRef(new Animated.Value(0)).current
@@ -101,19 +109,21 @@ export function OnboardingFlow({ theme, onComplete, onReloadWords }: Props) {
     setSubmitError(null)
     setSubmitting(true)
     try {
-      const words = getWordsForStack(BASICS_STACK_ID)
-      if (words.length === 0) throw new Error('Basics stack is empty.')
-      for (let i = 0; i < words.length; i++) {
-        await saveWordFromStackImport({
-          text: words[i]!,
-          mainLanguage,
-          stackId: BASICS_STACK_ID,
-          stackPosition: i,
-        })
+      if (addArgStackToVocabs) {
+        const words = getWordsForStack(ONBOARDING_STACK_ID)
+        if (words.length === 0) throw new Error('Argument Architecture stack is empty.')
+        for (let i = 0; i < words.length; i++) {
+          await saveWordFromStackImport({
+            text: words[i]!,
+            mainLanguage,
+            stackId: ONBOARDING_STACK_ID,
+            stackPosition: i,
+          })
+        }
       }
       await completeOnboardingProfile({
         examDateIso,
-        firstStackId: BASICS_STACK_ID,
+        firstStackId: addArgStackToVocabs ? ONBOARDING_STACK_ID : null,
       })
       await onReloadWords()
       onComplete()
@@ -122,7 +132,7 @@ export function OnboardingFlow({ theme, onComplete, onReloadWords }: Props) {
     } finally {
       setSubmitting(false)
     }
-  }, [examDateIso, mainLanguage, onComplete, onReloadWords])
+  }, [addArgStackToVocabs, examDateIso, mainLanguage, onComplete, onReloadWords])
 
   const progress = `${step + 1} / ${STEPS}`
   const cardBg = theme.surface2
@@ -184,7 +194,7 @@ export function OnboardingFlow({ theme, onComplete, onReloadWords }: Props) {
                 fontHeadline={fontHeadline}
                 fontBody={fontBody}
                 title="Stacks keep you honest"
-                body="Curated lists (including Basics) let you bulk-add high-value vocabulary instead of hoping you’ll remember to save words later."
+                body="Curated word stacks let you bulk-add high-value vocabulary instead of hoping you’ll remember to save words later."
               />
               <View style={styles.mockBelow}>
                 <MockStacksList theme={theme} fontBody={fontBody} />
@@ -232,7 +242,7 @@ export function OnboardingFlow({ theme, onComplete, onReloadWords }: Props) {
               <Text
                 style={[styles.screenBody, { color: theme.learnOnSurfaceVariant, fontFamily: fontBody, marginBottom: 16 }]}
               >
-                Pick your GMAT date and add the Argument Architecture stack to your deck. Then we’ll run your first session.
+                Pick your GMAT date. Optionally add the Argument Architecture stack to your vocabs, then you’re ready to study.
               </Text>
               <Text style={[styles.fieldLabel, { color: theme.learnOnSurfaceVariant, fontFamily: fontLabel }]}>
                 EXAM DATE
@@ -243,27 +253,63 @@ export function OnboardingFlow({ theme, onComplete, onReloadWords }: Props) {
                 examDateIso={examDateIso}
                 onExamDateIsoChange={setExamDateIso}
               />
-              <View
+              <Text
                 style={[
-                  styles.basicsCard,
+                  styles.fieldLabel,
+                  { color: theme.learnOnSurfaceVariant, fontFamily: fontLabel, marginTop: 20 },
+                ]}
+              >
+                STARTER STACK
+              </Text>
+              <Pressable
+                onPress={() => setAddArgStackToVocabs((v) => !v)}
+                style={({ pressed }) => [
+                  styles.onbStackCard,
                   {
-                    borderColor: theme.learnGlassBorder,
+                    borderColor: addArgStackToVocabs ? theme.learnAccent : theme.learnGlassBorder,
                     backgroundColor: theme.learnSearchBg,
-                    marginTop: 18,
+                    marginTop: 8,
+                    opacity: pressed ? 0.92 : 1,
                     ...glassScreenShadow(theme),
                   },
                 ]}
               >
-                <MaterialIcons name="library-books" size={28} color={theme.learnAccent} />
+                <View
+                  style={{
+                    width: 22,
+                    height: 22,
+                    borderRadius: 6,
+                    borderWidth: 2,
+                    borderColor: addArgStackToVocabs ? theme.learnAccent : theme.learnGlassBorder,
+                    backgroundColor: addArgStackToVocabs ? theme.learnAccent : 'transparent',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginTop: 2,
+                  }}
+                >
+                  {addArgStackToVocabs ? <MaterialIcons name="check" size={16} color={theme.learnPillActiveText} /> : null}
+                </View>
                 <View style={{ flex: 1, marginLeft: 12 }}>
-                  <Text style={{ fontFamily: fontHeadline, fontSize: 17, fontWeight: '800', color: theme.learnOnSurface }}>
-                    Basics · 50 words
-                  </Text>
-                  <Text style={{ fontFamily: fontBody, fontSize: 14, color: theme.learnOnSurfaceVariant, marginTop: 4 }}>
-                    Starter vocabulary covering core verbal and quantitative terms — added to your deck on continue.
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <MaterialIcons name="library-books" size={22} color={theme.learnAccent} />
+                    <Text style={{ fontFamily: fontHeadline, fontSize: 17, fontWeight: '800', color: theme.learnOnSurface }}>
+                      Add to my vocabs
+                    </Text>
+                  </View>
+                  <Text
+                    style={{
+                      fontFamily: fontBody,
+                      fontSize: 14,
+                      color: theme.learnOnSurfaceVariant,
+                      marginTop: 4,
+                    }}
+                    numberOfLines={4}
+                  >
+                    {argStackTitle} · {argStackWordCount} words — GMAT argument-move vocabulary. Turn off to start with an
+                    empty deck and add words yourself.
                   </Text>
                 </View>
-              </View>
+              </Pressable>
               {submitError ? (
                 <Text style={{ color: theme.danger, fontFamily: fontBody, marginTop: 12, textAlign: 'center' }}>{submitError}</Text>
               ) : null}
@@ -304,7 +350,7 @@ export function OnboardingFlow({ theme, onComplete, onReloadWords }: Props) {
               <ActivityIndicator color={theme.learnPillActiveText} />
             ) : (
               <Text style={{ fontFamily: fontHeadline, fontSize: 16, fontWeight: '800', color: theme.learnPillActiveText }}>
-                Add Basics & start session
+                Get started
               </Text>
             )}
           </Pressable>
@@ -452,7 +498,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     width: '100%',
   },
-  basicsCard: {
+  onbStackCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     borderRadius: 16,
