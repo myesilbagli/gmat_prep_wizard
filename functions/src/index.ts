@@ -12,6 +12,7 @@ import {
 import { parseJsonFromOutputText } from '../../shared/parseOpenAiJson'
 import { validateGeneratedResult } from '../../shared/wordGeneration'
 import type { RcDifficulty, RcQuestionType } from '../../shared/rcTypes'
+import type { CrQuestionType } from '../../shared/crTypes'
 
 setGlobalOptions({ region: 'us-central1' })
 
@@ -168,6 +169,11 @@ export const api = onRequest(
 
       if (routeBase === 'generateRcQuestionSet') {
         await handleGenerateRcQuestionSet(req.body as any, decoded.uid, res)
+        return
+      }
+
+      if (routeBase === 'generateCrQuestion') {
+        await handleGenerateCrQuestion(req.body as any, decoded.uid, res)
         return
       }
 
@@ -1174,7 +1180,9 @@ function fisherYatesShuffle<T>(arr: T[]): void {
  * correctIndex to point at the new home of the correct text, so the choice
  * at correctIndex remains the originally-correct one.
  */
-function redistributeCorrectPositions(questions: RcQuestionShape[]): void {
+function redistributeCorrectPositions(
+  questions: Array<{ choices: string[]; correctIndex: number }>,
+): void {
   if (questions.length === 0) return
 
   // Step 1: per-question Fisher–Yates with tag-and-track.
@@ -1291,6 +1299,311 @@ async function handleGenerateRcQuestionSet(body: any, _uid: string, res: any) {
   const code = last.fail === 'parse' ? 'RC_PARSE' : 'RC_VALIDATE'
   const payload: Record<string, unknown> = {
     error: 'AI could not generate a valid RC question set',
+    code,
+  }
+  if (last.fail === 'validate') {
+    payload.validationStage = last.stage
+  }
+  res.status(502).json(payload)
+}
+
+// =====================================================================
+// CR (Critical Reasoning) — single-question demo endpoint
+// =====================================================================
+
+const CR_QUESTION_TYPES: ReadonlyArray<CrQuestionType> = [
+  'assumption',
+  'strengthen',
+  'weaken',
+  'evaluate',
+  'inference',
+  'explain',
+] as const
+
+function isCrQuestionType(v: unknown): v is CrQuestionType {
+  return typeof v === 'string' && (CR_QUESTION_TYPES as readonly string[]).includes(v)
+}
+
+function parseCrQuestionType(body: any): CrQuestionType {
+  const v = body?.questionType
+  if (isCrQuestionType(v)) return v
+  throw new Error(
+    "questionType must be one of: 'assumption', 'strengthen', 'weaken', 'evaluate', 'inference', 'explain'",
+  )
+}
+
+/** Per-type logical specification — the actual hard part. Each entry tells
+ * the model what the correct answer must do logically and what the
+ * distractors must fail to do. */
+const CR_TYPE_LOGIC_SPECS: Record<CrQuestionType, string> = {
+  assumption:
+    'The correct answer is a NECESSARY unstated premise: if it were false, the argument would fall apart. Test: negate the correct answer; the conclusion must no longer follow. Distractors must be statements that are plausible or supportive of the argument but NOT necessary — the argument still works if they are false.',
+  strengthen:
+    'The correct answer must add support to the specific inferential leap between premises and conclusion. Distractors must be on-topic but fail to strengthen that leap: they restate a premise, support a side point, or are irrelevant to the logical link.',
+  weaken:
+    'The correct answer must attack the specific link the conclusion depends on. Distractors must fail to weaken it — they attack an irrelevant point, or are logically neutral toward the conclusion.',
+  evaluate:
+    "The correct answer is a question whose answer would determine whether the argument holds. Distractors are questions whose answers would not bear on the argument's validity, regardless of which way they resolve.",
+  inference:
+    'The correct answer MUST follow from the stated information with no additional assumptions. Distractors must NOT be guaranteed by the text: they require extra assumptions, overstate, or contradict the stated information.',
+  explain:
+    'The argument presents a surprising result, paradox, or apparent contradiction. The correct answer reconciles it — provides a reason both sides can be true. Distractors fail to resolve the contradiction (they restate it, deepen it, or are irrelevant).',
+}
+
+/** Canonical question stems per type. The prompt asks the model to use a
+ * stem "in this style"; the exact wording can vary slightly. */
+const CR_TYPE_STEMS: Record<CrQuestionType, string> = {
+  assumption: 'Which of the following is an assumption on which the argument depends?',
+  strengthen:
+    'Which of the following, if true, would most strengthen the argument?',
+  weaken:
+    'Which of the following, if true, most seriously weakens the argument?',
+  evaluate:
+    'Which of the following would be most useful to know in order to evaluate the argument?',
+  inference:
+    'Which of the following can be properly inferred from the statements above?',
+  explain:
+    'Which of the following, if true, best explains the apparent discrepancy described above?',
+}
+
+const CR_ANSWER_CHOICE_RULES = [
+  'Exactly 5 choices.',
+  'Exactly one is correct.',
+  'Distractors must be plausible-but-wrong, not obviously wrong: topically relevant and',
+  '  superficially attractive, but each failing the specific logical job for this question type.',
+  'Vary choice lengths naturally — do not pad short choices to match a long correct answer,',
+  '  and do not truncate well-formed answers to match a terse distractor.',
+  'Do not start multiple choices with the same 4-word prefix.',
+  'No "all of the above" / "none of the above" choices.',
+].join('\n')
+
+const CR_EXPLANATION_RULES = [
+  'Explanation must be at least 2 sentences and at least 100 characters.',
+  "Sentence 1: state why the correct answer is correct in terms of the argument's logic for",
+  '  this question type (e.g. for an assumption question, why the argument collapses if the',
+  '  correct answer is false).',
+  'Sentences 2+: address each wrong choice. Identify the logical failure (irrelevant to the',
+  '  link, unnecessary, overstates, etc.).',
+  'CRITICAL — reference each wrong choice by a brief content paraphrase, NOT by its letter or',
+  '  position. The choices will be shuffled before display, so letter/position references will',
+  '  become incorrect.',
+  'FORBIDDEN phrases (never use these): "Choice A", "Choice B", "Choice C", "Choice D",',
+  '  "Choice E", "Option A", "Option B", "Option C", "Option D", "Option E", "answer A",',
+  '  "answer B", "answer C", "answer D", "answer E", "the first choice", "the second choice",',
+  '  "the third choice", "the fourth choice", "the fifth choice", "the last choice", "(A)",',
+  '  "(B)", "(C)", "(D)", "(E)".',
+  'INSTEAD, refer to each wrong choice by a short quoted phrase or paraphrase that uniquely',
+  '  identifies its content. Example pattern: "the choice claiming that the new policy will',
+  '  reduce demand is unnecessary because…".',
+  'Tone: instructive, not condescending. No phrases like "obviously", "clearly", "any reader',
+  '  can see".',
+].join('\n')
+
+function buildCrQuestionJsonSchema(): Record<string, unknown> {
+  return {
+    type: 'object',
+    additionalProperties: false,
+    required: [
+      'questionType',
+      'argument',
+      'questionStem',
+      'choices',
+      'correctIndex',
+      'explanation',
+    ],
+    properties: {
+      questionType: {
+        type: 'string',
+        enum: ['assumption', 'strengthen', 'weaken', 'evaluate', 'inference', 'explain'],
+      },
+      argument: { type: 'string' },
+      questionStem: { type: 'string' },
+      choices: {
+        type: 'array',
+        minItems: 5,
+        maxItems: 5,
+        items: { type: 'string' },
+      },
+      correctIndex: { type: 'integer', minimum: 0, maximum: 4 },
+      explanation: { type: 'string' },
+    },
+  }
+}
+
+type CrQuestionShape = {
+  questionType: CrQuestionType
+  argument: string
+  questionStem: string
+  choices: string[]
+  correctIndex: number
+  explanation: string
+}
+
+function isValidCrQuestionResponse(x: any): x is CrQuestionShape {
+  if (!x || typeof x !== 'object') return false
+  if (!isCrQuestionType(x.questionType)) return false
+  if (typeof x.argument !== 'string' || x.argument.trim().length === 0) return false
+  if (typeof x.questionStem !== 'string' || x.questionStem.trim().length === 0) return false
+  if (!Array.isArray(x.choices) || x.choices.length !== 5) return false
+  if (!x.choices.every((c: any) => typeof c === 'string' && c.trim().length > 0)) return false
+  if (
+    typeof x.correctIndex !== 'number' ||
+    !Number.isInteger(x.correctIndex) ||
+    x.correctIndex < 0 ||
+    x.correctIndex > 4
+  ) {
+    return false
+  }
+  if (typeof x.explanation !== 'string' || x.explanation.trim().length === 0) return false
+  return true
+}
+
+function validateCrQuestionResponseResult(
+  parsed: unknown,
+  rawText: string,
+): { ok: true } | { ok: false; stage: string } {
+  const trimmed = rawText?.trim() ?? ''
+  if (!trimmed) return { ok: false, stage: 'cr_empty_output' }
+  if (parsed == null || typeof parsed !== 'object') return { ok: false, stage: 'cr_not_object' }
+  if (!isValidCrQuestionResponse(parsed)) return { ok: false, stage: 'cr_invalid_shape' }
+  return { ok: true }
+}
+
+function buildCrPrompt(args: { questionType: CrQuestionType }): string {
+  const { questionType } = args
+  return [
+    'You are a GMAT verbal expert writing a Critical Reasoning question. Return JSON only.',
+    '',
+    'ARGUMENT LENGTH: 50-100 words. Real GMAT CR arguments are short, tight prose —',
+    'typically one short paragraph. Do NOT write a passage. Do not add background, framing,',
+    'or scene-setting beyond what the logic requires.',
+    '',
+    'CONCRETENESS / REALISM: Use concrete actors and scenarios — a publisher, a consultant,',
+    'a city council, a researcher, a dealer; business, science, public-policy, or everyday',
+    'domains. Plausible, modern, ground-level scenarios. No vague abstractions. No fictional',
+    'names of real living people.',
+    '',
+    `QUESTION TYPE: ${questionType}`,
+    '',
+    'LOGICAL SPECIFICATION (must satisfy):',
+    CR_TYPE_LOGIC_SPECS[questionType],
+    '',
+    `QUESTION STEM: use a stem in this style: "${CR_TYPE_STEMS[questionType]}". Phrasing may`,
+    'vary slightly to fit the argument, but the role of the stem must match the type above.',
+    '',
+    'CONSTRUCTION ORDER (do not skip):',
+    "1. First, identify the argument's core logical gap — the unstated link between the",
+    '   premises and the conclusion.',
+    "2. Then construct the correct answer so that it satisfies the question type's logical",
+    '   role on that specific gap.',
+    '3. Then construct four distractors that are topically relevant and superficially',
+    '   plausible but each fail the logical job — by being unnecessary, irrelevant to the',
+    '   link, or true-but-not-doing-the-work.',
+    '',
+    'SELF-CHECK (do before finalizing):',
+    `- Does the correct answer satisfy the logical test for ${questionType}?`,
+    '- For each distractor, confirm it FAILS that test.',
+    '- The correct answer must be unambiguously the best; no distractor should also satisfy',
+    '  the logical relationship.',
+    '',
+    'ANSWER CHOICE QUALITY:',
+    CR_ANSWER_CHOICE_RULES,
+    '',
+    'EXPLANATION FORMAT:',
+    CR_EXPLANATION_RULES,
+    '',
+    'PROHIBITIONS:',
+    '- No "all of the above" / "none of the above" choices.',
+    '- No questions about grammar or writing style.',
+    '- correctIndex MUST be an integer 0-4.',
+    '',
+    'OUTPUT FORMAT: Return JSON only, no markdown, no code fences:',
+    '{',
+    `  "questionType": "${questionType}",`,
+    '  "argument": "...",',
+    '  "questionStem": "...",',
+    '  "choices": ["...", "...", "...", "...", "..."],',
+    '  "correctIndex": 0,',
+    '  "explanation": "..."',
+    '}',
+  ].join('\n')
+}
+
+async function handleGenerateCrQuestion(body: any, _uid: string, res: any) {
+  const questionType = parseCrQuestionType(body)
+  const reqNonce = parseRcNonce(body)
+
+  const openai = new OpenAI({ apiKey: requireEnv('OPENAI_API_KEY') })
+  const model = process.env.OPENAI_CR_MODEL ?? 'gpt-5'
+  const reasoningEffort = ((process.env.OPENAI_CR_REASONING_EFFORT ?? 'medium') as
+    | 'low'
+    | 'medium'
+    | 'high')
+  const schema = buildCrQuestionJsonSchema()
+  const basePrompt = buildCrPrompt({ questionType })
+
+  const nonceTail = reqNonce
+    ? `\n\nREQUEST_NONCE (vary scenario and angle; do not echo in JSON; no semantic load): "${escapeRcDoubleQuoted(reqNonce)}"`
+    : ''
+
+  type CrAttemptResult =
+    | { ok: true; value: CrQuestionShape }
+    | { ok: false; fail: 'parse' }
+    | { ok: false; fail: 'validate'; stage: string }
+
+  async function attempt(extra: string | null): Promise<CrAttemptResult> {
+    const prompt = `${basePrompt}${nonceTail}${extra ? `\n\n${extra}` : ''}`
+    const completion = await openai.responses.create({
+      model,
+      input: prompt,
+      max_output_tokens: 2500,
+      reasoning: { effort: reasoningEffort },
+      text: {
+        format: {
+          type: 'json_schema',
+          name: 'cr_question',
+          schema,
+          strict: true,
+        },
+      },
+    })
+    const outputText = completion.output_text?.trim() ?? ''
+    const parsed = parseRcModelJson(outputText)
+    if (parsed == null) return { ok: false, fail: 'parse' }
+    const vr = validateCrQuestionResponseResult(parsed, outputText)
+    if (!vr.ok) return { ok: false, fail: 'validate', stage: vr.stage }
+    return { ok: true, value: parsed as CrQuestionShape }
+  }
+
+  const first = await attempt(null)
+  if (first.ok) {
+    redistributeCorrectPositions([first.value])
+    res.status(200).json(first.value)
+    return
+  }
+
+  const second = await attempt(
+    `STRICT: Conform exactly to the JSON schema. Argument 50-100 words. Five non-empty choices. questionType must be "${questionType}". Return only the JSON object.`,
+  )
+  if (second.ok) {
+    redistributeCorrectPositions([second.value])
+    res.status(200).json(second.value)
+    return
+  }
+
+  const third = await attempt(
+    `FINAL ATTEMPT: Return only the JSON object matching the schema. questionType: "${questionType}".`,
+  )
+  if (third.ok) {
+    redistributeCorrectPositions([third.value])
+    res.status(200).json(third.value)
+    return
+  }
+
+  const last = third
+  const code = last.fail === 'parse' ? 'CR_PARSE' : 'CR_VALIDATE'
+  const payload: Record<string, unknown> = {
+    error: 'AI could not generate a valid CR question',
     code,
   }
   if (last.fail === 'validate') {
