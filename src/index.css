@@ -16,10 +16,62 @@
   --danger: #ef4444;
 
   --radius: 14px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
   --radius-pill: 999px;
   --shadow: rgba(0, 0, 0, 0.35) 0 14px 40px -20px;
   --shadow-glow: 0 0 24px rgba(99, 102, 241, 0.25);
   --header-bg: rgba(45, 52, 73, 0.6);
+
+  /* Design system: semantic colors (spec §1.2) */
+  --success: var(--accent-2);
+  --success-soft: rgba(34, 197, 94, 0.08);
+  --success-on-soft: #86efac;
+  --danger-soft: rgba(239, 68, 68, 0.08);
+  --danger-text: #fca5a5;
+  --selection-border: var(--accent-gradient-end);
+  --selection-fill: rgba(99, 102, 241, 0.12);
+  --fill-subtle: rgba(255, 255, 255, 0.03);
+  --fill-muted: rgba(255, 255, 255, 0.06);
+  --text-tertiary: rgba(199, 196, 215, 0.72);
+  --scrim: rgba(0, 0, 0, 0.65);
+  --on-primary: #ffffff;
+
+  /* Spacing (8-point base, spec §3) */
+  --space-2xs: 4px;
+  --space-xs: 8px;
+  --space-sm: 10px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 20px;
+  --space-2xl: 24px;
+  --space-3xl: 32px;
+  --space-4xl: 48px;
+
+  /* Card padding tiers (spec §4) */
+  --card-pad-compact: 16px;
+  --card-pad-comfortable: 20px;
+
+  /* Line heights (spec §2.2) */
+  --leading-tight: 1.15;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.7;
+
+  /* Type scale sizes (spec §2.3) */
+  --text-micro-size: 10px;
+  --text-label-size: 12px;
+  --text-body-sm-size: 13px;
+  --text-body-size: 14px;
+  --text-body-lg-size: 15px;
+  --text-section-size: 16px;
+  --text-card-title-size: 18px;
+  --text-title-size: 20px;
+  --text-headword-size: 24px;
+  --text-headword-emphasis-size: 28px;
+  --text-page-title-size: 28px;
+  --text-hero-size: 32px;
+  --text-stat-value: 20px;
 
   --sans: Manrope, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica,
     Arial, "Apple Color Emoji", "Segoe UI Emoji";
@@ -54,6 +106,19 @@
   --shadow: rgba(0, 0, 0, 0.12) 0 14px 40px -20px;
   --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.18);
   --header-bg: rgba(245, 245, 251, 0.88);
+
+  /* Design system: semantic color overrides for light theme (spec §1.2) */
+  --success: #16a34a;
+  --success-soft: rgba(22, 163, 74, 0.12);
+  --success-on-soft: #15803d;
+  --danger-soft: rgba(239, 68, 68, 0.1);
+  --danger-text: #b91c1c;
+  --selection-fill: rgba(99, 102, 241, 0.1);
+  --fill-subtle: rgba(11, 18, 32, 0.04);
+  --fill-muted: rgba(11, 18, 32, 0.06);
+  --text-tertiary: rgba(11, 18, 32, 0.52);
+  --scrim: rgba(0, 0, 0, 0.45);
+
   color-scheme: light;
   background: radial-gradient(1200px 700px at 20% -10%, rgba(124, 58, 237, 0.10), transparent 55%),
     radial-gradient(900px 600px at 90% 0%, rgba(99, 102, 241, 0.08), transparent 55%),
@@ -154,6 +219,309 @@ textarea {
 
 .muted {
   color: var(--muted);
+}
+
+/* ========== Type utility classes (spec §2.3) ========== */
+
+.text-micro {
+  font-size: var(--text-micro-size);
+  font-weight: 700;
+  line-height: var(--leading-normal);
+  letter-spacing: 0.06em;
+}
+.text-label {
+  font-size: var(--text-label-size);
+  font-weight: 700;
+  line-height: var(--leading-normal);
+  letter-spacing: 0.04em;
+}
+.text-body-sm {
+  font-size: var(--text-body-sm-size);
+  font-weight: 400;
+  line-height: var(--leading-normal);
+}
+.text-body {
+  font-size: var(--text-body-size);
+  font-weight: 400;
+  line-height: var(--leading-normal);
+}
+.text-body-lg {
+  font-size: var(--text-body-lg-size);
+  font-weight: 400;
+  line-height: var(--leading-normal);
+}
+.text-section {
+  font-size: var(--text-section-size);
+  font-weight: 800;
+  line-height: var(--leading-tight);
+}
+.text-card-title {
+  font-size: var(--text-card-title-size);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+  letter-spacing: -0.02em;
+}
+.text-title {
+  font-size: var(--text-title-size);
+  font-weight: 800;
+  line-height: var(--leading-tight);
+  letter-spacing: -0.02em;
+}
+.text-headword {
+  font-size: var(--text-headword-size);
+  font-weight: 800;
+  line-height: var(--leading-tight);
+  letter-spacing: -0.03em;
+}
+.text-headword-emphasis {
+  font-size: var(--text-headword-emphasis-size);
+  font-weight: 800;
+  line-height: var(--leading-tight);
+  letter-spacing: -0.03em;
+}
+.text-page-title {
+  font-size: var(--text-page-title-size);
+  font-weight: 800;
+  line-height: var(--leading-tight);
+  letter-spacing: -0.03em;
+}
+.text-hero {
+  font-size: var(--text-hero-size);
+  font-weight: 800;
+  line-height: var(--leading-tight);
+  letter-spacing: -0.03em;
+}
+
+/* ========== UI components (spec §7) ========== */
+
+/* PrimaryButton — spec §7.1 (canonical name; .btnPrimary kept as legacy alias) */
+.uiPrimaryButton {
+  appearance: none;
+  border: none;
+  background: linear-gradient(135deg, var(--accent-gradient-start), var(--accent-gradient-end));
+  color: var(--on-primary);
+  border-radius: var(--radius-pill);
+  padding: var(--space-md) var(--space-xl);
+  font-weight: 700;
+  font-size: var(--text-body-lg-size);
+  line-height: 1.2;
+  box-shadow: var(--shadow-glow);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  text-decoration: none;
+  font-family: inherit;
+}
+.uiPrimaryButton:hover:not(:disabled):not(.is-loading) {
+  filter: brightness(1.08);
+}
+.uiPrimaryButton:disabled,
+.uiPrimaryButton.is-loading {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* SelectableTile — spec §7.2 */
+.uiSelectableTile {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--fill-subtle);
+  color: var(--text);
+  cursor: pointer;
+  display: block;
+  text-align: left;
+  width: 100%;
+  font-family: inherit;
+  font-size: var(--text-body-size);
+  font-weight: 600;
+  line-height: var(--leading-normal);
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+.uiSelectableTile.is-selected {
+  border: 2px solid var(--selection-border);
+  background: var(--selection-fill);
+}
+.uiSelectableTile:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.uiSelectableTile--pill {
+  border-radius: var(--radius-pill);
+  padding: var(--space-xs) var(--space-lg);
+}
+.uiSelectableTile--tile {
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+}
+.uiSelectableTile__sublabel {
+  display: block;
+  margin-top: var(--space-2xs);
+  font-size: var(--text-body-sm-size);
+  font-weight: 400;
+  color: var(--muted);
+}
+
+/* McqOption — spec §7.3 */
+.uiMcqOption {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--fill-subtle);
+  color: var(--text);
+  border-radius: var(--radius-md);
+  padding: var(--space-md) var(--space-lg);
+  font-size: var(--text-body-size);
+  line-height: var(--leading-normal);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+.uiMcqOption.is-selected {
+  border: 2px solid var(--selection-border);
+  background: var(--selection-fill);
+}
+.uiMcqOption.is-correct {
+  border: 2px solid var(--success);
+  background: color-mix(in srgb, var(--success) 20%, transparent);
+}
+.uiMcqOption.is-incorrect {
+  border: 2px solid var(--danger);
+  background: color-mix(in srgb, var(--danger) 20%, transparent);
+}
+.uiMcqOption.is-dimmed {
+  border: 1px solid transparent;
+  background: var(--fill-subtle);
+  color: var(--muted);
+  opacity: 0.6;
+}
+.uiMcqOption:disabled {
+  cursor: default;
+}
+.uiMcqOption__letter {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1;
+}
+.uiMcqOption.is-selected .uiMcqOption__letter {
+  border-color: transparent;
+  background: var(--selection-border);
+  color: var(--on-primary);
+}
+.uiMcqOption.is-correct .uiMcqOption__letter {
+  border-color: transparent;
+  background: var(--success);
+  color: var(--on-primary);
+}
+.uiMcqOption.is-incorrect .uiMcqOption__letter {
+  border-color: transparent;
+  background: var(--danger);
+  color: var(--on-primary);
+}
+
+/* Alert — spec §7.4 */
+.uiAlert {
+  border-radius: var(--radius-sm);
+  padding: var(--space-md);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--leading-normal);
+}
+.uiAlert--error {
+  background: var(--danger-soft);
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+  color: var(--danger-text);
+}
+.uiAlert--success {
+  background: var(--success-soft);
+  border: 1px solid color-mix(in srgb, var(--success) 40%, transparent);
+  color: var(--success-on-soft);
+}
+.uiAlert--info {
+  background: var(--fill-subtle);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+/* GenerationLoader — animated wait UI for long generation calls */
+.generationLoader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  padding: var(--space-2xl);
+  text-align: center;
+  color: var(--text);
+}
+.generationLoader__svg {
+  animation: generationLoaderSpin 1.4s linear infinite;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+.generationLoader__ring.is-reduced .generationLoader__svg {
+  animation: none;
+}
+.generationLoader__title {
+  color: var(--text);
+}
+.generationLoader__message {
+  color: var(--muted);
+  font-size: var(--text-body-size);
+  line-height: var(--leading-normal);
+  min-height: 1.5em;
+  max-width: 480px;
+  transition: opacity 300ms ease;
+}
+@keyframes generationLoaderSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .generationLoader__svg {
+    animation: none;
+  }
+  .generationLoader__message {
+    transition: none;
+  }
+}
+
+/* StatBlock — spec §7.5 */
+.uiStatBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+}
+.uiStatBlock__label {
+  font-size: var(--text-label-size);
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+.uiStatBlock__value {
+  font-size: var(--text-stat-value);
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.1;
+}
+.uiStatBlock__sublabel {
+  font-size: var(--text-body-sm-size);
+  color: var(--text-tertiary);
 }
 
 /* Marketing landing (#/landing) — Stitch export palette */

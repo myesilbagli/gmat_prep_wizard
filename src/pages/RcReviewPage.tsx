@@ -3,6 +3,12 @@ import { useNavigate, useParams } from 'react-router-dom'
 import type { RcAttempt, RcQuestionType } from '../../shared/rcTypes'
 import { createRcAttempt, getRcAttempt } from '../lib/rcAttempts'
 import { generateRcPassage } from '../lib/rcGeneration'
+import { PrimaryButton } from '../components/ui/PrimaryButton'
+import { McqOption } from '../components/ui/McqOption'
+import { Alert } from '../components/ui/Alert'
+import { StatBlock } from '../components/ui/StatBlock'
+import { GenerationLoader } from '../components/GenerationLoader'
+import { RC_LOADING_MESSAGES } from '../lib/loadingMessages'
 
 const QUESTION_TYPE_LABELS: Record<RcQuestionType, string> = {
   main_idea: 'Main idea',
@@ -82,31 +88,18 @@ export function RcReviewPage() {
 
   if (error) {
     return (
-      <div className="container" style={{ paddingTop: 32, paddingBottom: 32 }}>
-        <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800 }}>Review</h1>
-        <div
-          role="alert"
-          style={{
-            marginTop: 16,
-            padding: 12,
-            borderRadius: 10,
-            border: '1px solid rgba(239, 68, 68, 0.4)',
-            background: 'rgba(239, 68, 68, 0.08)',
-            color: '#FCA5A5',
-            fontSize: 14,
-          }}
-        >
+      <div
+        className="container"
+        style={{ paddingTop: 'var(--space-3xl)', paddingBottom: 'var(--space-3xl)' }}
+      >
+        <h1 className="text-headword" style={{ margin: 0 }}>
+          Review
+        </h1>
+        <Alert variant="error" style={{ marginTop: 'var(--space-lg)' }}>
           {error}
-        </div>
-        <div style={{ marginTop: 16 }}>
-          <button
-            type="button"
-            className="btn"
-            onClick={() => navigate('/exam')}
-            style={primaryButtonStyle()}
-          >
-            Back to exam hub
-          </button>
+        </Alert>
+        <div style={{ marginTop: 'var(--space-lg)' }}>
+          <PrimaryButton onClick={() => navigate('/exam')}>Back to exam hub</PrimaryButton>
         </div>
       </div>
     )
@@ -114,19 +107,41 @@ export function RcReviewPage() {
 
   if (!attempt) {
     return (
-      <div className="container" style={{ paddingTop: 32, paddingBottom: 32 }}>
+      <div
+        className="container"
+        style={{ paddingTop: 'var(--space-3xl)', paddingBottom: 'var(--space-3xl)' }}
+      >
         <div className="muted">Loading…</div>
       </div>
     )
   }
 
+  if (practicingAgain) {
+    return (
+      <div
+        className="container"
+        style={{ paddingTop: 'var(--space-3xl)', paddingBottom: 'var(--space-3xl)', maxWidth: 720 }}
+      >
+        <div className="card" style={{ padding: 'var(--card-pad-comfortable)' }}>
+          <GenerationLoader
+            title="Generating a new passage"
+            messages={RC_LOADING_MESSAGES}
+          />
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="container" style={{ paddingTop: 24, paddingBottom: 48, maxWidth: 880 }}>
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, letterSpacing: -0.3 }}>
+    <div
+      className="container"
+      style={{ paddingTop: 'var(--space-2xl)', paddingBottom: 'var(--space-4xl)', maxWidth: 880 }}
+    >
+      <div style={{ marginBottom: 'var(--space-xl)' }}>
+        <h1 className="text-page-title" style={{ margin: 0 }}>
           Review
         </h1>
-        <p className="muted" style={{ margin: '6px 0 0', fontSize: 14 }}>
+        <p className="muted text-body" style={{ margin: 'var(--space-xs) 0 0' }}>
           {attempt.topic} · {attempt.difficulty}
         </p>
       </div>
@@ -134,23 +149,23 @@ export function RcReviewPage() {
       <div
         className="card"
         style={{
-          padding: 20,
-          marginBottom: 20,
+          padding: 'var(--card-pad-comfortable)',
+          marginBottom: 'var(--space-xl)',
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-          gap: 12,
+          gap: 'var(--space-md)',
         }}
       >
-        <Stat label="Accuracy" value={`${stats.correct} / ${stats.total}`} />
-        <Stat label="Avg / question" value={formatSeconds(stats.avgSeconds)} />
-        <Stat label="Total time" value={formatSeconds(stats.totalSeconds)} />
+        <StatBlock label="Accuracy" value={`${stats.correct} / ${stats.total}`} />
+        <StatBlock label="Avg / question" value={formatSeconds(stats.avgSeconds)} />
+        <StatBlock label="Total time" value={formatSeconds(stats.totalSeconds)} />
       </div>
 
-      <div className="muted" style={{ fontSize: 12, fontWeight: 700, marginBottom: 12 }}>
+      <div className="muted text-label" style={{ marginBottom: 'var(--space-md)' }}>
         Questions (in order)
       </div>
 
-      <div style={{ display: 'grid', gap: 16 }}>
+      <div style={{ display: 'grid', gap: 'var(--space-lg)' }}>
         {attempt.questions.map((q, i) => {
           const userIdx = typeof q.userAnswerIndex === 'number' ? q.userAnswerIndex : null
           const isCorrect = userIdx != null && userIdx === q.correctIndex
@@ -159,33 +174,30 @@ export function RcReviewPage() {
               key={i}
               className="card"
               style={{
-                padding: 18,
-                borderRadius: 12,
-                border: '1px solid var(--border)',
-                background: 'rgba(255,255,255,0.02)',
+                padding: 'var(--card-pad-comfortable)',
                 display: 'grid',
-                gap: 12,
+                gap: 'var(--space-md)',
               }}
             >
               <div
-                style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--space-sm)',
+                  flexWrap: 'wrap',
+                }}
               >
-                <span
-                  className="muted"
-                  style={{ fontSize: 12, fontWeight: 700, letterSpacing: 0.3 }}
-                >
+                <span className="muted text-label">
                   Question {i + 1} of {attempt.questions.length}
                 </span>
                 <span
+                  className="text-label"
                   style={{
-                    padding: '2px 8px',
-                    borderRadius: 999,
-                    background: 'rgba(99, 102, 241, 0.16)',
-                    color: '#A5B4FC',
-                    fontSize: 11,
-                    fontWeight: 700,
+                    padding: '2px var(--space-xs)',
+                    borderRadius: 'var(--radius-pill)',
+                    background: 'var(--selection-fill)',
+                    color: 'color-mix(in srgb, var(--accent-gradient-end) 75%, var(--text))',
                     textTransform: 'uppercase',
-                    letterSpacing: 0.5,
                   }}
                 >
                   {QUESTION_TYPE_LABELS[q.type] ?? q.type}
@@ -194,98 +206,66 @@ export function RcReviewPage() {
                   state={userIdx == null ? 'unanswered' : isCorrect ? 'correct' : 'wrong'}
                 />
                 {typeof q.timeSeconds === 'number' ? (
-                  <span className="muted" style={{ fontSize: 12 }}>
-                    {formatSeconds(q.timeSeconds)}
-                  </span>
+                  <span className="muted text-label">{formatSeconds(q.timeSeconds)}</span>
                 ) : null}
               </div>
-              <div style={{ fontSize: 16, fontWeight: 600, lineHeight: 1.4 }}>{q.questionText}</div>
-              <div style={{ display: 'grid', gap: 8 }}>
+              <div
+                className="text-section"
+                style={{ fontWeight: 600, lineHeight: 'var(--leading-normal)' }}
+              >
+                {q.questionText}
+              </div>
+              <div style={{ display: 'grid', gap: 'var(--space-xs)' }}>
                 {q.choices.map((c, ci) => {
                   const isUser = userIdx === ci
                   const isAnswer = q.correctIndex === ci
+                  const state = isAnswer ? 'correct' : isUser ? 'incorrect' : 'default'
                   return (
-                    <div
+                    <McqOption
                       key={ci}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: 10,
-                        padding: '10px 12px',
-                        borderRadius: 8,
-                        border: isAnswer
-                          ? '2px solid #22C55E'
-                          : isUser
-                            ? '2px solid #EF4444'
-                            : '1px solid var(--border)',
-                        background: isAnswer
-                          ? 'rgba(34, 197, 94, 0.08)'
-                          : isUser
-                            ? 'rgba(239, 68, 68, 0.06)'
-                            : 'rgba(255,255,255,0.02)',
-                        fontSize: 14,
-                        lineHeight: 1.45,
-                      }}
-                    >
-                      <span
-                        aria-hidden
-                        style={{
-                          flex: '0 0 auto',
-                          width: 22,
-                          height: 22,
-                          borderRadius: 999,
-                          fontWeight: 700,
-                          fontSize: 11,
-                          color: isAnswer ? '#fff' : isUser ? '#fff' : 'var(--muted)',
-                          background: isAnswer
-                            ? '#22C55E'
-                            : isUser
-                              ? '#EF4444'
-                              : 'transparent',
-                          border: isAnswer || isUser ? 'none' : '1px solid var(--border)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          marginTop: 1,
-                        }}
-                      >
-                        {String.fromCharCode(65 + ci)}
-                      </span>
-                      <span style={{ flex: 1 }}>
-                        {c}
-                        {isUser && !isAnswer ? (
-                          <span
-                            className="muted"
-                            style={{ marginLeft: 8, fontSize: 12, fontStyle: 'italic' }}
-                          >
-                            your answer
-                          </span>
-                        ) : null}
-                        {isAnswer ? (
-                          <span
-                            style={{
-                              marginLeft: 8,
-                              fontSize: 12,
-                              color: '#86EFAC',
-                              fontWeight: 600,
-                            }}
-                          >
-                            correct
-                          </span>
-                        ) : null}
-                      </span>
-                    </div>
+                      letter={String.fromCharCode(65 + ci)}
+                      state={state}
+                      disabled
+                      label={
+                        <span>
+                          {c}
+                          {isUser && !isAnswer ? (
+                            <span
+                              className="muted text-body-sm"
+                              style={{
+                                marginLeft: 'var(--space-xs)',
+                                fontStyle: 'italic',
+                              }}
+                            >
+                              your answer
+                            </span>
+                          ) : null}
+                          {isAnswer ? (
+                            <span
+                              className="text-body-sm"
+                              style={{
+                                marginLeft: 'var(--space-xs)',
+                                color: 'var(--success-on-soft)',
+                                fontWeight: 600,
+                              }}
+                            >
+                              correct
+                            </span>
+                          ) : null}
+                        </span>
+                      }
+                    />
                   )
                 })}
               </div>
               <div
+                className="text-body-sm"
                 style={{
-                  fontSize: 13,
-                  lineHeight: 1.6,
+                  lineHeight: 'var(--leading-relaxed)',
                   color: 'var(--muted)',
-                  background: 'rgba(255,255,255,0.02)',
-                  padding: '12px 14px',
-                  borderRadius: 8,
+                  background: 'var(--fill-subtle)',
+                  padding: 'var(--space-md) var(--space-lg)',
+                  borderRadius: 'var(--radius-sm)',
                   border: '1px solid var(--border)',
                 }}
               >
@@ -296,27 +276,30 @@ export function RcReviewPage() {
         })}
       </div>
 
-      <div style={{ marginTop: 24, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-        <button
-          type="button"
-          className="btn"
+      <div
+        style={{
+          marginTop: 'var(--space-2xl)',
+          display: 'flex',
+          gap: 'var(--space-md)',
+          flexWrap: 'wrap',
+        }}
+      >
+        <PrimaryButton
           onClick={onPracticeAgain}
           disabled={practicingAgain}
-          style={primaryButtonStyle(practicingAgain)}
+          loading={practicingAgain}
         >
           {practicingAgain ? 'Generating…' : 'Practice again'}
-        </button>
+        </PrimaryButton>
         <button
           type="button"
-          className="btn"
+          className="btn text-body"
           onClick={() => navigate('/exam')}
           style={{
-            padding: '12px 20px',
-            borderRadius: 10,
+            padding: 'var(--space-md) var(--space-xl)',
+            borderRadius: 'var(--radius-md)',
             fontWeight: 600,
-            fontSize: 14,
             background: 'transparent',
-            border: '1px solid var(--border)',
             color: 'var(--muted)',
           }}
         >
@@ -327,30 +310,17 @@ export function RcReviewPage() {
   )
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <div className="muted" style={{ fontSize: 12, fontWeight: 700, letterSpacing: 0.4 }}>
-        {label}
-      </div>
-      <div style={{ fontSize: 22, fontWeight: 800, marginTop: 4 }}>{value}</div>
-    </div>
-  )
-}
-
 function CorrectnessChip({ state }: { state: 'correct' | 'wrong' | 'unanswered' }) {
   if (state === 'correct') {
     return (
       <span
+        className="text-label"
         style={{
-          padding: '2px 8px',
-          borderRadius: 999,
-          background: 'rgba(34, 197, 94, 0.16)',
-          color: '#86EFAC',
-          fontSize: 11,
-          fontWeight: 700,
+          padding: '2px var(--space-xs)',
+          borderRadius: 'var(--radius-pill)',
+          background: 'var(--success-soft)',
+          color: 'var(--success-on-soft)',
           textTransform: 'uppercase',
-          letterSpacing: 0.5,
         }}
       >
         ✓ Correct
@@ -360,15 +330,13 @@ function CorrectnessChip({ state }: { state: 'correct' | 'wrong' | 'unanswered' 
   if (state === 'wrong') {
     return (
       <span
+        className="text-label"
         style={{
-          padding: '2px 8px',
-          borderRadius: 999,
-          background: 'rgba(239, 68, 68, 0.16)',
-          color: '#FCA5A5',
-          fontSize: 11,
-          fontWeight: 700,
+          padding: '2px var(--space-xs)',
+          borderRadius: 'var(--radius-pill)',
+          background: 'var(--danger-soft)',
+          color: 'var(--danger-text)',
           textTransform: 'uppercase',
-          letterSpacing: 0.5,
         }}
       >
         ✗ Incorrect
@@ -377,15 +345,12 @@ function CorrectnessChip({ state }: { state: 'correct' | 'wrong' | 'unanswered' 
   }
   return (
     <span
-      className="muted"
+      className="muted text-label"
       style={{
-        padding: '2px 8px',
-        borderRadius: 999,
+        padding: '2px var(--space-xs)',
+        borderRadius: 'var(--radius-pill)',
         border: '1px solid var(--border)',
-        fontSize: 11,
-        fontWeight: 700,
         textTransform: 'uppercase',
-        letterSpacing: 0.5,
       }}
     >
       Skipped
@@ -399,17 +364,4 @@ function formatSeconds(s: number): string {
   const m = Math.floor(s / 60)
   const r = s % 60
   return r === 0 ? `${m}m` : `${m}m ${r}s`
-}
-
-function primaryButtonStyle(disabled = false): React.CSSProperties {
-  return {
-    padding: '12px 20px',
-    borderRadius: 10,
-    fontWeight: 700,
-    fontSize: 15,
-    background: disabled ? 'rgba(99,102,241,0.4)' : 'var(--accent-gradient-end, #6366f1)',
-    color: '#fff',
-    border: '1px solid transparent',
-    cursor: disabled ? 'default' : 'pointer',
-  }
 }

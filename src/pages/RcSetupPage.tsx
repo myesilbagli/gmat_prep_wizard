@@ -3,6 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import type { RcDifficulty } from '../../shared/rcTypes'
 import { generateRcPassage } from '../lib/rcGeneration'
 import { createRcAttempt } from '../lib/rcAttempts'
+import { PrimaryButton } from '../components/ui/PrimaryButton'
+import { SelectableTile } from '../components/ui/SelectableTile'
+import { Alert } from '../components/ui/Alert'
+import { GenerationLoader } from '../components/GenerationLoader'
+import { RC_LOADING_MESSAGES } from '../lib/loadingMessages'
 
 const DIFFICULTY_OPTIONS: Array<{ value: RcDifficulty; label: string; description: string }> = [
   {
@@ -54,128 +59,89 @@ export function RcSetupPage() {
   }
 
   return (
-    <div className="container" style={{ paddingTop: 24, paddingBottom: 32, maxWidth: 720 }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, letterSpacing: -0.3 }}>
+    <div
+      className="container"
+      style={{ paddingTop: 'var(--space-2xl)', paddingBottom: 'var(--space-3xl)', maxWidth: 720 }}
+    >
+      <div style={{ marginBottom: 'var(--space-2xl)' }}>
+        <h1 className="text-page-title" style={{ margin: 0 }}>
           Reading Comprehension
         </h1>
-        <p className="muted" style={{ margin: '8px 0 0', fontSize: 15 }}>
+        <p className="muted text-body-lg" style={{ margin: 'var(--space-xs) 0 0' }}>
           Pick a difficulty (and optionally a topic) and we'll generate a passage with questions.
         </p>
       </div>
 
-      <div
-        className="card"
-        style={{ padding: 20, marginBottom: 20, display: 'grid', gap: 20 }}
-      >
-        <div>
-          <div className="muted" style={{ fontSize: 12, fontWeight: 700, marginBottom: 10 }}>
-            Difficulty
-          </div>
-          <div style={{ display: 'grid', gap: 12 }}>
-            {DIFFICULTY_OPTIONS.map((opt) => {
-              const selected = difficulty === opt.value
-              return (
-                <button
+      {submitting ? (
+        <div
+          className="card"
+          style={{
+            padding: 'var(--card-pad-comfortable)',
+            marginBottom: 'var(--space-xl)',
+          }}
+        >
+          <GenerationLoader title="Generating your passage" messages={RC_LOADING_MESSAGES} />
+        </div>
+      ) : (
+        <div
+          className="card"
+          style={{
+            padding: 'var(--card-pad-comfortable)',
+            marginBottom: 'var(--space-xl)',
+            display: 'grid',
+            gap: 'var(--space-xl)',
+          }}
+        >
+          <div>
+            <div
+              className="muted text-label"
+              style={{ marginBottom: 'var(--space-xs)' }}
+            >
+              Difficulty
+            </div>
+            <div style={{ display: 'grid', gap: 'var(--space-md)' }}>
+              {DIFFICULTY_OPTIONS.map((opt) => (
+                <SelectableTile
                   key={opt.value}
-                  type="button"
-                  className="btn"
+                  layout="tile"
+                  label={opt.label}
+                  sublabel={opt.description}
+                  selected={difficulty === opt.value}
                   onClick={() => setDifficulty(opt.value)}
-                  disabled={submitting}
-                  style={{
-                    padding: 14,
-                    textAlign: 'left',
-                    borderRadius: 12,
-                    border: selected
-                      ? '2px solid var(--accent-gradient-end)'
-                      : '1px solid var(--border)',
-                    background: selected
-                      ? 'rgba(99, 102, 241, 0.12)'
-                      : 'rgba(255,255,255,0.03)',
-                    cursor: submitting ? 'default' : 'pointer',
-                  }}
-                >
-                  <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>
-                    {opt.label}
-                  </div>
-                  <div className="muted" style={{ fontSize: 13, lineHeight: 1.4 }}>
-                    {opt.description}
-                  </div>
-                </button>
-              )
-            })}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="rc-topic"
+              className="muted text-label"
+              style={{ marginBottom: 'var(--space-xs)', display: 'block' }}
+            >
+              Topic (optional)
+            </label>
+            <input
+              id="rc-topic"
+              type="text"
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              placeholder="e.g. corporate governance, philosophy of science"
+              maxLength={120}
+              className="input"
+            />
+            <div className="muted text-label" style={{ marginTop: 'var(--space-xs)' }}>
+              Leave blank to let the model pick. Max 120 characters.
+            </div>
+          </div>
+
+          {error ? <Alert variant="error">{error}</Alert> : null}
+
+          <div>
+            <PrimaryButton onClick={onStart}>Start practice</PrimaryButton>
           </div>
         </div>
-
-        <div>
-          <label
-            htmlFor="rc-topic"
-            className="muted"
-            style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, display: 'block' }}
-          >
-            Topic (optional)
-          </label>
-          <input
-            id="rc-topic"
-            type="text"
-            value={topic}
-            onChange={(e) => setTopic(e.target.value)}
-            disabled={submitting}
-            placeholder="e.g. corporate governance, philosophy of science"
-            maxLength={120}
-            style={{
-              width: '100%',
-              boxSizing: 'border-box',
-              padding: '12px 14px',
-              borderRadius: 10,
-              border: '1px solid var(--border)',
-              background: 'rgba(255,255,255,0.03)',
-              color: 'var(--text)',
-              fontSize: 14,
-            }}
-          />
-          <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>
-            Leave blank to let the model pick. Max 120 characters.
-          </div>
-        </div>
-
-        {error ? (
-          <div
-            role="alert"
-            style={{
-              padding: 12,
-              borderRadius: 10,
-              border: '1px solid rgba(239, 68, 68, 0.4)',
-              background: 'rgba(239, 68, 68, 0.08)',
-              color: '#FCA5A5',
-              fontSize: 14,
-            }}
-          >
-            {error}
-          </div>
-        ) : null}
-
-        <div>
-          <button
-            type="button"
-            className="btn"
-            onClick={onStart}
-            disabled={submitting}
-            style={{
-              padding: '12px 20px',
-              borderRadius: 10,
-              fontWeight: 700,
-              fontSize: 15,
-              background: submitting ? 'rgba(99,102,241,0.4)' : 'var(--accent-gradient-end, #6366f1)',
-              color: '#fff',
-              border: '1px solid transparent',
-              cursor: submitting ? 'progress' : 'pointer',
-            }}
-          >
-            {submitting ? 'Generating…' : 'Start practice'}
-          </button>
-        </div>
-      </div>
+      )}
     </div>
   )
 }

@@ -9,6 +9,11 @@ import {
   updateRcAttemptQuestions,
 } from '../lib/rcAttempts'
 import { generateRcPassage, generateRcQuestionSet } from '../lib/rcGeneration'
+import { PrimaryButton } from '../components/ui/PrimaryButton'
+import { McqOption } from '../components/ui/McqOption'
+import { Alert } from '../components/ui/Alert'
+import { GenerationLoader } from '../components/GenerationLoader'
+import { RC_LOADING_MESSAGES } from '../lib/loadingMessages'
 
 type PracticePhase =
   | 'loading-attempt'
@@ -174,40 +179,41 @@ export function RcPracticePage() {
         minHeight: '100svh',
         display: 'flex',
         flexDirection: 'column',
-        background: 'var(--bg, #0A0A0F)',
+        background: 'var(--bg)',
         color: 'var(--text)',
       }}
     >
       <header
         style={{
-          padding: '14px 20px',
+          padding: 'var(--space-md) var(--space-lg)',
+          background: 'var(--header-bg)',
           borderBottom: '1px solid var(--border)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          gap: 12,
+          gap: 'var(--space-md)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
         }}
       >
         <button
           type="button"
-          className="btn"
+          className="btn text-body-sm"
           onClick={() => navigate('/exam')}
           style={{
             background: 'transparent',
-            border: '1px solid var(--border)',
+            padding: 'var(--space-2xs) var(--space-md)',
+            borderRadius: 'var(--radius-sm)',
             color: 'var(--muted)',
-            padding: '6px 12px',
-            borderRadius: 8,
-            fontSize: 13,
             fontWeight: 600,
           }}
         >
           Exit
         </button>
-        <div style={{ fontWeight: 700, fontSize: 14, letterSpacing: -0.2 }}>
+        <div className="text-body" style={{ fontWeight: 700 }}>
           Reading Comprehension · {attempt?.difficulty ?? '…'}
         </div>
-        <div className="muted" style={{ fontSize: 13 }}>
+        <div className="muted text-body-sm">
           {questions ? `Question ${currentIndex + 1} / ${totalQuestions}` : `1 / ${totalQuestions}`}
         </div>
       </header>
@@ -224,73 +230,76 @@ export function RcPracticePage() {
         <PassagePane passage={passageText} />
         <div
           style={{
-            padding: 24,
+            padding: 'var(--space-2xl)',
             overflowY: 'auto',
             borderLeft: '1px solid var(--border)',
-            background: 'rgba(255,255,255,0.01)',
+            background: 'var(--fill-subtle)',
           }}
         >
           {phase === 'loading-attempt' && <CenteredMessage>Loading attempt…</CenteredMessage>}
           {phase === 'fatal-load-error' && (
-            <CenteredMessage tone="error">
-              <strong>Couldn't load attempt.</strong>
-              <div style={{ marginTop: 8, fontSize: 13 }}>{error}</div>
-              <div style={{ marginTop: 16 }}>
-                <button
-                  type="button"
-                  className="btn"
-                  onClick={() => navigate('/exam/rc/setup')}
-                  style={primaryButtonStyle()}
-                >
+            <CenteredMessage>
+              <Alert variant="error" style={{ maxWidth: 360 }}>
+                <strong>Couldn't load attempt.</strong>
+                <div style={{ marginTop: 'var(--space-xs)' }}>{error}</div>
+              </Alert>
+              <div style={{ marginTop: 'var(--space-lg)' }}>
+                <PrimaryButton onClick={() => navigate('/exam/rc/setup')}>
                   Back to setup
-                </button>
+                </PrimaryButton>
               </div>
             </CenteredMessage>
           )}
           {phase === 'loading-questions' && (
-            <CenteredMessage>
-              Generating questions…
-              <div className="muted" style={{ marginTop: 8, fontSize: 13 }}>
-                Stage 2 typically takes 5-9 seconds.
-              </div>
-            </CenteredMessage>
+            <GenerationLoader
+              title="Generating your questions"
+              messages={RC_LOADING_MESSAGES}
+            />
           )}
           {phase === 'questions-error-retry' && (
-            <CenteredMessage tone="error">
-              <strong>Couldn't generate questions.</strong>
-              <div style={{ marginTop: 8, fontSize: 13 }}>{error}</div>
-              <div style={{ marginTop: 16 }}>
-                <button type="button" className="btn" onClick={onRetryQuestions} style={primaryButtonStyle()}>
-                  Retry
-                </button>
+            <CenteredMessage>
+              <Alert variant="error" style={{ maxWidth: 360 }}>
+                <strong>Couldn't generate questions.</strong>
+                <div style={{ marginTop: 'var(--space-xs)' }}>{error}</div>
+              </Alert>
+              <div style={{ marginTop: 'var(--space-lg)' }}>
+                <PrimaryButton onClick={onRetryQuestions}>Retry</PrimaryButton>
               </div>
             </CenteredMessage>
           )}
-          {phase === 'questions-error-fatal' && (
-            <CenteredMessage tone="error">
-              <strong>Couldn't generate questions for this passage.</strong>
-              <div style={{ marginTop: 8, fontSize: 13 }}>{error}</div>
-              <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {phase === 'questions-error-fatal' && generatingNewPassage && (
+            <GenerationLoader
+              title="Generating a new passage"
+              messages={RC_LOADING_MESSAGES}
+            />
+          )}
+          {phase === 'questions-error-fatal' && !generatingNewPassage && (
+            <CenteredMessage>
+              <Alert variant="error" style={{ maxWidth: 360 }}>
+                <strong>Couldn't generate questions for this passage.</strong>
+                <div style={{ marginTop: 'var(--space-xs)' }}>{error}</div>
+              </Alert>
+              <div
+                style={{
+                  marginTop: 'var(--space-lg)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 'var(--space-sm)',
+                  alignItems: 'center',
+                }}
+              >
+                <PrimaryButton onClick={onGenerateNewPassage}>
+                  Generate new passage
+                </PrimaryButton>
                 <button
                   type="button"
-                  className="btn"
-                  onClick={onGenerateNewPassage}
-                  disabled={generatingNewPassage}
-                  style={primaryButtonStyle(generatingNewPassage)}
-                >
-                  {generatingNewPassage ? 'Generating new passage…' : 'Generate new passage'}
-                </button>
-                <button
-                  type="button"
-                  className="btn"
+                  className="btn text-body"
                   onClick={() => navigate('/exam/rc/setup')}
                   style={{
                     background: 'transparent',
-                    border: '1px solid var(--border)',
                     color: 'var(--muted)',
-                    padding: '10px 16px',
-                    borderRadius: 10,
-                    fontSize: 14,
+                    padding: 'var(--space-sm) var(--space-lg)',
+                    borderRadius: 'var(--radius-md)',
                     fontWeight: 600,
                   }}
                 >
@@ -324,24 +333,24 @@ function PassagePane({ passage }: { passage: string }) {
   return (
     <div
       style={{
-        padding: 24,
+        padding: 'var(--space-2xl)',
         overflowY: 'auto',
-        background: 'rgba(255,255,255,0.02)',
+        background: 'var(--fill-subtle)',
       }}
     >
-      <div className="muted" style={{ fontSize: 12, fontWeight: 700, marginBottom: 12 }}>
+      <div className="muted text-label" style={{ marginBottom: 'var(--space-md)' }}>
         Passage
       </div>
       {paragraphs.length === 0 ? (
-        <div className="muted" style={{ fontSize: 14 }}>Loading passage…</div>
+        <div className="muted text-body">Loading passage…</div>
       ) : (
         paragraphs.map((p, i) => (
           <p
             key={i}
+            className="text-body-lg"
             style={{
-              margin: '0 0 16px',
-              fontSize: 15,
-              lineHeight: 1.7,
+              margin: '0 0 var(--space-lg)',
+              lineHeight: 'var(--leading-relaxed)',
               color: 'var(--text)',
               whiteSpace: 'pre-wrap',
             }}
@@ -376,113 +385,56 @@ function QuestionPane({
   return (
     <div>
       <div
-        className="muted"
+        className="muted text-label"
         style={{
-          fontSize: 12,
-          fontWeight: 700,
-          marginBottom: 12,
-          letterSpacing: 0.4,
+          marginBottom: 'var(--space-md)',
           textTransform: 'uppercase',
+          letterSpacing: '0.06em',
         }}
       >
         {QUESTION_TYPE_LABELS[question.type] ?? question.type}
       </div>
-      <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, lineHeight: 1.4, marginBottom: 16 }}>
+      <h2
+        className="text-card-title"
+        style={{ margin: '0 0 var(--space-lg)' }}
+      >
         {question.questionText}
       </h2>
-      <div role="radiogroup" style={{ display: 'grid', gap: 10, marginBottom: 16 }}>
+      <div role="radiogroup" style={{ display: 'grid', gap: 'var(--space-sm)', marginBottom: 'var(--space-lg)' }}>
         {question.choices.map((choice, i) => {
           const selected = selectedIndex === i
           return (
-            <button
+            <McqOption
               key={i}
-              type="button"
-              role="radio"
-              aria-checked={selected}
+              label={choice}
+              letter={String.fromCharCode(65 + i)}
+              state={selected ? 'selected' : 'default'}
               onClick={() => onSelect(i)}
               disabled={isSubmitting}
-              className="btn"
-              style={{
-                textAlign: 'left',
-                padding: '12px 14px',
-                borderRadius: 10,
-                border: selected
-                  ? '2px solid var(--accent-gradient-end)'
-                  : '1px solid var(--border)',
-                background: selected ? 'rgba(99, 102, 241, 0.12)' : 'rgba(255,255,255,0.03)',
-                color: 'var(--text)',
-                fontSize: 14,
-                lineHeight: 1.45,
-                cursor: isSubmitting ? 'progress' : 'pointer',
-                display: 'flex',
-                gap: 10,
-                alignItems: 'flex-start',
-              }}
-            >
-              <span
-                aria-hidden
-                style={{
-                  flex: '0 0 auto',
-                  width: 24,
-                  height: 24,
-                  borderRadius: 999,
-                  border: '1px solid var(--border)',
-                  background: selected ? 'var(--accent-gradient-end)' : 'transparent',
-                  color: selected ? '#fff' : 'var(--muted)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 12,
-                  fontWeight: 700,
-                  marginTop: 1,
-                }}
-              >
-                {String.fromCharCode(65 + i)}
-              </span>
-              <span style={{ flex: 1 }}>{choice}</span>
-            </button>
+            />
           )
         })}
       </div>
       {error ? (
-        <div
-          role="alert"
-          style={{
-            padding: 10,
-            borderRadius: 8,
-            border: '1px solid rgba(239, 68, 68, 0.4)',
-            background: 'rgba(239, 68, 68, 0.08)',
-            color: '#FCA5A5',
-            fontSize: 13,
-            marginBottom: 12,
-          }}
-        >
+        <Alert variant="error" style={{ marginBottom: 'var(--space-md)' }}>
           {error}
-        </div>
+        </Alert>
       ) : null}
-      <button
-        type="button"
-        className="btn"
+      <PrimaryButton
         onClick={onNext}
         disabled={selectedIndex == null || isSubmitting}
-        style={primaryButtonStyle(selectedIndex == null || isSubmitting)}
+        loading={isSubmitting}
       >
         {isSubmitting ? 'Saving…' : isLast ? 'Finish' : 'Next'}
-      </button>
+      </PrimaryButton>
     </div>
   )
 }
 
-function CenteredMessage({
-  children,
-  tone,
-}: {
-  children: React.ReactNode
-  tone?: 'error'
-}) {
+function CenteredMessage({ children }: { children: React.ReactNode }) {
   return (
     <div
-      role={tone === 'error' ? 'alert' : 'status'}
+      role="status"
       style={{
         minHeight: '100%',
         display: 'flex',
@@ -490,24 +442,11 @@ function CenteredMessage({
         alignItems: 'center',
         justifyContent: 'center',
         textAlign: 'center',
-        padding: '40px 20px',
-        color: tone === 'error' ? '#FCA5A5' : 'var(--text)',
+        padding: 'var(--space-4xl) var(--space-xl)',
+        color: 'var(--text)',
       }}
     >
       {children}
     </div>
   )
-}
-
-function primaryButtonStyle(disabled = false): React.CSSProperties {
-  return {
-    padding: '12px 20px',
-    borderRadius: 10,
-    fontWeight: 700,
-    fontSize: 15,
-    background: disabled ? 'rgba(99,102,241,0.4)' : 'var(--accent-gradient-end, #6366f1)',
-    color: '#fff',
-    border: '1px solid transparent',
-    cursor: disabled ? 'default' : 'pointer',
-  }
 }

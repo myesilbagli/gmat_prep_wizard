@@ -6,6 +6,8 @@ import { createCrAttempt } from '../lib/crAttempts'
 import { PrimaryButton } from '../components/ui/PrimaryButton'
 import { SelectableTile } from '../components/ui/SelectableTile'
 import { Alert } from '../components/ui/Alert'
+import { GenerationLoader } from '../components/GenerationLoader'
+import { CR_LOADING_MESSAGES } from '../lib/loadingMessages'
 
 const TIMER_OPTIONS: Array<{ value: CrTimerMode; label: string; description: string }> = [
   {
@@ -63,45 +65,54 @@ export function CrSetupPage() {
         </p>
       </div>
 
-      <div
-        className="card"
-        style={{
-          padding: 'var(--card-pad-comfortable)',
-          marginBottom: 'var(--space-xl)',
-          display: 'grid',
-          gap: 'var(--space-xl)',
-        }}
-      >
-        <div>
-          <div className="muted text-label" style={{ marginBottom: 'var(--space-xs)' }}>
-            Timer mode
+      {submitting ? (
+        <div
+          className="card"
+          style={{
+            padding: 'var(--card-pad-comfortable)',
+            marginBottom: 'var(--space-xl)',
+          }}
+        >
+          <GenerationLoader title="Generating your CR set" messages={CR_LOADING_MESSAGES} />
+        </div>
+      ) : (
+        <div
+          className="card"
+          style={{
+            padding: 'var(--card-pad-comfortable)',
+            marginBottom: 'var(--space-xl)',
+            display: 'grid',
+            gap: 'var(--space-xl)',
+          }}
+        >
+          <div>
+            <div className="muted text-label" style={{ marginBottom: 'var(--space-xs)' }}>
+              Timer mode
+            </div>
+            <div style={{ display: 'grid', gap: 'var(--space-md)' }}>
+              {TIMER_OPTIONS.map((opt) => (
+                <SelectableTile
+                  key={opt.value}
+                  layout="tile"
+                  label={opt.label}
+                  sublabel={opt.description}
+                  selected={timerMode === opt.value}
+                  onClick={() => setTimerMode(opt.value)}
+                />
+              ))}
+            </div>
           </div>
-          <div style={{ display: 'grid', gap: 'var(--space-md)' }}>
-            {TIMER_OPTIONS.map((opt) => (
-              <SelectableTile
-                key={opt.value}
-                layout="tile"
-                label={opt.label}
-                sublabel={opt.description}
-                selected={timerMode === opt.value}
-                disabled={submitting}
-                onClick={() => setTimerMode(opt.value)}
-              />
-            ))}
+
+          {error ? <Alert variant="error">{error}</Alert> : null}
+
+          <div>
+            <PrimaryButton onClick={onStart}>Start set</PrimaryButton>
+            <p className="muted text-body-sm" style={{ margin: 'var(--space-sm) 0 0' }}>
+              All 5 questions are generated in parallel (~30–60 s total, not 5× that).
+            </p>
           </div>
         </div>
-
-        {error ? <Alert variant="error">{error}</Alert> : null}
-
-        <div>
-          <PrimaryButton onClick={onStart} disabled={submitting} loading={submitting}>
-            {submitting ? 'Generating 5 questions…' : 'Start set'}
-          </PrimaryButton>
-          <p className="muted text-body-sm" style={{ margin: 'var(--space-sm) 0 0' }}>
-            All 5 questions are generated in parallel (~30–60 s total, not 5× that).
-          </p>
-        </div>
-      </div>
+      )}
     </div>
   )
 }
