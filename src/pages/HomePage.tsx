@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
-import { Link } from 'react-router-dom'
 import { auth } from '../lib/firebase'
 import { listVocabItems } from '../lib/vocab'
 import type { GeneratedResult } from '../lib/types'
@@ -21,6 +20,7 @@ import {
   IconQuote,
   IconStar,
 } from '../components/Icons'
+import { PrimaryButton } from '../components/ui/PrimaryButton'
 
 type GenerateState =
   | { status: 'idle' }
@@ -178,7 +178,11 @@ export function HomePage() {
   return (
     <div
       className="container"
-      style={{ paddingTop: 'var(--space-2xl)', paddingBottom: 'var(--space-3xl)' }}
+      style={{
+        paddingTop: 'var(--space-2xl)',
+        paddingBottom: 'var(--space-3xl)',
+        maxWidth: 1100,
+      }}
     >
       <div style={{ marginBottom: 'var(--space-2xl)' }}>
         <h1 className="text-page-title" style={{ margin: 0 }}>
@@ -189,109 +193,104 @@ export function HomePage() {
         </p>
       </div>
 
-      {user && (
-        <div
-          className="card"
-          style={{
-            padding: 'var(--card-pad-comfortable)',
-            marginBottom: 'var(--space-xl)',
-            display: 'grid',
-            gap: 'var(--space-md)',
-          }}
-        >
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+          gap: 'var(--space-xl)',
+          marginBottom: 'var(--space-xl)',
+        }}
+      >
+        {/* HERO: streak + Start session (the primary surface) */}
+        {user ? (
           <div
+            className="card"
             style={{
+              padding: 'var(--card-pad-comfortable)',
               display: 'flex',
-              flexWrap: 'wrap',
-              alignItems: 'center',
-              gap: 'var(--space-md)',
+              flexDirection: 'column',
+              gap: 'var(--space-lg)',
+              minHeight: 240,
             }}
           >
             <div>
-              <div className="muted text-micro" style={{ textTransform: 'uppercase' }}>
+              <div className="muted text-label" style={{ letterSpacing: '0.08em' }}>
                 STREAK
               </div>
               <div
-                className="text-headword-emphasis"
-                style={{ marginTop: 'var(--space-2xs)' }}
+                style={{
+                  marginTop: 'var(--space-xs)',
+                  display: 'flex',
+                  alignItems: 'baseline',
+                  gap: 'var(--space-sm)',
+                }}
               >
-                {profileLoading ? '…' : streak ?? 0}{' '}
                 <span
-                  className="text-body"
-                  style={{ fontWeight: 600, color: 'var(--muted)' }}
+                  className="text-hero"
+                  style={{
+                    background:
+                      'linear-gradient(135deg, var(--accent-gradient-start), var(--accent-gradient-end))',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                  }}
+                >
+                  {profileLoading ? '…' : streak ?? 0}
+                </span>
+                <span
+                  className="text-body-lg muted"
+                  style={{ fontWeight: 600 }}
                 >
                   day{(streak ?? 0) === 1 ? '' : 's'}
                 </span>
               </div>
-              <p className="muted text-label" style={{ margin: 'var(--space-xs) 0 0' }}>
+              <p className="muted text-body-sm" style={{ margin: 'var(--space-xs) 0 0' }}>
                 Complete a full daily session to extend your streak.
               </p>
-              <p className="muted text-label" style={{ margin: 'var(--space-2xs) 0 0' }}>
-                Sessions completed: {profileLoading ? '…' : sessionCount ?? 0}
-              </p>
             </div>
-            <div style={{ marginLeft: 'auto', width: '100%', maxWidth: 280 }}>
-              <Link
-                to="/session"
-                className="btn btnPrimary"
+
+            <div style={{ marginTop: 'auto' }}>
+              <PrimaryButton as="link" to="/session" style={{ width: '100%' }}>
+                Start session
+              </PrimaryButton>
+              <p
+                className="muted text-label"
                 style={{
-                  display: 'block',
+                  margin: 'var(--space-sm) 0 0',
                   textAlign: 'center',
-                  textDecoration: 'none',
                 }}
               >
-                Start session
-              </Link>
+                {profileLoading ? '…' : sessionCount ?? 0} session
+                {(sessionCount ?? 0) === 1 ? '' : 's'} completed all-time
+              </p>
             </div>
           </div>
+        ) : null}
 
+        {/* DECK BREAKDOWN: visual composition, not a monospace dump */}
+        <DeckBreakdownCard deckStats={deckStats} signedIn={!!user} />
+      </div>
+
+      {/* LOOKUP — secondary section */}
+      <section style={{ marginTop: 'var(--space-2xl)' }}>
+        <div className="muted text-label" style={{ marginBottom: 'var(--space-md)' }}>
+          LOOK UP A WORD
         </div>
-      )}
 
-      {deckStats ? (
-        <div
-          className="card"
-          style={{
-            padding: 16,
-            marginBottom: 20,
-            display: 'grid',
-            gap: 10,
-          }}
-        >
-          <div style={{ fontSize: 15, fontWeight: 700 }}>Your Deck — {deckStats.total} words</div>
-          <div style={{ fontSize: 13, lineHeight: 1.6, fontFamily: 'ui-monospace, monospace' }}>
-            <div>New&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{deckStats.new}</div>
-            <div>Learning&nbsp;&nbsp;{deckStats.learning}</div>
-            <div>Familiar&nbsp;&nbsp;{deckStats.familiar}</div>
-            <div>Mastered&nbsp;&nbsp;{deckStats.mastered}</div>
-          </div>
-          <div className="muted" style={{ fontSize: 12 }}>
-            Flagged: {deckStats.flagged}
-          </div>
-          <div style={{ fontSize: 13, marginTop: 4 }}>
-            Today&apos;s session: {deckStats.sessionWordCount} words
-            <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
-              {deckStats.sessionComposition}
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      <div style={{ display: 'grid', gap: 14 }}>
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 10,
-            padding: '14px 16px',
-            borderRadius: 14,
+            gap: 'var(--space-md)',
+            padding: 'var(--space-md) var(--space-lg)',
+            borderRadius: 'var(--radius-lg)',
             border: '1px solid var(--border)',
             background: 'var(--surface)',
+            flexWrap: 'wrap',
           }}
         >
           <input
-            className="input"
-            placeholder="Lookup & Generate"
+            placeholder="Type a word or phrase — e.g. equivocate, in light of"
             value={text}
             onChange={(e) => {
               setText(e.target.value)
@@ -310,58 +309,319 @@ export function HomePage() {
             }}
             autoCapitalize="none"
             autoCorrect="off"
+            className="text-body"
             style={{
+              flex: '1 1 240px',
+              minWidth: 0,
               border: 'none',
               background: 'transparent',
+              color: 'var(--text)',
+              outline: 'none',
+              padding: 'var(--space-2xs) 0',
               minHeight: 28,
-              padding: '4px 0',
-              flex: 1,
             }}
           />
-          <button
-            type="button"
-            className="btn btnPrimary"
+          <PrimaryButton
             onClick={generate}
             disabled={!canGenerate || state.status === 'loading' || !userReady}
-            style={{ padding: '8px 12px', fontSize: 13 }}
+            loading={state.status === 'loading'}
           >
             {state.status === 'loading' ? 'Generating…' : 'Generate Analysis'}
-          </button>
+          </PrimaryButton>
         </div>
 
         {!user ? (
-          <p className="muted" style={{ fontSize: 13, margin: 0 }}>
+          <p className="muted text-body-sm" style={{ margin: 'var(--space-sm) 0 0' }}>
             Sign in to generate and save your words.
           </p>
         ) : null}
+
+        <div
+          className="card"
+          style={{
+            marginTop: 'var(--space-lg)',
+            padding: 'var(--card-pad-comfortable)',
+          }}
+        >
+          {state.status === 'idle' && (
+            <p className="muted text-body" style={{ margin: 0 }}>
+              Enter a word or phrase and tap Generate Analysis.
+            </p>
+          )}
+          {state.status === 'loading' && <LookupLoading word={text.trim()} />}
+          {state.status === 'error' && (
+            <p className="text-body" style={{ margin: 0, color: 'var(--danger)' }}>
+              {state.message}
+            </p>
+          )}
+          {state.status === 'ready' && (
+            <WordAnalysisCard
+              word={text.trim()}
+              result={state.result}
+              mainLanguage={mainLanguage}
+              onSave={save}
+              saving={saving}
+              saved={saved}
+            />
+          )}
+        </div>
+      </section>
+    </div>
+  )
+}
+
+/**
+ * Visual deck breakdown — replaces the previous monospace "New 177 / Learning
+ * 71 / …" dump. Renders a segmented progress bar (one segment per bucket),
+ * a colored-dot legend with counts, and a callout for today's session size
+ * and composition. Uses only existing tokens.
+ */
+function DeckBreakdownCard({
+  deckStats,
+  signedIn,
+}: {
+  deckStats: {
+    total: number
+    new: number
+    learning: number
+    familiar: number
+    mastered: number
+    flagged: number
+    sessionWordCount: number
+    sessionComposition: string
+  } | null
+  signedIn: boolean
+}) {
+  if (!signedIn) {
+    return (
+      <div
+        className="card"
+        style={{
+          padding: 'var(--card-pad-comfortable)',
+          minHeight: 240,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--space-md)',
+        }}
+      >
+        <div className="muted text-label" style={{ letterSpacing: '0.08em' }}>
+          YOUR DECK
+        </div>
+        <p className="muted text-body" style={{ margin: 0 }}>
+          Sign in to track your saved words.
+        </p>
+      </div>
+    )
+  }
+
+  if (!deckStats) {
+    return (
+      <div
+        className="card"
+        style={{
+          padding: 'var(--card-pad-comfortable)',
+          minHeight: 240,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--space-md)',
+        }}
+      >
+        <div className="muted text-label" style={{ letterSpacing: '0.08em' }}>
+          YOUR DECK
+        </div>
+        <p className="muted text-body" style={{ margin: 0 }}>
+          Loading deck…
+        </p>
+      </div>
+    )
+  }
+
+  const total = deckStats.total
+  const segments: Array<{
+    key: 'new' | 'learning' | 'familiar' | 'mastered'
+    label: string
+    count: number
+    color: string
+  }> = [
+    { key: 'new', label: 'New', count: deckStats.new, color: 'var(--fill-muted)' },
+    {
+      key: 'learning',
+      label: 'Learning',
+      count: deckStats.learning,
+      color: 'var(--accent-gradient-end)',
+    },
+    {
+      key: 'familiar',
+      label: 'Familiar',
+      count: deckStats.familiar,
+      color: 'var(--accent-gradient-start)',
+    },
+    {
+      key: 'mastered',
+      label: 'Mastered',
+      count: deckStats.mastered,
+      color: 'var(--success)',
+    },
+  ]
+
+  return (
+    <div
+      className="card"
+      style={{
+        padding: 'var(--card-pad-comfortable)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 'var(--space-lg)',
+        minHeight: 240,
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'baseline',
+          justifyContent: 'space-between',
+          gap: 'var(--space-sm)',
+          flexWrap: 'wrap',
+        }}
+      >
+        <div>
+          <div className="muted text-label" style={{ letterSpacing: '0.08em' }}>
+            YOUR DECK
+          </div>
+          <div
+            style={{
+              marginTop: 'var(--space-xs)',
+              display: 'flex',
+              alignItems: 'baseline',
+              gap: 'var(--space-sm)',
+            }}
+          >
+            <span className="text-headword">{total}</span>
+            <span className="muted text-body-sm">word{total === 1 ? '' : 's'}</span>
+          </div>
+        </div>
+        {deckStats.flagged > 0 ? (
+          <span
+            className="text-label"
+            style={{
+              padding: '2px var(--space-xs)',
+              borderRadius: 'var(--radius-pill)',
+              background: 'var(--selection-fill)',
+              color: 'color-mix(in srgb, var(--accent-gradient-end) 75%, var(--text))',
+              textTransform: 'uppercase',
+            }}
+          >
+            ★ {deckStats.flagged} flagged
+          </span>
+        ) : null}
       </div>
 
-      <div style={{ height: 24 }} />
+      {total > 0 ? (
+        <>
+          {/* Segmented composition bar */}
+          <div
+            aria-label="Deck composition"
+            style={{
+              display: 'flex',
+              height: 10,
+              width: '100%',
+              borderRadius: 'var(--radius-pill)',
+              overflow: 'hidden',
+              border: '1px solid var(--border)',
+              background: 'var(--fill-subtle)',
+            }}
+          >
+            {segments.map((s) =>
+              s.count > 0 ? (
+                <div
+                  key={s.key}
+                  title={`${s.label}: ${s.count}`}
+                  style={{
+                    width: `${(s.count / total) * 100}%`,
+                    background: s.color,
+                  }}
+                />
+              ) : null,
+            )}
+          </div>
 
-      <div className="card" style={{ padding: 20 }}>
-        {state.status === 'idle' && (
-          <p className="muted" style={{ margin: 0, fontSize: 14 }}>
-            Enter a word or phrase and tap Generate Analysis.
+          {/* Legend with counts */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+              gap: 'var(--space-sm) var(--space-md)',
+            }}
+          >
+            {segments.map((s) => (
+              <div
+                key={s.key}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--space-xs)',
+                  minWidth: 0,
+                }}
+              >
+                <span
+                  aria-hidden
+                  style={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: 'var(--radius-pill)',
+                    background: s.color,
+                    flexShrink: 0,
+                  }}
+                />
+                <span className="muted text-label">{s.label}</span>
+                <span
+                  className="text-body"
+                  style={{ marginLeft: 'auto', fontWeight: 700 }}
+                >
+                  {s.count}
+                </span>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <p className="muted text-body" style={{ margin: 0 }}>
+          Save your first words below to see your deck breakdown.
+        </p>
+      )}
+
+      {/* Today's session callout */}
+      <div
+        style={{
+          marginTop: 'auto',
+          paddingTop: 'var(--space-md)',
+          borderTop: '1px solid var(--border)',
+        }}
+      >
+        <div className="muted text-label" style={{ letterSpacing: '0.08em' }}>
+          TODAY&apos;S SESSION
+        </div>
+        <div
+          style={{
+            marginTop: 'var(--space-2xs)',
+            display: 'flex',
+            alignItems: 'baseline',
+            gap: 'var(--space-sm)',
+          }}
+        >
+          <span className="text-title">{deckStats.sessionWordCount}</span>
+          <span className="muted text-body-sm">
+            word{deckStats.sessionWordCount === 1 ? '' : 's'}
+          </span>
+        </div>
+        {deckStats.sessionComposition ? (
+          <p
+            className="muted text-body-sm"
+            style={{ margin: 'var(--space-2xs) 0 0' }}
+          >
+            {deckStats.sessionComposition}
           </p>
-        )}
-        {state.status === 'loading' && (
-          <LookupLoading word={text.trim()} />
-        )}
-        {state.status === 'error' && (
-          <p style={{ margin: 0, color: 'var(--danger)', fontSize: 14 }}>
-            {state.message}
-          </p>
-        )}
-        {state.status === 'ready' && (
-          <WordAnalysisCard
-            word={text.trim()}
-            result={state.result}
-            mainLanguage={mainLanguage}
-            onSave={save}
-            saving={saving}
-            saved={saved}
-          />
-        )}
+        ) : null}
       </div>
     </div>
   )
