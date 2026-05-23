@@ -1556,7 +1556,11 @@ async function handleGenerateCrQuestion(body: any, _uid: string, res: any) {
     const completion = await openai.responses.create({
       model,
       input: prompt,
-      max_output_tokens: 2500,
+      // 8000 leaves headroom for GPT-5 medium-effort reasoning tokens (which
+      // count against this budget) plus the JSON output. First test at 2500
+      // returned empty output_text on every attempt — reasoning ate the
+      // whole budget. See plan iteration 1.
+      max_output_tokens: 8000,
       reasoning: { effort: reasoningEffort },
       text: {
         format: {
