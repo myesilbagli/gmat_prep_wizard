@@ -36,7 +36,7 @@ export type RcPassageRequest = {
 export type RcPassageResponse = {
   /** Full passage text with `\n\n` between paragraphs. */
   passage: string
-  /** Same content split, length 2 (easy) or 2-3 (medium) or 3 (hard). */
+  /** Same content split; length 1–4 paragraphs. */
   paragraphs: string[]
   /** The actual subject the model settled on (echoes user topic when given). */
   topic: string

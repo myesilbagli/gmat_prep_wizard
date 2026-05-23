@@ -124,7 +124,7 @@ function normalizeText(text: unknown): string {
 }
 
 export const api = onRequest(
-  { secrets: ['OPENAI_API_KEY'] },
+  { secrets: ['OPENAI_API_KEY'], timeoutSeconds: 300, memory: '512MiB' },
   async (req, res) => {
     const origin = req.headers.origin
     Object.entries(corsHeaders(origin)).forEach(([k, v]) => res.setHeader(k, v))
@@ -583,28 +583,31 @@ function rcPassageModel(): string {
 
 const RC_DIFFICULTY_SPEC: Record<RcDifficulty, string> = {
   easy: [
-    'WORD COUNT: 350-380 words.',
-    'PARAGRAPH COUNT: exactly 2 paragraphs.',
-    'VOCABULARY: standard academic; advanced terms only when load-bearing.',
-    'SENTENCE LENGTH: average 18-25 words; mix shorter and longer.',
-    'TOPIC SCOPE: business cases, accessible science, social science.',
-    'ARGUMENT: clear thesis + 1-2 supporting points + 1 qualification.',
+    'VOCABULARY: Standard academic vocabulary; advanced terms only when load-bearing.',
+    'SYNTAX: Mostly single-clause sentences or one subordinate/relative clause; readable pacing.',
+    'ARGUMENT: Clear thesis, one or two supporting points, one qualification; concrete topic treatment.',
+    'HEDGING: Light; claims are comparatively direct.',
+    'ABSTRACTION: Concrete actors, institutions, or cases predominate over abstract noun chains.',
+    'INFERENCE: Single-step; conclusions follow clearly from stated premises.',
+    'PARAGRAPH TENDENCY: Tends toward 1-2 paragraphs (not a requirement).',
   ].join('\n'),
   medium: [
-    'WORD COUNT: 380-420 words.',
-    'PARAGRAPH COUNT: 2-3 paragraphs.',
-    'VOCABULARY: standard academic with some advanced terms.',
-    'SENTENCE LENGTH: average 22-32 words; at least one sentence with two embedded clauses.',
-    'TOPIC SCOPE: any GMAT-appropriate domain.',
-    'ARGUMENT: thesis + multiple supporting points + counterargument + nuanced conclusion.',
+    'VOCABULARY: Standard academic with some advanced, precise terms.',
+    'SYNTAX: Sentences regularly carry one or two subordinate or relative clauses.',
+    'ARGUMENT: Thesis + counterpoint or complication + nuanced resolution.',
+    'HEDGING: Moderate ("tend to", "appears to", "has been argued").',
+    'ABSTRACTION: Moderately abstract; balance concrete examples with general claims.',
+    'INFERENCE: Moderate; some conclusions require combining two statements.',
+    'PARAGRAPH TENDENCY: Tends toward 2-3 paragraphs (not a requirement).',
   ].join('\n'),
   hard: [
-    'WORD COUNT: 400-450 words.',
-    'PARAGRAPH COUNT: exactly 3 paragraphs.',
-    'VOCABULARY: dense academic, abstract terms, specialized when relevant.',
-    'SENTENCE LENGTH: average 28-40 words with embedded clauses.',
-    'TOPIC SCOPE: philosophy of science, complex policy debates, abstract economics, dense humanities.',
-    'ARGUMENT: layered claims, multiple competing views, careful hedging, no clean resolution.',
+    'VOCABULARY: Dense, precise, abstract vocabulary where appropriate.',
+    'SYNTAX: Frequent multi-clause embedding with concessive and contrastive structure.',
+    'ARGUMENT: Layered argument, competing perspectives, careful hedging; no clean resolution.',
+    'HEDGING: Heavy; qualifications and limits on claims.',
+    'ABSTRACTION: Conceptually abstract topics and relationships; still prefer identifiable actors when possible.',
+    'INFERENCE: Subtle; requires synthesizing multiple statements; avoid giveaway phrasing.',
+    'PARAGRAPH TENDENCY: Tends toward 2-4 paragraphs (not a requirement).',
   ].join('\n'),
 }
 
@@ -652,8 +655,8 @@ const RC_PASSAGE_JSON_SCHEMA: Record<string, unknown> = {
     passage: { type: 'string' },
     paragraphs: {
       type: 'array',
-      minItems: 2,
-      maxItems: 3,
+      minItems: 1,
+      maxItems: 4,
       items: { type: 'string' },
     },
     topic: { type: 'string' },
@@ -722,7 +725,7 @@ function validateRcPassageResponseResult(
     return { ok: false, stage: 'passage_empty' }
   }
   if (!Array.isArray(x.paragraphs)) return { ok: false, stage: 'paragraphs_not_array' }
-  if (x.paragraphs.length < 2 || x.paragraphs.length > 3) {
+  if (x.paragraphs.length < 1 || x.paragraphs.length > 4) {
     return { ok: false, stage: 'paragraph_count_range' }
   }
   if (!x.paragraphs.every((p: unknown) => typeof p === 'string' && p.trim().length > 0)) {
@@ -768,24 +771,48 @@ function buildRcPassagePrompt(args: {
 
   return [
     'You are a GMAT verbal expert writing a Reading Comprehension passage in the',
-    'style of a scholarly journal article. Produce ONE multi-paragraph passage. Return JSON only.',
+    'style of a scholarly journal article. Produce ONE passage. Return JSON only.',
     '',
     'REGISTER: GMAT academic-analytical voice. NOT journalistic. NOT essayistic.',
     'NOT textbook-explanatory. Think scholarly journal article.',
     '',
-    'STRUCTURE:',
-    '- Opening paragraph: establish a thesis, prevailing view, or central premise.',
-    '- Middle paragraph(s): introduce evidence, complications, counterpoints, or qualifications.',
-    '- Closing: hedge or qualify — RC passages rarely commit fully to one side.',
-    '- Use blank-line paragraph breaks so structure is visible in the rendered passage.',
+    'LENGTH: Target 200-290 words — the typical range for real GMAT Reading Comprehension',
+    'passages. Many strong passages are as short as 200 words. Do NOT exceed 350 words under',
+    'any circumstances. Length is independent of difficulty: harder passages are harder through',
+    'vocabulary, syntax, and reasoning, never through being longer.',
     '',
-    'SENTENCE CONSTRUCTION:',
-    '- Use concessive/contrastive connectives: notwithstanding, albeit, insofar as,',
-    '  to the extent that, although, yet, however.',
-    '- Prefer abstract noun-phrase subjects ("the prevailing assumption") over personal',
-    '  subjects ("people think").',
-    '- Academic hedging expected: "tend to", "appears to", "has been argued that".',
-    '- Each paragraph must contain at least one subordinate or relative clause.',
+    'PARAGRAPHS: Use 1-4 paragraphs as the content naturally requires. A single well-developed',
+    'paragraph is a valid GMAT passage; so is a four-paragraph historical development. Let the',
+    "argument's shape determine paragraphing. The difficulty band's paragraph tendency is a lean,",
+    'not a requirement.',
+    '',
+    'GROUNDING: Strongly prefer attributing the central argument, claim, or finding to a specific',
+    'named scholar, researcher, study, or work, then developing or complicating it (e.g.',
+    '"According to [Scholar]\'s [Work]...", "[Field] researcher [Name] argues..."). The scholar',
+    'and work may be invented but must be plausible and must NOT be a real identifiable living',
+    'person. This grounds the passage as a genuine academic excerpt. Not every passage requires',
+    'it, but most should use it.',
+    '',
+    'STRUCTURE: Choose whichever shape fits the topic. Do not force the same shape every time.',
+    'Permitted patterns include:',
+    '- Argument + complication + qualification',
+    '- Historical or chronological development (before/after a period → consequence)',
+    '- Competing groups or views with divergent goals or interpretations',
+    '- A claim, its evidence, and a reinterpretation of that evidence',
+    '- A problem, its mechanism, and responses to it',
+    'Use blank-line paragraph breaks so structure is visible in the rendered passage.',
+    '',
+    'CONNECTIVES: Use concessive/contrastive connectives where natural: notwithstanding, albeit,',
+    'insofar as, to the extent that, although, yet, however.',
+    '',
+    'SENTENCE RHYTHM (required): Vary sentence length substantially. Include several short,',
+    'direct sentences (8-15 words) among longer analytical ones. Do NOT write consecutive',
+    'sentences that all exceed 30 words. The GMAT register is readable complexity, not',
+    'relentless density.',
+    '',
+    'CONCRETENESS: Prefer concrete actors and their motivations over chains of abstract noun',
+    'phrases. "Hospital administrators realized training schools could supply cheap labor" is',
+    'better GMAT prose than "institutional incentives mediated labor-market outcomes."',
     '',
     'TOPIC:',
     topicInstruction,
@@ -848,6 +875,7 @@ async function handleGenerateRcPassage(body: any, _uid: string, res: any) {
       model,
       input: prompt,
       max_output_tokens: 3500,
+      reasoning: { effort: 'low' },
       text: {
         format: {
           type: 'json_schema',
@@ -871,7 +899,9 @@ async function handleGenerateRcPassage(body: any, _uid: string, res: any) {
     return
   }
 
-  const second = await attempt('STRICT: Output must conform to the JSON schema')
+  const second = await attempt(
+    'STRICT: Output must conform to the JSON schema. Respect LENGTH: 200-290 words target, hard cap 350 words.',
+  )
   if (second.ok) {
     res.status(200).json(second.value)
     return
@@ -974,7 +1004,7 @@ function parseRcPassageString(body: any): string {
 function parseRcParagraphs(body: any): string[] {
   const v = body?.paragraphs
   if (!Array.isArray(v)) throw new Error('paragraphs must be an array')
-  if (v.length < 2 || v.length > 3) throw new Error('paragraphs must have length 2 or 3')
+  if (v.length < 1 || v.length > 4) throw new Error('paragraphs must have length 1 to 4')
   for (const p of v) {
     if (typeof p !== 'string' || p.trim().length === 0) {
       throw new Error('every paragraph must be a non-empty string')

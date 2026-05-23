@@ -8,17 +8,20 @@ const DIFFICULTY_OPTIONS: Array<{ value: RcDifficulty; label: string; descriptio
   {
     value: 'easy',
     label: 'Easy',
-    description: '350-380 words, 2 paragraphs, 3 questions. Lighter density, clear thesis.',
+    description:
+      'Direct prose, clear argument, single-step inferences. Concrete treatment. 3 questions.',
   },
   {
     value: 'medium',
     label: 'Medium',
-    description: '380-420 words, 2-3 paragraphs, 4 questions. Standard GMAT density.',
+    description:
+      'Moderate vocabulary and syntax; thesis with counterpoint and nuance. Some two-step inferences. 4 questions.',
   },
   {
     value: 'hard',
     label: 'Hard',
-    description: '400-450 words, 3 paragraphs, 4 questions. Layered claims, dense vocabulary.',
+    description:
+      'Dense vocabulary, layered competing views, heavy hedging; subtle inferences across the passage. 4 questions.',
   },
 ]
 
