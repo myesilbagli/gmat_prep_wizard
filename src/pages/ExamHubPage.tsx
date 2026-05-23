@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 import { PrimaryButton } from '../components/ui/PrimaryButton'
 
 export function ExamHubPage() {
@@ -11,22 +10,6 @@ export function ExamHubPage() {
         <p className="muted text-body-lg" style={{ margin: 'var(--space-xs) 0 0' }}>
           GMAT-style sections. Pick a mode to generate a fresh attempt.
         </p>
-        {/* TEMPORARY: dev entry-point for the CR generator demo. Remove with /cr-test route. */}
-        <Link
-          to="/cr-test"
-          style={{
-            display: 'inline-block',
-            marginTop: 'var(--space-md)',
-            padding: '6px 12px',
-            border: '1px dashed var(--border)',
-            borderRadius: 'var(--radius-sm)',
-            color: 'var(--muted)',
-            textDecoration: 'none',
-            fontSize: 12,
-          }}
-        >
-          [dev] CR test page →
-        </Link>
       </div>
 
       <div

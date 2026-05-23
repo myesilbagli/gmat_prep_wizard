@@ -10,7 +10,6 @@ import { ExamHubPage } from './pages/ExamHubPage'
 import { RcSetupPage } from './pages/RcSetupPage'
 import { RcPracticePage } from './pages/RcPracticePage'
 import { RcReviewPage } from './pages/RcReviewPage'
-import { CrTestPage } from './pages/CrTestPage'
 import { CrSetupPage } from './pages/CrSetupPage'
 import { CrPracticePage } from './pages/CrPracticePage'
 import { CrReviewPage } from './pages/CrReviewPage'
@@ -33,8 +32,6 @@ function App() {
       <Route path="/sign-up" element={<SignUpPage />} />
       <Route path="/privacy" element={<PrivacyPolicyPage />} />
       <Route path="/terms" element={<TermsOfServicePage />} />
-      {/* TEMPORARY: throwaway CR demo test page. Remove when real CR pages ship. */}
-      <Route path="/cr-test" element={<CrTestPage />} />
       <Route element={<AppLayout />}>
         <Route path={APP_HOME} element={<HomePage />} />
         <Route path="/words" element={<MyWordsPage />} />
