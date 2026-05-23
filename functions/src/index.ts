@@ -974,7 +974,18 @@ const RC_EXPLANATION_RULES = [
   'Sentence 1: state why the correct answer is correct, citing the relevant passage location',
   '  ("the second paragraph hedges...") rather than restating the choice.',
   'Sentences 2+: address each wrong choice. Name the distractor archetype and the specific',
-  '  failure (e.g. "Choice B inverts the relationship described in sentence 3").',
+  '  failure.',
+  'CRITICAL — reference each wrong choice by a brief content paraphrase, NOT by its letter or',
+  '  position. The choices will be shuffled before display, so letter/position references will',
+  '  become incorrect.',
+  'FORBIDDEN phrases (never use these): "Choice A", "Choice B", "Choice C", "Choice D",',
+  '  "Choice E", "Option A", "Option B", "Option C", "Option D", "Option E", "answer A",',
+  '  "answer B", "answer C", "answer D", "answer E", "the first choice", "the second choice",',
+  '  "the third choice", "the fourth choice", "the fifth choice", "the last choice", "(A)",',
+  '  "(B)", "(C)", "(D)", "(E)".',
+  'INSTEAD, refer to each wrong choice by a short quoted phrase or paraphrase that uniquely',
+  '  identifies its content. Example pattern: "the choice claiming DST reliably decreases',
+  '  energy use inverts the relationship described in paragraph two".',
   'Tone: instructive, not condescending. No phrases like "obviously", "clearly", "any reader',
   '  can see".',
 ].join('\n')
@@ -1130,6 +1141,74 @@ function validateRcQuestionSetResponseResult(
   return { ok: true }
 }
 
+/**
+ * In-place Fisher–Yates. Generic over element type and array length so this
+ * works regardless of how many choices a question has.
+ */
+function fisherYatesShuffle<T>(arr: T[]): void {
+  for (let i = arr.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1))
+    const tmp = arr[i]
+    arr[i] = arr[j]
+    arr[j] = tmp
+  }
+}
+
+/**
+ * Mutates each question's choices array to:
+ *   1. Fisher–Yates-shuffle each question's choices independently using the
+ *      tag-and-track pattern so the correctIndex remap is provably correct
+ *      (correctIndex always lands on the same choice text it pointed at before).
+ *   2. Then redistribute the correct answers across the set so they don't
+ *      cluster: take a shuffled pool [0..N-1] of choice indices (N = choice
+ *      count) and assign each question a target position from the pool,
+ *      cycling if the set has more questions than positions. Swap each
+ *      question's correct choice into its assigned target, keeping
+ *      correctIndex in sync.
+ *
+ * Provably correct remap: in step 1 we tag the originally-correct text with
+ * isCorrect:true once. The shuffle moves whole {text,isCorrect} objects, so
+ * isCorrect stays attached to its original text. After the shuffle,
+ * findIndex(isCorrect) returns the new position of that exact text. In step
+ * 2 we only ever swap two elements in the choices array AND update
+ * correctIndex to point at the new home of the correct text, so the choice
+ * at correctIndex remains the originally-correct one.
+ */
+function redistributeCorrectPositions(questions: RcQuestionShape[]): void {
+  if (questions.length === 0) return
+
+  // Step 1: per-question Fisher–Yates with tag-and-track.
+  for (const q of questions) {
+    const tagged = q.choices.map((text, i) => ({ text, isCorrect: i === q.correctIndex }))
+    fisherYatesShuffle(tagged)
+    q.choices = tagged.map((t) => t.text)
+    q.correctIndex = tagged.findIndex((t) => t.isCorrect)
+  }
+
+  // Step 2: distribute correct positions across the set.
+  const maxLen = Math.max(...questions.map((q) => q.choices.length))
+  if (maxLen <= 0) return
+  const pool: number[] = []
+  for (let i = 0; i < maxLen; i += 1) pool.push(i)
+  fisherYatesShuffle(pool)
+
+  for (let qi = 0; qi < questions.length; qi += 1) {
+    const q = questions[qi]
+    let target = pool[qi % pool.length]
+    // Defensive: clamp to this question's actual length so this works if
+    // questions have different choice counts in the future.
+    if (target >= q.choices.length) target = target % q.choices.length
+    if (q.correctIndex !== target) {
+      const a = q.correctIndex
+      const b = target
+      const tmp = q.choices[a]
+      q.choices[a] = q.choices[b]
+      q.choices[b] = tmp
+      q.correctIndex = target
+    }
+  }
+}
+
 async function handleGenerateRcQuestionSet(body: any, _uid: string, res: any) {
   const difficulty = parseRcDifficulty(body)
   const passage = parseRcPassageString(body)
@@ -1185,6 +1264,7 @@ async function handleGenerateRcQuestionSet(body: any, _uid: string, res: any) {
 
   const first = await attempt(null)
   if (first.ok) {
+    redistributeCorrectPositions(first.value.questions)
     res.status(200).json(first.value)
     return
   }
@@ -1193,6 +1273,7 @@ async function handleGenerateRcQuestionSet(body: any, _uid: string, res: any) {
     `STRICT: The questions array must contain exactly ${questionCount} entries with exactly ONE main_idea question, at least 2 distinct types, and no type appearing more than twice. Return only the JSON object.`,
   )
   if (second.ok) {
+    redistributeCorrectPositions(second.value.questions)
     res.status(200).json(second.value)
     return
   }
@@ -1201,6 +1282,7 @@ async function handleGenerateRcQuestionSet(body: any, _uid: string, res: any) {
     `FINAL ATTEMPT: Conform to the JSON schema. Exactly ${questionCount} questions with five non-empty choices each. Return only the JSON object.`,
   )
   if (third.ok) {
+    redistributeCorrectPositions(third.value.questions)
     res.status(200).json(third.value)
     return
   }
