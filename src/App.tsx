@@ -4,6 +4,8 @@ import { HomePage } from './pages/HomePage'
 import { MyWordsPage } from './pages/MyWordsPage'
 import { WordDetailPage } from './pages/WordDetailPage'
 import { LearnPage } from './pages/LearnPage'
+import { StackBrowsePage } from './pages/StackBrowsePage'
+import { StackDetailPage } from './pages/StackDetailPage'
 import { TestPage } from './pages/TestPage'
 import { SessionPage } from './pages/SessionPage'
 import { ExamHubPage } from './pages/ExamHubPage'
@@ -37,6 +39,8 @@ function App() {
         <Route path="/words" element={<MyWordsPage />} />
         <Route path="/words/:wordId" element={<WordDetailPage />} />
         <Route path="/learn" element={<LearnPage />} />
+        <Route path="/learn/stacks" element={<StackBrowsePage />} />
+        <Route path="/learn/stacks/:stackId" element={<StackDetailPage />} />
         <Route path="/test" element={<TestPage />} />
         <Route path="/exam" element={<ExamHubPage />} />
         <Route path="/exam/rc/setup" element={<RcSetupPage />} />

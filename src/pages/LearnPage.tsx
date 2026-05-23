@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { bucketFromWord } from '../../shared/learningBuckets'
 import { pickParagraphWords } from '../../shared/paragraphPicker'
 import { DEFAULT_MAIN_LANGUAGE, normalizeMainLanguageCode } from '../../shared/languages'
@@ -302,6 +302,26 @@ export function LearnPage() {
           Browse saved vocabulary. Mastery is automatic from your exposure score (20+ = Mastered). Open
           Study on a card for a focused flashcard flow.
         </p>
+        <div style={{ marginTop: 'var(--space-md)' }}>
+          <Link
+            to="/learn/stacks"
+            className="text-body-sm"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 'var(--space-2xs)',
+              padding: 'var(--space-2xs) var(--space-md)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-sm)',
+              background: 'var(--fill-subtle)',
+              color: 'var(--text)',
+              textDecoration: 'none',
+              fontWeight: 600,
+            }}
+          >
+            Browse word stacks →
+          </Link>
+        </div>
       </div>
 
       <div

@@ -12,6 +12,7 @@ import {
   where,
 } from 'firebase/firestore'
 import { mergeTranslationsForSave } from '../../shared/vocab'
+import { WORD_TAG_KNOWN } from '../../shared/wordTags'
 import { auth, db } from './firebase'
 import type { GeneratedResult, WordDoc } from './types'
 
@@ -30,6 +31,17 @@ export async function saveWord(params: {
   result: GeneratedResult
   tags?: string[]
   mainLanguage?: string
+  /** Where the save originates. 'stack' triggers stack-import semantics
+   *  (wordSource: 'word_stack', stackId/stackPosition recorded, optional
+   *  markKnown tag). Defaults to 'lookup' for existing callers. */
+  source?: 'lookup' | 'stack'
+  /** Canonical stack id (e.g. 'stack_arg_architecture'). Required when
+   *  source === 'stack'. */
+  stackId?: string
+  /** 0-indexed position of this word within its stack. */
+  stackPosition?: number
+  /** Sets the 'known' tag on the word — mirrors mobile triage behavior. */
+  markKnown?: boolean
 }) {
   const uid = requireUserId()
   const rawText = (params.text ?? params.word ?? '').trim()
@@ -122,14 +134,40 @@ export async function saveWord(params: {
   if (!existing.empty) {
     const prev = existing.docs[0].data() as Record<string, unknown>
     const ref = doc(db, 'users', uid, 'words', existing.docs[0].id)
+    // Stack-source upgrades a 'lookup'-sourced word's provenance; otherwise
+    // preserve whatever the doc already has.
     const mergedWordSource =
-      typeof prev.wordSource === 'string' ? prev.wordSource : ('lookup' as const)
-    const preservedTags = Array.isArray(prev.tags) ? prev.tags : params.tags ?? []
+      params.source === 'stack'
+        ? 'word_stack'
+        : typeof prev.wordSource === 'string'
+          ? prev.wordSource
+          : ('lookup' as const)
+    const preservedTags = Array.isArray(prev.tags) ? (prev.tags as string[]) : params.tags ?? []
+    // Mirror mobile: only ADD 'known', never remove on update.
+    const nextTags =
+      params.markKnown === true && !preservedTags.includes(WORD_TAG_KNOWN)
+        ? [...preservedTags, WORD_TAG_KNOWN]
+        : preservedTags
+    // Carry stackId/stackPosition forward if not provided in this save.
+    const stackIdField =
+      params.stackId != null
+        ? { stackId: params.stackId }
+        : typeof prev.stackId === 'string'
+          ? { stackId: prev.stackId }
+          : {}
+    const stackPositionField =
+      params.stackPosition != null
+        ? { stackPosition: params.stackPosition }
+        : typeof prev.stackPosition === 'number'
+          ? { stackPosition: prev.stackPosition }
+          : {}
     await updateDoc(ref, {
       ...contentPayload,
       ...legacyStripOnUpdate,
-      tags: preservedTags,
+      tags: nextTags,
       wordSource: mergedWordSource,
+      ...stackIdField,
+      ...stackPositionField,
       exposureScore:
         typeof prev.exposureScore === 'number' && Number.isFinite(prev.exposureScore)
           ? prev.exposureScore
@@ -154,15 +192,20 @@ export async function saveWord(params: {
     return { id: existing.docs[0].id }
   }
 
+  const isStackImport = params.source === 'stack'
   const payloadNew = {
     ...contentPayload,
-    status: 'learning',
+    // markKnown overrides the params.tags default — same behavior as mobile.
+    tags: params.markKnown === true ? [WORD_TAG_KNOWN] : params.tags ?? [],
+    status: 'learning' as const,
     exposureScore: 0,
     lastSeenAt: null,
     lastAnsweredAt: null,
     lastCorrect: null,
     flagged: false,
-    wordSource: 'lookup' as const,
+    wordSource: (isStackImport ? 'word_stack' : 'lookup') as 'word_stack' | 'lookup',
+    ...(params.stackId != null ? { stackId: params.stackId } : {}),
+    ...(params.stackPosition != null ? { stackPosition: params.stackPosition } : {}),
   }
 
   const ref = await addDoc(wordsCol, { ...payloadNew, createdAt: serverTimestamp() })
