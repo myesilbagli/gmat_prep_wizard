@@ -10,6 +10,10 @@ import { ExamHubPage } from './pages/ExamHubPage'
 import { RcSetupPage } from './pages/RcSetupPage'
 import { RcPracticePage } from './pages/RcPracticePage'
 import { RcReviewPage } from './pages/RcReviewPage'
+import { CrTestPage } from './pages/CrTestPage'
+import { CrSetupPage } from './pages/CrSetupPage'
+import { CrPracticePage } from './pages/CrPracticePage'
+import { CrReviewPage } from './pages/CrReviewPage'
 import { LandingPage } from './pages/LandingPage'
 import { SignInPage } from './pages/SignInPage'
 import { SignUpPage } from './pages/SignUpPage'
@@ -24,10 +28,13 @@ function App() {
       <Route path="/landing" element={<Navigate to="/" replace />} />
       <Route path="/session" element={<SessionPage />} />
       <Route path="/exam/rc/practice/:attemptId" element={<RcPracticePage />} />
+      <Route path="/exam/cr/practice/:attemptId" element={<CrPracticePage />} />
       <Route path="/sign-in" element={<SignInPage />} />
       <Route path="/sign-up" element={<SignUpPage />} />
       <Route path="/privacy" element={<PrivacyPolicyPage />} />
       <Route path="/terms" element={<TermsOfServicePage />} />
+      {/* TEMPORARY: throwaway CR demo test page. Remove when real CR pages ship. */}
+      <Route path="/cr-test" element={<CrTestPage />} />
       <Route element={<AppLayout />}>
         <Route path={APP_HOME} element={<HomePage />} />
         <Route path="/words" element={<MyWordsPage />} />
@@ -37,6 +44,8 @@ function App() {
         <Route path="/exam" element={<ExamHubPage />} />
         <Route path="/exam/rc/setup" element={<RcSetupPage />} />
         <Route path="/exam/rc/review/:attemptId" element={<RcReviewPage />} />
+        <Route path="/exam/cr/setup" element={<CrSetupPage />} />
+        <Route path="/exam/cr/review/:attemptId" element={<CrReviewPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

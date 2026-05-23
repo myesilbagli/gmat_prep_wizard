@@ -1,22 +1,39 @@
 import { Link } from 'react-router-dom'
+import { PrimaryButton } from '../components/ui/PrimaryButton'
 
 export function ExamHubPage() {
   return (
-    <div className="container" style={{ paddingTop: 24, paddingBottom: 32 }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, letterSpacing: -0.3 }}>
+    <div className="container" style={{ paddingTop: 'var(--space-2xl)', paddingBottom: 'var(--space-3xl)' }}>
+      <div style={{ marginBottom: 'var(--space-2xl)' }}>
+        <h1 className="text-page-title" style={{ margin: 0 }}>
           Exam practice
         </h1>
-        <p className="muted" style={{ margin: '8px 0 0', fontSize: 15 }}>
+        <p className="muted text-body-lg" style={{ margin: 'var(--space-xs) 0 0' }}>
           GMAT-style sections. Pick a mode to generate a fresh attempt.
         </p>
+        {/* TEMPORARY: dev entry-point for the CR generator demo. Remove with /cr-test route. */}
+        <Link
+          to="/cr-test"
+          style={{
+            display: 'inline-block',
+            marginTop: 'var(--space-md)',
+            padding: '6px 12px',
+            border: '1px dashed var(--border)',
+            borderRadius: 'var(--radius-sm)',
+            color: 'var(--muted)',
+            textDecoration: 'none',
+            fontSize: 12,
+          }}
+        >
+          [dev] CR test page →
+        </Link>
       </div>
 
       <div
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          gap: 16,
+          gap: 'var(--space-lg)',
         }}
       >
         <ExamHubCard
@@ -28,8 +45,10 @@ export function ExamHubPage() {
         />
         <ExamHubCard
           title="Critical Reasoning"
-          description="Argument-based questions: assumptions, weakenings, strengthenings, paradoxes, and inference."
-          ctaLabel="Coming soon"
+          description="5-question timed set. Argument-based questions: assumptions, weakenings, strengthenings, paradoxes, and inference."
+          ctaLabel="Start →"
+          to="/exam/cr/setup"
+          available
         />
       </div>
     </div>
@@ -46,55 +65,38 @@ type ExamHubCardProps = {
 
 function ExamHubCard({ title, description, ctaLabel, to, available }: ExamHubCardProps) {
   const baseStyle: React.CSSProperties = {
-    padding: 20,
+    padding: 'var(--card-pad-comfortable)',
     display: 'flex',
     flexDirection: 'column',
-    gap: 12,
-    borderRadius: 14,
-    border: '1px solid var(--border)',
-    background: available ? 'rgba(99, 102, 241, 0.04)' : 'rgba(255,255,255,0.02)',
+    gap: 'var(--space-md)',
+    background: available ? 'var(--selection-fill)' : 'var(--fill-subtle)',
     opacity: available ? 1 : 0.6,
   }
   return (
     <div className="card" style={baseStyle}>
       <div>
-        <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, letterSpacing: -0.2 }}>
+        <h2 className="text-title" style={{ margin: 0 }}>
           {title}
         </h2>
-        <p className="muted" style={{ margin: '8px 0 0', fontSize: 14, lineHeight: 1.5 }}>
+        <p className="muted text-body" style={{ margin: 'var(--space-xs) 0 0' }}>
           {description}
         </p>
       </div>
       <div style={{ marginTop: 'auto' }}>
         {available && to ? (
-          <Link
-            to={to}
-            className="btn"
-            style={{
-              display: 'inline-block',
-              padding: '10px 16px',
-              borderRadius: 10,
-              fontWeight: 700,
-              fontSize: 14,
-              textDecoration: 'none',
-              background: 'var(--accent-gradient-end, #6366f1)',
-              color: '#fff',
-              border: '1px solid transparent',
-            }}
-          >
+          <PrimaryButton as="link" to={to}>
             {ctaLabel}
-          </Link>
+          </PrimaryButton>
         ) : (
           <span
-            className="muted"
+            className="muted text-body"
             style={{
               display: 'inline-block',
-              padding: '10px 16px',
-              borderRadius: 10,
+              padding: 'var(--space-sm) var(--space-lg)',
+              borderRadius: 'var(--radius-md)',
               fontWeight: 600,
-              fontSize: 14,
               border: '1px solid var(--border)',
-              background: 'rgba(255,255,255,0.03)',
+              background: 'var(--fill-subtle)',
             }}
           >
             {ctaLabel}
