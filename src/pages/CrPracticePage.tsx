@@ -10,6 +10,12 @@ import { getCrAttempt, markCrAttemptComplete, recordCrAnswer } from '../lib/crAt
 import { McqOption } from '../components/ui/McqOption'
 import { PrimaryButton } from '../components/ui/PrimaryButton'
 import { Alert } from '../components/ui/Alert'
+import {
+  PASSAGE_LINE_HEIGHT,
+  PASSAGE_MEASURE,
+  PASSAGE_PARAGRAPH_GAP,
+  getPassageFontSize,
+} from '../lib/passageTypography'
 
 type Phase = 'loading' | 'reading' | 'submitting' | 'finishing' | 'fatal-error'
 
@@ -265,16 +271,19 @@ export function CrPracticePage() {
           {currentQuestion.questionType.toUpperCase()}
         </div>
 
-        <p
-          className="text-body-lg"
-          style={{
-            margin: '0 0 var(--space-lg)',
-            lineHeight: 'var(--leading-relaxed)',
-            whiteSpace: 'pre-wrap',
-          }}
-        >
-          {currentQuestion.argument}
-        </p>
+        <div style={{ maxWidth: PASSAGE_MEASURE, marginBottom: 'var(--space-lg)' }}>
+          <p
+            style={{
+              margin: `0 0 ${PASSAGE_PARAGRAPH_GAP}`,
+              fontSize: getPassageFontSize(currentQuestion.argument),
+              lineHeight: PASSAGE_LINE_HEIGHT,
+              color: 'var(--text)',
+              whiteSpace: 'pre-wrap',
+            }}
+          >
+            {currentQuestion.argument}
+          </p>
+        </div>
 
         <h2 className="text-card-title" style={{ margin: '0 0 var(--space-lg)' }}>
           {currentQuestion.questionStem}

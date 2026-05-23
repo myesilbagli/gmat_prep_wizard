@@ -14,6 +14,12 @@ import { McqOption } from '../components/ui/McqOption'
 import { Alert } from '../components/ui/Alert'
 import { GenerationLoader } from '../components/GenerationLoader'
 import { RC_LOADING_MESSAGES } from '../lib/loadingMessages'
+import {
+  PASSAGE_LINE_HEIGHT,
+  PASSAGE_MEASURE,
+  PASSAGE_PARAGRAPH_GAP,
+  getPassageFontSize,
+} from '../lib/passageTypography'
 
 type PracticePhase =
   | 'loading-attempt'
@@ -330,6 +336,7 @@ function PassagePane({ passage }: { passage: string }) {
     () => passage.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean),
     [passage],
   )
+  const fontSize = useMemo(() => getPassageFontSize(passage), [passage])
   return (
     <div
       style={{
@@ -338,27 +345,35 @@ function PassagePane({ passage }: { passage: string }) {
         background: 'var(--fill-subtle)',
       }}
     >
-      <div className="muted text-label" style={{ marginBottom: 'var(--space-md)' }}>
-        Passage
+      <div
+        style={{
+          maxWidth: PASSAGE_MEASURE,
+          marginLeft: 0,
+          marginRight: 'auto',
+        }}
+      >
+        <div className="muted text-label" style={{ marginBottom: 'var(--space-md)' }}>
+          Passage
+        </div>
+        {paragraphs.length === 0 ? (
+          <div className="muted text-body">Loading passage…</div>
+        ) : (
+          paragraphs.map((p, i) => (
+            <p
+              key={i}
+              style={{
+                margin: `0 0 ${PASSAGE_PARAGRAPH_GAP}`,
+                fontSize,
+                lineHeight: PASSAGE_LINE_HEIGHT,
+                color: 'var(--text)',
+                whiteSpace: 'pre-wrap',
+              }}
+            >
+              {p}
+            </p>
+          ))
+        )}
       </div>
-      {paragraphs.length === 0 ? (
-        <div className="muted text-body">Loading passage…</div>
-      ) : (
-        paragraphs.map((p, i) => (
-          <p
-            key={i}
-            className="text-body-lg"
-            style={{
-              margin: '0 0 var(--space-lg)',
-              lineHeight: 'var(--leading-relaxed)',
-              color: 'var(--text)',
-              whiteSpace: 'pre-wrap',
-            }}
-          >
-            {p}
-          </p>
-        ))
-      )}
     </div>
   )
 }

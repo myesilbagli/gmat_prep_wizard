@@ -6,6 +6,12 @@ import { PrimaryButton } from '../components/ui/PrimaryButton'
 import { McqOption } from '../components/ui/McqOption'
 import { Alert } from '../components/ui/Alert'
 import { StatBlock } from '../components/ui/StatBlock'
+import {
+  PASSAGE_LINE_HEIGHT,
+  PASSAGE_MEASURE,
+  PASSAGE_PARAGRAPH_GAP,
+  getPassageFontSize,
+} from '../lib/passageTypography'
 
 const QUESTION_TYPE_LABEL: Record<CrQuestionType, string> = {
   assumption: 'Assumption',
@@ -260,16 +266,19 @@ function ReviewQuestionCard({
         <span className="muted text-label">{formatSeconds(q.timeSeconds)}</span>
       </div>
 
-      <p
-        className="text-body"
-        style={{
-          margin: 0,
-          lineHeight: 'var(--leading-relaxed)',
-          whiteSpace: 'pre-wrap',
-        }}
-      >
-        {q.argument}
-      </p>
+      <div style={{ maxWidth: PASSAGE_MEASURE }}>
+        <p
+          style={{
+            margin: `0 0 ${PASSAGE_PARAGRAPH_GAP}`,
+            fontSize: getPassageFontSize(q.argument),
+            lineHeight: PASSAGE_LINE_HEIGHT,
+            color: 'var(--text)',
+            whiteSpace: 'pre-wrap',
+          }}
+        >
+          {q.argument}
+        </p>
+      </div>
 
       <div className="text-section" style={{ fontWeight: 600 }}>
         {q.questionStem}
