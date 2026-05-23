@@ -176,12 +176,15 @@ export function HomePage() {
   }
 
   return (
-    <div className="container" style={{ paddingTop: 24, paddingBottom: 32 }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, letterSpacing: -0.3 }}>
+    <div
+      className="container"
+      style={{ paddingTop: 'var(--space-2xl)', paddingBottom: 'var(--space-3xl)' }}
+    >
+      <div style={{ marginBottom: 'var(--space-2xl)' }}>
+        <h1 className="text-page-title" style={{ margin: 0 }}>
           Today
         </h1>
-        <p className="muted" style={{ margin: '8px 0 0', fontSize: 15 }}>
+        <p className="muted text-body-lg" style={{ margin: 'var(--space-xs) 0 0' }}>
           Your streak, daily session, and quick lookup in one place.
         </p>
       </div>
@@ -190,27 +193,40 @@ export function HomePage() {
         <div
           className="card"
           style={{
-            padding: 18,
-            marginBottom: 20,
+            padding: 'var(--card-pad-comfortable)',
+            marginBottom: 'var(--space-xl)',
             display: 'grid',
-            gap: 14,
+            gap: 'var(--space-md)',
           }}
         >
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12 }}>
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              gap: 'var(--space-md)',
+            }}
+          >
             <div>
-              <div className="muted" style={{ fontSize: 11, fontWeight: 700, letterSpacing: 0.6 }}>
+              <div className="muted text-micro" style={{ textTransform: 'uppercase' }}>
                 STREAK
               </div>
-              <div style={{ fontSize: 26, fontWeight: 800 }}>
+              <div
+                className="text-headword-emphasis"
+                style={{ marginTop: 'var(--space-2xs)' }}
+              >
                 {profileLoading ? '…' : streak ?? 0}{' '}
-                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--muted)' }}>
+                <span
+                  className="text-body"
+                  style={{ fontWeight: 600, color: 'var(--muted)' }}
+                >
                   day{(streak ?? 0) === 1 ? '' : 's'}
                 </span>
               </div>
-              <p className="muted" style={{ margin: '6px 0 0', fontSize: 12 }}>
+              <p className="muted text-label" style={{ margin: 'var(--space-xs) 0 0' }}>
                 Complete a full daily session to extend your streak.
               </p>
-              <p className="muted" style={{ margin: '4px 0 0', fontSize: 12 }}>
+              <p className="muted text-label" style={{ margin: 'var(--space-2xs) 0 0' }}>
                 Sessions completed: {profileLoading ? '…' : sessionCount ?? 0}
               </p>
             </div>
@@ -221,9 +237,6 @@ export function HomePage() {
                 style={{
                   display: 'block',
                   textAlign: 'center',
-                  padding: '14px 18px',
-                  fontSize: 16,
-                  fontWeight: 700,
                   textDecoration: 'none',
                 }}
               >
@@ -428,14 +441,7 @@ function WordAnalysisCard({
           >
             {typeLabel}
           </div>
-          <div
-            style={{
-              fontSize: 28,
-              fontWeight: 800,
-              letterSpacing: -0.3,
-              color: 'var(--text)',
-            }}
-          >
+          <div className="text-headword-emphasis" style={{ color: 'var(--text)' }}>
             {word}
           </div>
         </div>
@@ -587,12 +593,12 @@ function WordAnalysisCard({
             {result.synonyms.map((s, i) => (
               <span
                 key={`${s}-${i}`}
+                className="text-body-sm"
                 style={{
-                  fontSize: 13,
-                  padding: '6px 12px',
-                  borderRadius: 999,
+                  padding: 'var(--space-2xs) var(--space-md)',
+                  borderRadius: 'var(--radius-pill)',
                   border: '1px solid var(--border)',
-                  background: 'rgba(255,255,255,0.04)',
+                  background: 'var(--fill-subtle)',
                   color: 'var(--muted)',
                 }}
               >
@@ -619,12 +625,12 @@ function WordAnalysisCard({
             {result.wordTags.map((t, i) => (
               <span
                 key={`${t}-${i}`}
+                className="text-label"
                 style={{
-                  fontSize: 12,
-                  padding: '5px 10px',
-                  borderRadius: 999,
+                  padding: 'var(--space-2xs) var(--space-md)',
+                  borderRadius: 'var(--radius-pill)',
                   border: '1px solid var(--border)',
-                  background: 'rgba(99,102,241,0.12)',
+                  background: 'var(--selection-fill)',
                   color: 'var(--text)',
                 }}
               >

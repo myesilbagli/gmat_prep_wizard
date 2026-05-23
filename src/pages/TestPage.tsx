@@ -3,6 +3,9 @@ import { MASTERED_MIN_SCORE } from '../../shared/exposureScore'
 import type { QuizMode } from '../../shared/types'
 import { applyQuizAnswerExposure, listVocabItems, type VocabItem } from '../lib/vocab'
 import { IconPlay } from '../components/Icons'
+import { SelectableTile } from '../components/ui/SelectableTile'
+import { McqOption } from '../components/ui/McqOption'
+import { StatBlock } from '../components/ui/StatBlock'
 
 type QuizQuestion = {
   itemId: string
@@ -146,12 +149,15 @@ export function TestPage() {
   const estimatedMinutes = Math.max(1, Math.ceil(count * 0.8))
 
   return (
-    <div className="container" style={{ paddingTop: 24, paddingBottom: 32 }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, letterSpacing: -0.3 }}>
+    <div
+      className="container"
+      style={{ paddingTop: 'var(--space-2xl)', paddingBottom: 'var(--space-3xl)' }}
+    >
+      <div style={{ marginBottom: 'var(--space-2xl)' }}>
+        <h1 className="text-page-title" style={{ margin: 0 }}>
           GMAT practice
         </h1>
-        <p className="muted" style={{ margin: '8px 0 0', fontSize: 15 }}>
+        <p className="muted text-body-lg" style={{ margin: 'var(--space-xs) 0 0' }}>
           Exam-style verbal questions from your deck. Learning items first; mastered words fill
           when needed.
         </p>
@@ -160,104 +166,48 @@ export function TestPage() {
       <div
         className="card"
         style={{
-          padding: 20,
-          marginBottom: 20,
+          padding: 'var(--card-pad-comfortable)',
+          marginBottom: 'var(--space-xl)',
           display: 'grid',
-          gap: 20,
+          gap: 'var(--space-xl)',
         }}
       >
         <div>
-          <div
-            className="muted"
-            style={{ fontSize: 12, fontWeight: 700, marginBottom: 10 }}
-          >
+          <div className="muted text-label" style={{ marginBottom: 'var(--space-xs)' }}>
             Section type
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <button
-              type="button"
-              className="btn"
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-md)' }}>
+            <SelectableTile
+              layout="tile"
+              label="Meaning in Context"
+              sublabel="Formal stems: blanks, usage, and meaning in analytical passages."
+              selected={mode === 'context'}
               onClick={() => setMode('context')}
-              style={{
-                padding: 16,
-                textAlign: 'left',
-                borderRadius: 14,
-                border:
-                  mode === 'context'
-                    ? '2px solid var(--accent-gradient-end)'
-                    : '1px solid var(--border)',
-                background:
-                  mode === 'context'
-                    ? 'rgba(99, 102, 241, 0.12)'
-                    : 'rgba(255,255,255,0.03)',
-              }}
-            >
-              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>
-                Meaning in Context
-              </div>
-              <div className="muted" style={{ fontSize: 13, lineHeight: 1.4 }}>
-                Formal stems: blanks, usage, and meaning in analytical passages.
-              </div>
-            </button>
-            <button
-              type="button"
-              className="btn"
+            />
+            <SelectableTile
+              layout="tile"
+              label="GMAT-Style Verbal"
+              sublabel="Sentence completion and verbal reasoning–style vocabulary."
+              selected={mode === 'verbal'}
               onClick={() => setMode('verbal')}
-              style={{
-                padding: 16,
-                textAlign: 'left',
-                borderRadius: 14,
-                border:
-                  mode === 'verbal'
-                    ? '2px solid var(--accent-gradient-end)'
-                    : '1px solid var(--border)',
-                background:
-                  mode === 'verbal'
-                    ? 'rgba(99, 102, 241, 0.12)'
-                    : 'rgba(255,255,255,0.03)',
-              }}
-            >
-              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>
-                GMAT-Style Verbal
-              </div>
-              <div className="muted" style={{ fontSize: 13, lineHeight: 1.4 }}>
-                Sentence completion and verbal reasoning–style vocabulary.
-              </div>
-            </button>
+            />
           </div>
         </div>
 
         <div>
-          <div
-            className="muted"
-            style={{ fontSize: 12, fontWeight: 700, marginBottom: 10 }}
-          >
+          <div className="muted text-label" style={{ marginBottom: 'var(--space-xs)' }}>
             Number of questions
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-xs)' }}>
             {[5, 10, 20, 50].map((n) => (
-              <button
+              <SelectableTile
                 key={n}
-                type="button"
-                className="btn"
+                layout="pill"
+                label={String(n)}
+                selected={count === n}
                 onClick={() => setCount(n)}
-                style={{
-                  padding: '10px 16px',
-                  borderRadius: 999,
-                  border:
-                    count === n
-                      ? '2px solid var(--accent-gradient-end)'
-                      : '1px solid var(--border)',
-                  background:
-                    count === n
-                      ? 'rgba(99, 102, 241, 0.18)'
-                      : 'rgba(255,255,255,0.04)',
-                  fontSize: 14,
-                  fontWeight: 600,
-                }}
-              >
-                {n}
-              </button>
+                style={{ width: 'auto', display: 'inline-flex', alignItems: 'center' }}
+              />
             ))}
           </div>
         </div>
@@ -271,30 +221,27 @@ export function TestPage() {
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: 10,
-              padding: '14px 24px',
-              fontSize: 15,
-              fontWeight: 700,
+              gap: 'var(--space-xs)',
             }}
           >
             <IconPlay style={{ flexShrink: 0 }} />
             {starting ? 'Starting…' : 'Begin section'}
           </button>
-          <p className="muted" style={{ margin: '10px 0 0', fontSize: 13 }}>
+          <p className="muted text-body-sm" style={{ margin: 'var(--space-sm) 0 0' }}>
             Estimated duration: ~{estimatedMinutes} minute{estimatedMinutes === 1 ? '' : 's'}
           </p>
         </div>
 
         {loadingItems && (
-          <p className="muted" style={{ margin: 0, fontSize: 13 }}>
+          <p className="muted text-body-sm" style={{ margin: 0 }}>
             Loading saved items…
           </p>
         )}
         {loadError && (
-          <p style={{ margin: 0, color: 'var(--danger)', fontSize: 13 }}>{loadError}</p>
+          <p className="text-body-sm" style={{ margin: 0, color: 'var(--danger)' }}>{loadError}</p>
         )}
         {quizError && (
-          <p style={{ margin: 0, color: 'var(--danger)', fontSize: 13 }}>{quizError}</p>
+          <p className="text-body-sm" style={{ margin: 0, color: 'var(--danger)' }}>{quizError}</p>
         )}
       </div>
 
@@ -324,36 +271,27 @@ export function TestPage() {
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-            gap: 12,
-            marginTop: 8,
+            gap: 'var(--space-md)',
+            marginTop: 'var(--space-xs)',
           }}
         >
           <div
             className="card"
-            style={{ padding: 14, textAlign: 'center' }}
+            style={{ padding: 'var(--card-pad-compact)', textAlign: 'center' }}
           >
-            <div className="muted" style={{ fontSize: 11, fontWeight: 700, marginBottom: 4 }}>
-              Previous accuracy
-            </div>
-            <div style={{ fontSize: 20, fontWeight: 800 }}>—</div>
+            <StatBlock label="Previous accuracy" value="—" />
           </div>
           <div
             className="card"
-            style={{ padding: 14, textAlign: 'center' }}
+            style={{ padding: 'var(--card-pad-compact)', textAlign: 'center' }}
           >
-            <div className="muted" style={{ fontSize: 11, fontWeight: 700, marginBottom: 4 }}>
-              Daily streak
-            </div>
-            <div style={{ fontSize: 20, fontWeight: 800 }}>—</div>
+            <StatBlock label="Daily streak" value="—" />
           </div>
           <div
             className="card"
-            style={{ padding: 14, textAlign: 'center' }}
+            style={{ padding: 'var(--card-pad-compact)', textAlign: 'center' }}
           >
-            <div className="muted" style={{ fontSize: 11, fontWeight: 700, marginBottom: 4 }}>
-              Words mastered
-            </div>
-            <div style={{ fontSize: 20, fontWeight: 800 }}>—</div>
+            <StatBlock label="Words mastered" value="—" />
           </div>
         </div>
       )}
@@ -373,35 +311,32 @@ function QuizQuestionView(props: {
   const { question, index, total, runSub, quizPicked } = props
 
   return (
-    <div className="card" style={{ padding: 16, display: 'grid', gap: 12 }}>
-      <div className="muted" style={{ fontSize: 13 }}>
+    <div
+      className="card"
+      style={{ padding: 'var(--card-pad-compact)', display: 'grid', gap: 'var(--space-md)' }}
+    >
+      <div className="muted text-body-sm">
         Question {index + 1} of {total}
       </div>
-      <div style={{ fontWeight: 600, lineHeight: 1.45 }}>{question.questionText}</div>
+      <div className="text-body" style={{ fontWeight: 600, lineHeight: 'var(--leading-normal)' }}>
+        {question.questionText}
+      </div>
       {runSub === 'mcq' ? (
-        <div style={{ display: 'grid', gap: 8 }}>
+        <div style={{ display: 'grid', gap: 'var(--space-xs)' }}>
           {question.options.map((opt, i) => (
-            <button
+            <McqOption
               key={i}
-              type="button"
+              label={opt}
+              letter={String.fromCharCode(65 + i)}
               onClick={() => props.onPickOption(i)}
-              className="btn"
-              style={{
-                textAlign: 'left',
-                border: '1px solid var(--border)',
-                background: 'rgba(255,255,255,0.04)',
-                fontSize: 14,
-              }}
-            >
-              {opt}
-            </button>
+            />
           ))}
         </div>
       ) : (
-        <div style={{ display: 'grid', gap: 12 }}>
-          <div style={{ fontSize: 14 }}>
+        <div style={{ display: 'grid', gap: 'var(--space-md)' }}>
+          <div className="text-body">
             {quizPicked === question.correctIndex ? (
-              <span style={{ fontWeight: 700, color: 'var(--accent-2)' }}>Correct.</span>
+              <span style={{ fontWeight: 700, color: 'var(--success)' }}>Correct.</span>
             ) : (
               <span>
                 <span style={{ fontWeight: 700 }}>Incorrect.</span> Correct:{' '}
@@ -409,9 +344,7 @@ function QuizQuestionView(props: {
               </span>
             )}
           </div>
-          <div className="muted" style={{ fontSize: 14, lineHeight: 1.5 }}>
-            {question.explanation}
-          </div>
+          <div className="muted text-body">{question.explanation}</div>
           <button type="button" className="btn btnPrimary" onClick={props.onContinue}>
             {index + 1 < total ? 'Continue' : 'View results'}
           </button>
@@ -431,10 +364,18 @@ function QuizSummary(props: {
   const total = questions.length
 
   return (
-    <div className="card" style={{ padding: 16, marginTop: 12, display: 'grid', gap: 12 }}>
+    <div
+      className="card"
+      style={{
+        padding: 'var(--card-pad-compact)',
+        marginTop: 'var(--space-md)',
+        display: 'grid',
+        gap: 'var(--space-md)',
+      }}
+    >
       <div>
         <div style={{ fontWeight: 600 }}>Section complete</div>
-        <div className="muted" style={{ fontSize: 13 }}>
+        <div className="muted text-body-sm">
           Score: {correctCount} / {total}
         </div>
       </div>
@@ -443,23 +384,23 @@ function QuizSummary(props: {
         New section
       </button>
 
-      <div style={{ fontWeight: 600, marginTop: 4 }}>Review</div>
-      <div style={{ display: 'grid', gap: 8 }}>
+      <div style={{ fontWeight: 600, marginTop: 'var(--space-2xs)' }}>Review</div>
+      <div style={{ display: 'grid', gap: 'var(--space-xs)' }}>
         {questions.map((q, idx) => {
           const userAnswer = answers[idx]
           const correct = userAnswer === q.correctIndex
           return (
             <div
               key={idx}
+              className="text-body-sm"
               style={{
                 border: '1px solid var(--border)',
-                borderRadius: 10,
-                padding: 10,
-                fontSize: 13,
+                borderRadius: 'var(--radius-md)',
+                padding: 'var(--space-sm)',
               }}
             >
               <div style={{ fontWeight: 600 }}>{q.questionText}</div>
-              <div className="muted" style={{ marginTop: 4 }}>
+              <div className="muted" style={{ marginTop: 'var(--space-2xs)' }}>
                 Your answer:{' '}
                 {userAnswer != null ? q.options[userAnswer] ?? '—' : '—'} (
                 {correct ? 'correct' : 'incorrect'})
@@ -467,7 +408,7 @@ function QuizSummary(props: {
               <div className="muted">
                 Correct answer: {q.options[q.correctIndex] ?? '—'}
               </div>
-              <div className="muted" style={{ marginTop: 4 }}>
+              <div className="muted" style={{ marginTop: 'var(--space-2xs)' }}>
                 {q.explanation}
               </div>
             </div>
@@ -493,4 +434,3 @@ function shuffle<T>(arr: T[]): T[] {
   }
   return copy
 }
-

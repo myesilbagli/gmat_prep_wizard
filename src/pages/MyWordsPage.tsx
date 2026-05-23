@@ -41,18 +41,18 @@ export function MyWordsPage() {
   }, [q, rows])
 
   return (
-    <div className="container" style={{ paddingBottom: 18 }}>
-      <div className="card" style={{ padding: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, flex: 1 }}>
+    <div className="container" style={{ paddingBottom: 'var(--space-3xl)' }}>
+      <div className="card" style={{ padding: 'var(--card-pad-compact)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+          <div className="text-body" style={{ fontWeight: 700, flex: 1 }}>
             My Words
           </div>
-          <span className="muted" style={{ fontSize: 13 }}>
+          <span className="muted text-body-sm">
             {rows.length} saved
           </span>
         </div>
 
-        <div style={{ height: 10 }} />
+        <div style={{ height: 'var(--space-sm)' }} />
         <input
           className="input"
           placeholder="Search…"
@@ -61,9 +61,9 @@ export function MyWordsPage() {
         />
       </div>
 
-      <div style={{ height: 12 }} />
+      <div style={{ height: 'var(--space-md)' }} />
 
-      <div className="card" style={{ padding: 16 }}>
+      <div className="card" style={{ padding: 'var(--card-pad-compact)' }}>
         {loading ? <div className="muted">Loading…</div> : null}
         {error ? <div style={{ color: 'var(--danger)' }}>{error}</div> : null}
 
@@ -75,7 +75,7 @@ export function MyWordsPage() {
           <div className="muted">No matches.</div>
         ) : null}
 
-        <div style={{ display: 'grid', gap: 10 }}>
+        <div style={{ display: 'grid', gap: 'var(--space-md)' }}>
           {filtered.map((r) => (
             <Link
               key={r.id}
@@ -85,22 +85,22 @@ export function MyWordsPage() {
               <div
                 style={{
                   border: '1px solid var(--border)',
-                  background: 'rgba(255,255,255,0.03)',
-                  borderRadius: 12,
-                  padding: 12,
+                  background: 'var(--fill-subtle)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: 'var(--space-md)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  gap: 12,
+                  gap: 'var(--space-md)',
                 }}
               >
                 <div>
-                  <div style={{ fontWeight: 700 }}>{r.data.word}</div>
-                  <div className="muted" style={{ fontSize: 13 }}>
+                  <div className="text-title">{r.data.word}</div>
+                  <div className="muted text-body-sm">
                     {r.data.result.definitions?.[0] ?? '—'}
                   </div>
                 </div>
-                <div className="muted" style={{ fontSize: 13 }}>
+                <div className="muted text-body-sm">
                   View →
                 </div>
               </div>
@@ -111,4 +111,3 @@ export function MyWordsPage() {
     </div>
   )
 }
-

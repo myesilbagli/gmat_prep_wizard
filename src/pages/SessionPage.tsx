@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { McqOption } from '../components/ui/McqOption'
 import { onAuthStateChanged } from 'firebase/auth'
 import type { QuizQuestion, VocabItem } from '../../shared/types'
 import { formatSessionBatchComposition, pickSessionBatchTwelve } from '../../shared/sessionPlanner'
@@ -34,7 +35,7 @@ function bucketDeltaText(before: number, after: number): string {
   return d > 0 ? `+${d}` : `${d}`
 }
 
-const WEB_SUCCESS = 'var(--accent-2)'
+const WEB_SUCCESS = 'var(--success)'
 const WEB_DANGER = 'var(--danger)'
 
 function IconMcqCheck({ size, color }: { size: number; color: string }) {
@@ -115,68 +116,44 @@ function McqStepWeb({
         </div>
       ) : null}
 
-      <div style={{ display: 'grid', gap: 10 }}>
+      <div style={{ display: 'grid', gap: 'var(--space-sm)' }}>
         {question.options.map((opt, i) => {
           const isCorrectRow = i === correctIdx
           const isWrongPicked = reviewing && quizPicked === i && i !== correctIdx
-
-          let btnStyle: CSSProperties = {
-            width: '100%',
-            textAlign: 'left',
-            padding: '14px 16px',
-            fontSize: 15,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 12,
-            borderRadius: 12,
-            borderWidth: 1,
-            borderStyle: 'solid',
-            borderColor: 'var(--border)',
-            background: 'color-mix(in srgb, var(--surface) 70%, transparent)',
-            color: 'var(--text)',
-            cursor: reviewing ? 'default' : 'pointer',
-          }
-
-          if (reviewing) {
-            if (isCorrectRow) {
-              btnStyle = {
-                ...btnStyle,
-                background: `color-mix(in srgb, ${WEB_SUCCESS} 20%, transparent)`,
-                borderColor: WEB_SUCCESS,
-                opacity: 1,
-              }
-            } else if (isWrongPicked) {
-              btnStyle = {
-                ...btnStyle,
-                background: `color-mix(in srgb, ${WEB_DANGER} 20%, transparent)`,
-                borderColor: WEB_DANGER,
-                opacity: 1,
-              }
-            } else {
-              btnStyle = {
-                ...btnStyle,
-                borderColor: 'transparent',
-                opacity: 0.6,
-              }
-            }
-          }
+          const state = reviewing
+            ? isCorrectRow
+              ? 'correct'
+              : isWrongPicked
+                ? 'incorrect'
+                : 'dimmed'
+            : 'default'
 
           return (
-            <button
+            <McqOption
               key={i}
-              type="button"
-              style={btnStyle}
+              letter={String.fromCharCode(65 + i)}
+              state={state}
               onClick={() => onQuizPick(i)}
               disabled={reviewing}
-            >
-              <span style={{ flex: 1 }}>{opt}</span>
-              {reviewing && isCorrectRow ? (
-                <IconMcqCheck size={20} color={WEB_SUCCESS} />
-              ) : reviewing && isWrongPicked ? (
-                <IconMcqClose size={20} color={WEB_DANGER} />
-              ) : null}
-            </button>
+              label={
+                <span
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 'var(--space-md)',
+                  }}
+                >
+                  <span>{opt}</span>
+                  {reviewing && isCorrectRow ? (
+                    <IconMcqCheck size={20} color={WEB_SUCCESS} />
+                  ) : reviewing && isWrongPicked ? (
+                    <IconMcqClose size={20} color={WEB_DANGER} />
+                  ) : null}
+                </span>
+              }
+            />
           )
         })}
       </div>
@@ -632,7 +609,7 @@ function SessionPageInner({ onRequestNewSession }: { onRequestNewSession?: () =>
                   ).map(([label, before, after]) => {
                     const delta = after - before
                     const deltaColor =
-                      delta > 0 ? 'var(--accent-2)' : delta < 0 ? 'var(--danger)' : 'var(--muted)'
+                      delta > 0 ? 'var(--success)' : delta < 0 ? 'var(--danger)' : 'var(--muted)'
                     return (
                       <div
                         key={label}

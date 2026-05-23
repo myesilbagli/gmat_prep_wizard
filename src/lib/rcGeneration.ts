@@ -38,7 +38,7 @@ function buildNonce(): string {
   return Math.random().toString(36).slice(2, 18)
 }
 
-async function postJson<T>(path: string, body: unknown): Promise<T> {
+export async function postJson<T>(path: string, body: unknown): Promise<T> {
   const baseUrl = getFunctionsBaseUrl()
   const token = await getIdToken()
   const fullUrl = `${baseUrl}${path}`

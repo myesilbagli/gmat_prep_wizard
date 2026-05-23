@@ -105,9 +105,9 @@ export function AuthButton({ theme, setTheme }: AuthButtonProps) {
             right: 0,
             minWidth: 300,
             maxWidth: 360,
-            padding: 14,
+            padding: 'var(--card-pad-compact)',
             display: 'grid',
-            gap: 12,
+            gap: 'var(--space-md)',
             zIndex: 30,
           }}
         >

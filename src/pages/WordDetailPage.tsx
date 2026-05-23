@@ -34,8 +34,8 @@ export function WordDetailPage() {
   }, [wordId])
 
   return (
-    <div className="container" style={{ paddingBottom: 18 }}>
-      <div className="card" style={{ padding: 16 }}>
+    <div className="container" style={{ paddingBottom: 'var(--space-3xl)' }}>
+      <div className="card" style={{ padding: 'var(--card-pad-compact)' }}>
         {loading ? <div className="muted">Loading…</div> : null}
         {error ? <div style={{ color: 'var(--danger)' }}>{error}</div> : null}
         {!loading && !error && auth.currentUser == null ? (
@@ -67,12 +67,8 @@ function WordDetailView({ data }: { data: WordDoc }) {
   return (
     <div style={{ display: 'grid', gap: 14 }}>
       <div>
-        <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: -0.4 }}>
-          {headword}
-        </div>
-        <div className="muted" style={{ fontSize: 13 }}>
-          Source: {data.source}
-        </div>
+        <div className="text-headword">{headword}</div>
+        <div className="muted text-body-sm">Source: {data.source}</div>
       </div>
 
       <div style={{ display: 'grid', gap: 12 }}>
@@ -165,13 +161,13 @@ function Block(props: { title: string; items: string[]; inline?: boolean }) {
           {items.map((x, i) => (
             <span
               key={`${x}-${i}`}
+              className="text-body-sm"
               style={{
                 fontFamily: 'var(--mono)',
-                fontSize: 13,
-                padding: '6px 10px',
-                borderRadius: 999,
+                padding: 'var(--space-2xs) var(--space-md)',
+                borderRadius: 'var(--radius-pill)',
                 border: '1px solid var(--border)',
-                background: 'rgba(255,255,255,0.04)',
+                background: 'var(--fill-subtle)',
               }}
             >
               {x}

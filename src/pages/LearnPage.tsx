@@ -24,6 +24,7 @@ import {
   IconSearch,
   IconTrash,
 } from '../components/Icons'
+import { SelectableTile } from '../components/ui/SelectableTile'
 
 type Filter = 'all' | 'new' | 'learning' | 'familiar' | 'mastered'
 
@@ -262,25 +263,25 @@ export function LearnPage() {
   }
 
   return (
-    <div className="container" style={{ paddingBottom: 18 }}>
+    <div className="container" style={{ paddingBottom: 'var(--space-3xl)' }}>
       <style>{`
         .paraWordWrap { position: relative; display: inline-block; }
         .paraTooltip {
           position: absolute;
           left: 0;
-          top: calc(100% + 8px);
-          background: rgba(17, 24, 39, 0.98);
-          border: 1px solid rgba(255,255,255,0.14);
-          padding: 10px 12px;
-          border-radius: 10px;
-          font-size: 13px;
+          top: calc(100% + var(--space-xs));
+          background: var(--surface-2);
+          border: 1px solid var(--border);
+          padding: var(--space-sm) var(--space-md);
+          border-radius: var(--radius-md);
+          font-size: var(--text-body-sm-size);
           font-weight: 500;
-          line-height: 1.45;
-          color: rgba(255,255,255,0.95);
+          line-height: var(--leading-normal);
+          color: var(--text);
           text-align: center;
           width: min(280px, 85vw);
           max-width: 85vw;
-          box-shadow: 0 14px 40px rgba(0,0,0,0.5);
+          box-shadow: var(--shadow);
           z-index: 50;
           pointer-events: none;
           opacity: 0;
@@ -293,11 +294,11 @@ export function LearnPage() {
           visibility: visible;
         }
       `}</style>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, letterSpacing: -0.3 }}>
+      <div style={{ marginBottom: 'var(--space-2xl)' }}>
+        <h1 className="text-page-title" style={{ margin: 0 }}>
           Learn
         </h1>
-        <p className="muted" style={{ margin: '8px 0 0', fontSize: 15 }}>
+        <p className="muted text-body-lg" style={{ margin: 'var(--space-xs) 0 0' }}>
           Browse saved vocabulary. Mastery is automatic from your exposure score (20+ = Mastered). Open
           Study on a card for a focused flashcard flow.
         </p>
@@ -306,21 +307,21 @@ export function LearnPage() {
       <div
         className="card"
         style={{
-          padding: 14,
-          marginBottom: 16,
+          padding: 'var(--card-pad-compact)',
+          marginBottom: 'var(--space-lg)',
           display: 'grid',
-          gap: 12,
+          gap: 'var(--space-md)',
         }}
       >
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 10,
-            padding: '10px 14px',
-            borderRadius: 12,
+            gap: 'var(--space-sm)',
+            padding: 'var(--space-md) var(--space-lg)',
+            borderRadius: 'var(--radius-lg)',
             border: '1px solid var(--border)',
-            background: 'var(--bg)',
+            background: 'var(--surface)',
           }}
         >
           <IconSearch style={{ color: 'var(--muted)', flexShrink: 0 }} />
@@ -342,10 +343,10 @@ export function LearnPage() {
             display: 'flex',
             flexWrap: 'wrap',
             alignItems: 'center',
-            gap: 8,
+            gap: 'var(--space-xs)',
           }}
         >
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2xs)' }}>
             <FilterChip
               label="All"
               active={filter === 'all'}
@@ -372,7 +373,7 @@ export function LearnPage() {
               onClick={() => setFilter('mastered')}
             />
             {!loading ? (
-              <span className="muted" style={{ fontSize: 12, marginLeft: 4 }}>
+              <span className="muted text-label" style={{ marginLeft: 'var(--space-2xs)' }}>
                 {wordsInFilterCount} word{wordsInFilterCount === 1 ? '' : 's'}
               </span>
             ) : null}
@@ -408,7 +409,11 @@ export function LearnPage() {
 
       <div
         className="card"
-        style={{ padding: 18, marginTop: 8, overflow: 'visible' }}
+        style={{
+          padding: 'var(--card-pad-comfortable)',
+          marginTop: 'var(--space-xs)',
+          overflow: 'visible',
+        }}
       >
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
           <div style={{ fontWeight: 800, fontSize: 16 }}>Reading practice</div>
@@ -614,27 +619,13 @@ function FilterChip(props: {
   icon?: React.ReactNode
 }) {
   return (
-    <button
-      type="button"
+    <SelectableTile
+      layout="pill"
+      label={props.label}
+      selected={props.active}
       onClick={props.onClick}
-      className="btn"
-      style={{
-        padding: '6px 10px',
-        borderRadius: 999,
-        border: props.active
-          ? '1px solid var(--accent-gradient-end)'
-          : '1px solid var(--border)',
-        background: props.active
-          ? 'rgba(99, 102, 241, 0.18)'
-          : 'rgba(255,255,255,0.04)',
-        fontSize: 12,
-        display: 'inline-flex',
-        alignItems: 'center',
-      }}
-    >
-      {props.icon}
-      {props.label}
-    </button>
+      style={{ width: 'auto', display: 'inline-flex', alignItems: 'center' }}
+    />
   )
 }
 
