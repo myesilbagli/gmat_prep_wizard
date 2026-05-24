@@ -22,8 +22,11 @@ import {
   saveExamTarget,
 } from '../lib/userProfile'
 import type { ExamPart, ExamTarget } from '../../shared/userProfile'
+import { getLatestDiagnostic } from '../lib/diagnostic'
+import type { DiagnosticDoc } from '../../shared/diagnosticTypes'
 import { PrimaryButton } from '../components/ui/PrimaryButton'
 import { Alert } from '../components/ui/Alert'
+import { DiagnosticWeaknessProfile } from '../components/DiagnosticWeaknessProfile'
 
 const MONTH_NAMES = [
   'Jan',
@@ -320,65 +323,8 @@ export function ProfilePage() {
         </div>
       </section>
 
-      {/* DIAGNOSTIC (stubbed for next build) */}
-      <section
-        className="card"
-        style={{
-          padding: 'var(--card-pad-comfortable)',
-          marginBottom: 'var(--space-xl)',
-          display: 'grid',
-          gap: 'var(--space-md)',
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 'var(--space-sm)',
-            flexWrap: 'wrap',
-          }}
-        >
-          <div className="muted text-label" style={{ letterSpacing: '0.08em' }}>
-            DIAGNOSTIC
-          </div>
-          <span
-            className="text-label"
-            style={{
-              padding: '2px var(--space-xs)',
-              borderRadius: 'var(--radius-pill)',
-              background: 'var(--fill-subtle)',
-              color: 'var(--muted)',
-              border: '1px dashed var(--border)',
-              textTransform: 'uppercase',
-            }}
-          >
-            Coming soon
-          </span>
-        </div>
-        <p className="muted text-body" style={{ margin: 0 }}>
-          Add your GMAT diagnostic results to get a personalized study roadmap. We'll use
-          your section scores to weight which RC, CR, and vocab work to surface first.
-        </p>
-        <div>
-          <button
-            type="button"
-            className="btn"
-            disabled
-            style={{
-              padding: 'var(--space-md) var(--space-xl)',
-              borderRadius: 'var(--radius-pill)',
-              fontWeight: 700,
-              background: 'var(--fill-subtle)',
-              color: 'var(--muted)',
-              cursor: 'not-allowed',
-              border: '1px solid var(--border)',
-            }}
-          >
-            Add diagnostic
-          </button>
-        </div>
-      </section>
+      {/* DIAGNOSTIC */}
+      <DiagnosticSection user={user} />
 
       {/* STUDY ROADMAP (stubbed for next build) */}
       <section
@@ -423,6 +369,101 @@ export function ProfilePage() {
         </p>
       </section>
     </div>
+  )
+}
+
+/**
+ * Diagnostic card: loads the latest diagnostic for the signed-in user.
+ * If none exists, shows the empty-state CTA to /profile/diagnostic. If
+ * one exists, renders the computed weakness profile + a Re-do link.
+ */
+function DiagnosticSection({ user }: { user: User | null }) {
+  const [doc, setDoc] = useState<DiagnosticDoc | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!user) {
+      setDoc(null)
+      setLoading(false)
+      return
+    }
+    let cancelled = false
+    setLoading(true)
+    setError(null)
+    void getLatestDiagnostic()
+      .then((d) => {
+        if (cancelled) return
+        setDoc(d)
+      })
+      .catch((e) => {
+        if (cancelled) return
+        setError(e instanceof Error ? e.message : 'Failed to load diagnostic.')
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [user])
+
+  const empty = !loading && doc == null
+
+  return (
+    <section
+      className="card"
+      style={{
+        padding: 'var(--card-pad-comfortable)',
+        marginBottom: 'var(--space-xl)',
+        display: 'grid',
+        gap: 'var(--space-md)',
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 'var(--space-sm)',
+          flexWrap: 'wrap',
+        }}
+      >
+        <div className="muted text-label" style={{ letterSpacing: '0.08em' }}>
+          DIAGNOSTIC
+        </div>
+        {doc ? (
+          <Link
+            to="/profile/diagnostic"
+            className="muted text-body-sm"
+            style={{ textDecoration: 'none' }}
+          >
+            Re-do diagnostic →
+          </Link>
+        ) : null}
+      </div>
+
+      {error ? <Alert variant="error">{error}</Alert> : null}
+
+      {loading ? <div className="muted text-body-sm">Loading…</div> : null}
+
+      {empty ? (
+        <>
+          <p className="muted text-body" style={{ margin: 0 }}>
+            Add your GMAT diagnostic results to get a personalized study roadmap. We'll
+            use your section scores to weight which RC, CR, and vocab work to surface
+            first.
+          </p>
+          <div>
+            <PrimaryButton as="link" to="/profile/diagnostic">
+              Add diagnostic
+            </PrimaryButton>
+          </div>
+        </>
+      ) : null}
+
+      {doc ? <DiagnosticWeaknessProfile doc={doc} /> : null}
+    </section>
   )
 }
 

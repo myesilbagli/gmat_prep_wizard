@@ -7,6 +7,7 @@ import { LearnPage } from './pages/LearnPage'
 import { StackBrowsePage } from './pages/StackBrowsePage'
 import { StackDetailPage } from './pages/StackDetailPage'
 import { ProfilePage } from './pages/ProfilePage'
+import { DiagnosticIntakePage } from './pages/DiagnosticIntakePage'
 import { TestPage } from './pages/TestPage'
 import { SessionPage } from './pages/SessionPage'
 import { ExamHubPage } from './pages/ExamHubPage'
@@ -49,6 +50,7 @@ function App() {
         <Route path="/exam/cr/setup" element={<CrSetupPage />} />
         <Route path="/exam/cr/review/:attemptId" element={<CrReviewPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/profile/diagnostic" element={<DiagnosticIntakePage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

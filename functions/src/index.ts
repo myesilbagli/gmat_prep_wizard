@@ -13,6 +13,7 @@ import { parseJsonFromOutputText } from '../../shared/parseOpenAiJson'
 import { validateGeneratedResult } from '../../shared/wordGeneration'
 import type { RcDifficulty, RcQuestionType } from '../../shared/rcTypes'
 import type { CrQuestionType } from '../../shared/crTypes'
+import type { DiagnosticSection } from '../../shared/diagnosticTypes'
 
 setGlobalOptions({ region: 'us-central1' })
 
@@ -174,6 +175,11 @@ export const api = onRequest(
 
       if (routeBase === 'generateCrQuestion') {
         await handleGenerateCrQuestion(req.body as any, decoded.uid, res)
+        return
+      }
+
+      if (routeBase === 'parseDiagnostic') {
+        await handleParseDiagnostic(req.body as any, decoded.uid, res)
         return
       }
 
@@ -1614,6 +1620,243 @@ async function handleGenerateCrQuestion(body: any, _uid: string, res: any) {
     payload.validationStage = last.stage
   }
   res.status(502).json(payload)
+}
+
+// =====================================================================
+// Diagnostic — vision parse of GMAT Official Diagnostic screenshots
+// =====================================================================
+//
+// User uploads a section screenshot; OpenAI vision returns a structured
+// array of rows. STRUCTURAL validation only — the user verifies semantic
+// correctness in the UI before commit. Same lesson as RC/CR: brittle
+// content validators cause 502s with no recovery.
+
+const DIAGNOSTIC_SECTIONS: ReadonlyArray<DiagnosticSection> = ['verbal', 'quant', 'di'] as const
+
+function isDiagnosticSection(v: unknown): v is DiagnosticSection {
+  return typeof v === 'string' && (DIAGNOSTIC_SECTIONS as readonly string[]).includes(v)
+}
+
+function parseDiagnosticSection(body: any): DiagnosticSection {
+  const v = body?.section
+  if (isDiagnosticSection(v)) return v
+  throw new Error("section must be one of: 'verbal', 'quant', 'di'")
+}
+
+function parseDiagnosticImageBase64(body: any): string {
+  const v = body?.imageBase64
+  if (typeof v !== 'string' || v.trim().length === 0) {
+    throw new Error('imageBase64 must be a non-empty string')
+  }
+  // Strip data URL prefix if the caller included it; we add our own.
+  const cleaned = v.replace(/^data:[^;]+;base64,/, '')
+  if (cleaned.length < 100) throw new Error('imageBase64 looks too small to be an image')
+  if (cleaned.length > 8_000_000) throw new Error('imageBase64 is too large (>~6 MB decoded)')
+  return cleaned
+}
+
+function parseDiagnosticImageMimeType(body: any): string {
+  const v = body?.imageMimeType
+  if (typeof v !== 'string' || !v) return 'image/png'
+  const allowed = ['image/png', 'image/jpeg', 'image/webp', 'image/gif']
+  if (!allowed.includes(v)) return 'image/png'
+  return v
+}
+
+function buildDiagnosticParseSchema(): Record<string, unknown> {
+  return {
+    type: 'object',
+    additionalProperties: false,
+    required: ['rows'],
+    properties: {
+      rows: {
+        type: 'array',
+        items: {
+          type: 'object',
+          additionalProperties: false,
+          required: [
+            'question',
+            'responseTimeMinutes',
+            'performance',
+            'questionType',
+            'contentDomain',
+            'fundamentalSkill',
+          ],
+          properties: {
+            question: { type: 'integer', minimum: 1, maximum: 50 },
+            responseTimeMinutes: { type: 'number', minimum: 0, maximum: 30 },
+            performance: { type: 'string', enum: ['correct', 'incorrect'] },
+            questionType: { type: 'string' },
+            contentDomain: { type: ['string', 'null'] },
+            fundamentalSkill: { type: ['string', 'null'] },
+          },
+        },
+      },
+    },
+  }
+}
+
+function buildDiagnosticParsePrompt(section: DiagnosticSection): string {
+  const sectionLabel =
+    section === 'verbal' ? 'Verbal' : section === 'quant' ? 'Quant' : 'Data Insights'
+
+  const columnSpec =
+    section === 'verbal'
+      ? [
+          'COLUMNS (Verbal):',
+          '- Question: integer (1..N)',
+          '- Response Time: decimal minutes (e.g. 2.49)',
+          '- Performance: "Correct" or "Incorrect" — read the WORD, not the color',
+          '- Question Type: one of "Critical Reasoning", "Reading Comprehension"',
+          '- Fundamental Skills: one of "Identify Inferred Idea", "Identify Stated Idea",',
+          '  "Plan/Construct", "Analysis/Critique"',
+          '- Verbal has NO Content Domain column — return contentDomain: null on every row',
+        ].join('\n')
+      : section === 'quant'
+        ? [
+            'COLUMNS (Quant):',
+            '- Question: integer (1..N)',
+            '- Response Time: decimal minutes',
+            '- Performance: "Correct" or "Incorrect"',
+            '- Content Domain: one of "Algebra", "Arithmetic"',
+            '- Question Type: the column immediately to the right of Content Domain',
+            '- Fundamental Skills: one of "Value/Order/Factors", "Equal/Unequal/ALG",',
+            '  "Rates/Ratios/Percent", "Counting/Sets/Series/Prob/Stats"',
+          ].join('\n')
+        : [
+            'COLUMNS (Data Insights):',
+            '- Question: integer (1..N)',
+            '- Response Time: decimal minutes',
+            '- Performance: "Correct" or "Incorrect"',
+            '- Content Domain: one of "Math Related", "Non-Math Related"',
+            '- Question Type: one of "Data Sufficiency", "Two-part analysis", "Graphs and Tables",',
+            '  "Multi-source reasoning"',
+            '- DI has NO Fundamental Skills column — return fundamentalSkill: null on every row',
+          ].join('\n')
+
+  return [
+    `You are parsing a GMAT Official Diagnostic screenshot for the ${sectionLabel} section.`,
+    'The screenshot shows a "Question Performance and Time Management" table.',
+    '',
+    columnSpec,
+    '',
+    'INSTRUCTIONS:',
+    '- Read the table row by row, in the order it appears.',
+    '- Return EVERY row. Do not skip rows or merge cells.',
+    '- Map any column the section does not have to null (contentDomain for Verbal,',
+    '  fundamentalSkill for DI).',
+    '- Performance: read the text "Correct" or "Incorrect". Output lowercase "correct" or',
+    '  "incorrect". The cell may be color-coded (red for Incorrect) — trust the WORD.',
+    '- Response Time is in minutes (decimal). If you see "2:30" interpret as 2.5.',
+    '- Trim whitespace in string fields. Preserve case as printed (e.g. "Identify Inferred Idea").',
+    '- If a row is partially unreadable, still emit it with your best reading; the user will',
+    '  verify and fix.',
+    '',
+    'Return JSON only (no markdown, no code fences), matching the supplied JSON schema.',
+  ].join('\n')
+}
+
+async function handleParseDiagnostic(body: any, _uid: string, res: any) {
+  const section = parseDiagnosticSection(body)
+  const imageBase64 = parseDiagnosticImageBase64(body)
+  const mimeType = parseDiagnosticImageMimeType(body)
+
+  const openai = new OpenAI({ apiKey: requireEnv('OPENAI_API_KEY') })
+  const model = process.env.OPENAI_DIAGNOSTIC_MODEL ?? 'gpt-4.1'
+  const schema = buildDiagnosticParseSchema()
+  const prompt = buildDiagnosticParsePrompt(section)
+  const dataUrl = `data:${mimeType};base64,${imageBase64}`
+
+  type ParseAttempt =
+    | { ok: true; rows: unknown[] }
+    | { ok: false; fail: 'parse' }
+    | { ok: false; fail: 'validate'; stage: string }
+
+  async function attempt(extra: string | null): Promise<ParseAttempt> {
+    const fullPrompt = extra ? `${prompt}\n\n${extra}` : prompt
+    const completion = await openai.responses.create({
+      model,
+      input: [
+        {
+          role: 'user',
+          content: [
+            { type: 'input_text', text: fullPrompt },
+            { type: 'input_image', image_url: dataUrl, detail: 'high' },
+          ] as any,
+        },
+      ] as any,
+      temperature: 0.1,
+      max_output_tokens: 4000,
+      text: {
+        format: {
+          type: 'json_schema',
+          name: 'diagnostic_rows',
+          schema,
+          strict: true,
+        },
+      },
+    })
+    const outputText = completion.output_text?.trim() ?? ''
+    const parsed = parseRcModelJson(outputText)
+    if (parsed == null || typeof parsed !== 'object') return { ok: false, fail: 'parse' }
+    const rowsAny = (parsed as { rows?: unknown }).rows
+    if (!Array.isArray(rowsAny)) return { ok: false, fail: 'validate', stage: 'rows_not_array' }
+    if (rowsAny.length === 0) return { ok: false, fail: 'validate', stage: 'rows_empty' }
+    // Strict-mode schema guarantees per-row shape if the model returned JSON
+    // at all; one defensive scan in case the model emits past-schema.
+    for (let i = 0; i < rowsAny.length; i += 1) {
+      const r = rowsAny[i] as Record<string, unknown> | null
+      if (!r || typeof r !== 'object') {
+        return { ok: false, fail: 'validate', stage: `row_${i}_not_object` }
+      }
+      if (typeof r.question !== 'number' || !Number.isFinite(r.question)) {
+        return { ok: false, fail: 'validate', stage: `row_${i}_bad_question` }
+      }
+      if (
+        typeof r.responseTimeMinutes !== 'number' ||
+        !Number.isFinite(r.responseTimeMinutes)
+      ) {
+        return { ok: false, fail: 'validate', stage: `row_${i}_bad_time` }
+      }
+      if (r.performance !== 'correct' && r.performance !== 'incorrect') {
+        return { ok: false, fail: 'validate', stage: `row_${i}_bad_performance` }
+      }
+      if (typeof r.questionType !== 'string' || r.questionType.trim().length === 0) {
+        return { ok: false, fail: 'validate', stage: `row_${i}_bad_type` }
+      }
+    }
+    return { ok: true, rows: rowsAny }
+  }
+
+  const first = await attempt(null)
+  let final: ParseAttempt = first
+  if (!first.ok) {
+    const second = await attempt(
+      'STRICT: Output JSON only matching the supplied schema. Include EVERY row. Performance must be lowercase "correct" or "incorrect".',
+    )
+    final = second
+    if (!second.ok) {
+      const third = await attempt(
+        'FINAL ATTEMPT: Return the JSON object {"rows": [...]} with every row from the table.',
+      )
+      final = third
+    }
+  }
+
+  if (!final.ok) {
+    const code = final.fail === 'parse' ? 'DIAG_PARSE' : 'DIAG_VALIDATE'
+    const payload: Record<string, unknown> = {
+      error: 'Could not parse the diagnostic screenshot.',
+      code,
+    }
+    if (final.fail === 'validate') payload.validationStage = final.stage
+    res.status(502).json(payload)
+    return
+  }
+
+  // Tag each row with its section so the client doesn't have to.
+  const rows = final.rows.map((r) => ({ ...(r as object), section }))
+  res.status(200).json({ rows })
 }
 
 function normalizeQuizMode(raw: unknown): QuizMode {
