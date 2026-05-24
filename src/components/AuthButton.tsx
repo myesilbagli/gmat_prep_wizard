@@ -1,11 +1,32 @@
+/**
+ * Header auth + settings controls. Two surfaces, rendered side by side:
+ *
+ *   [ Profile (Name) ]  [ ⚙ ]
+ *
+ * - "Profile (Name)" — a Link to /profile. Used to be the entire popup;
+ *   now it just navigates to the real profile page (identity, exam
+ *   window, diagnostic stub, roadmap stub).
+ *
+ * - Gear icon — opens a lightweight settings popup with the quick prefs
+ *   only: theme, main language, timezone, and sign out. Exam window was
+ *   moved OUT of this popup into the profile page; that's the only
+ *   behavior change relative to the prior popup.
+ *
+ * All save paths still write to users/{uid}/settings/profile via
+ * src/lib/userProfile.ts → saveUserProfilePatch. Same shape, no schema
+ * divergence.
+ */
 import { useEffect, useRef, useState } from 'react'
 import type { User } from 'firebase/auth'
 import { Link } from 'react-router-dom'
-import { MAIN_LANGUAGE_OPTIONS, DEFAULT_MAIN_LANGUAGE, normalizeMainLanguageCode } from '../../shared/languages'
-import type { ExamPart, ExamTarget } from '../../shared/userProfile'
+import {
+  DEFAULT_MAIN_LANGUAGE,
+  MAIN_LANGUAGE_OPTIONS,
+  normalizeMainLanguageCode,
+} from '../../shared/languages'
 import { DEFAULT_TIMEZONE } from '../../shared/userProfile'
 import { signOutUser, subscribeToAuth } from '../lib/auth'
-import { ensureUserProfileDefaults, saveExamTarget, saveUserProfilePatch } from '../lib/userProfile'
+import { ensureUserProfileDefaults, saveUserProfilePatch } from '../lib/userProfile'
 
 type Theme = 'dark' | 'light'
 
@@ -22,9 +43,6 @@ export function AuthButton({ theme, setTheme }: AuthButtonProps) {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [timezone, setTimezone] = useState(DEFAULT_TIMEZONE)
-  const [examYear, setExamYear] = useState(new Date().getFullYear())
-  const [examMonth, setExamMonth] = useState(1)
-  const [examPart, setExamPart] = useState<ExamPart>('mid')
   const [mainLanguage, setMainLanguage] = useState(DEFAULT_MAIN_LANGUAGE)
   const boxRef = useRef<HTMLDivElement | null>(null)
 
@@ -50,11 +68,6 @@ export function AuthButton({ theme, setTheme }: AuthButtonProps) {
         if (cancelled) return
         setTimezone(p.timezone || DEFAULT_TIMEZONE)
         setMainLanguage(normalizeMainLanguageCode(p.mainLanguage))
-        if (p.examTarget) {
-          setExamYear(p.examTarget.year)
-          setExamMonth(p.examTarget.month)
-          setExamPart(p.examTarget.part)
-        }
       })
       .catch(() => {})
       .finally(() => {
@@ -65,10 +78,7 @@ export function AuthButton({ theme, setTheme }: AuthButtonProps) {
     }
   }, [open, user])
 
-  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-  const years = Array.from({ length: 8 }, (_, i) => new Date().getFullYear() + i)
-
-  async function saveProfileSettings() {
+  async function saveSettings() {
     if (!user) return
     setSaving(true)
     setSaved(false)
@@ -77,8 +87,6 @@ export function AuthButton({ theme, setTheme }: AuthButtonProps) {
         timezone: timezone.trim() || DEFAULT_TIMEZONE,
         mainLanguage: normalizeMainLanguageCode(mainLanguage),
       })
-      const target: ExamTarget = { year: examYear, month: examMonth, part: examPart }
-      await saveExamTarget(target)
       setSaved(true)
       window.dispatchEvent(new Event('gmat-vocab-profile-updated'))
     } finally {
@@ -86,22 +94,56 @@ export function AuthButton({ theme, setTheme }: AuthButtonProps) {
     }
   }
 
+  if (!user) {
+    return (
+      <div style={{ display: 'flex', gap: 'var(--space-xs)', alignItems: 'center' }}>
+        <Link
+          to="/sign-in"
+          className="btn"
+          style={{ textDecoration: 'none', display: 'inline-block' }}
+        >
+          Sign in
+        </Link>
+      </div>
+    )
+  }
+
   return (
-    <div ref={boxRef} style={{ position: 'relative' }}>
-      <button
+    <div
+      ref={boxRef}
+      style={{ position: 'relative', display: 'flex', gap: 'var(--space-xs)', alignItems: 'center' }}
+    >
+      <Link
+        to="/profile"
         className="btn"
-        disabled={busy}
-        onClick={() => setOpen((v) => !v)}
-        title={user?.email ?? undefined}
+        style={{ textDecoration: 'none', display: 'inline-block' }}
+        title={user.email ?? undefined}
       >
-        {user ? `Profile (${user.displayName ?? 'user'})` : 'Profile'}
+        Profile ({user.displayName ?? 'user'})
+      </Link>
+      <button
+        type="button"
+        className="btn"
+        aria-label="Settings"
+        title="Settings"
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          width: 36,
+          padding: 0,
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <IconGear />
       </button>
+
       {open ? (
         <div
           className="card"
           style={{
             position: 'absolute',
-            top: 'calc(100% + 8px)',
+            top: 'calc(100% + var(--space-xs))',
             right: 0,
             minWidth: 300,
             maxWidth: 360,
@@ -111,144 +153,149 @@ export function AuthButton({ theme, setTheme }: AuthButtonProps) {
             zIndex: 30,
           }}
         >
-          {!user ? (
-            <Link
-              to="/sign-in"
-              className="btn btnPrimary"
-              style={{ textAlign: 'center', textDecoration: 'none', display: 'block' }}
-              onClick={() => setOpen(false)}
+          <div className="muted text-label" style={{ letterSpacing: '0.08em' }}>
+            SETTINGS
+          </div>
+
+          <div>
+            <div
+              className="muted text-label"
+              style={{ marginBottom: 'var(--space-2xs)' }}
             >
-              Sign in
-            </Link>
-          ) : (
-            <>
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--muted)' }}>SETTINGS</div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button
-                  type="button"
-                  className="btn"
-                  onClick={() => setTheme('light')}
-                  style={{
-                    flex: 1,
-                    borderColor: theme === 'light' ? 'var(--text)' : undefined,
-                    color: theme === 'light' ? 'var(--text)' : 'var(--muted)',
-                  }}
-                >
-                  Light
-                </button>
-                <button
-                  type="button"
-                  className="btn"
-                  onClick={() => setTheme('dark')}
-                  style={{
-                    flex: 1,
-                    borderColor: theme === 'dark' ? 'var(--text)' : undefined,
-                    color: theme === 'dark' ? 'var(--text)' : 'var(--muted)',
-                  }}
-                >
-                  Dark
-                </button>
-              </div>
-
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--muted)', marginTop: 4 }}>
-                MAIN LANGUAGE
-              </div>
-              <p className="muted" style={{ margin: '0 0 8px', fontSize: 12, lineHeight: 1.45 }}>
-                Short gloss on cards in this language; English stays the study language.
-              </p>
-              <select
-                className="input"
-                value={mainLanguage}
-                onChange={(e) => setMainLanguage(e.target.value)}
-                style={{ width: '100%', marginBottom: 4 }}
-              >
-                {MAIN_LANGUAGE_OPTIONS.map((o) => (
-                  <option key={o.code} value={o.code}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--muted)', marginTop: 12 }}>
-                EXAM WINDOW
-              </div>
-              {loadingProfile ? <div className="muted">Loading profile…</div> : null}
-              <div style={{ display: 'grid', gap: 8 }}>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <select
-                    className="input"
-                    value={examMonth}
-                    onChange={(e) => setExamMonth(Number(e.target.value))}
-                    style={{ minWidth: 84 }}
-                  >
-                    {monthNames.map((m, i) => (
-                      <option key={m} value={i + 1}>
-                        {m}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    className="input"
-                    value={examYear}
-                    onChange={(e) => setExamYear(Number(e.target.value))}
-                    style={{ minWidth: 92 }}
-                  >
-                    {years.map((y) => (
-                      <option key={y} value={y}>
-                        {y}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    className="input"
-                    value={examPart}
-                    onChange={(e) => setExamPart(e.target.value as ExamPart)}
-                    style={{ minWidth: 110 }}
-                  >
-                    <option value="early">Early</option>
-                    <option value="mid">Mid</option>
-                    <option value="late">Late</option>
-                  </select>
-                </div>
-                <input
-                  className="input"
-                  placeholder="Timezone (e.g. Europe/Istanbul)"
-                  value={timezone}
-                  onChange={(e) => setTimezone(e.target.value)}
-                />
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <button
-                    type="button"
-                    className="btn"
-                    onClick={() => void saveProfileSettings()}
-                    disabled={saving}
-                  >
-                    {saving ? 'Saving…' : 'Save profile'}
-                  </button>
-                  {saved ? <span className="muted" style={{ fontSize: 12 }}>Saved</span> : null}
-                </div>
-              </div>
-
+              Theme
+            </div>
+            <div style={{ display: 'flex', gap: 'var(--space-xs)' }}>
               <button
+                type="button"
                 className="btn"
-                disabled={busy}
-                onClick={async () => {
-                  setBusy(true)
-                  try {
-                    await signOutUser()
-                    setOpen(false)
-                  } finally {
-                    setBusy(false)
-                  }
+                onClick={() => setTheme('light')}
+                style={{
+                  flex: 1,
+                  borderColor: theme === 'light' ? 'var(--text)' : undefined,
+                  color: theme === 'light' ? 'var(--text)' : 'var(--muted)',
                 }}
               >
-                {busy ? 'Working…' : 'Sign out'}
+                Light
               </button>
-            </>
-          )}
+              <button
+                type="button"
+                className="btn"
+                onClick={() => setTheme('dark')}
+                style={{
+                  flex: 1,
+                  borderColor: theme === 'dark' ? 'var(--text)' : undefined,
+                  color: theme === 'dark' ? 'var(--text)' : 'var(--muted)',
+                }}
+              >
+                Dark
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <div
+              className="muted text-label"
+              style={{ marginBottom: 'var(--space-2xs)' }}
+            >
+              Main language
+            </div>
+            <p className="muted text-label" style={{ margin: '0 0 var(--space-2xs)' }}>
+              Short gloss on cards in this language; English stays the study language.
+            </p>
+            <select
+              className="input"
+              value={mainLanguage}
+              onChange={(e) => setMainLanguage(e.target.value)}
+              style={{ width: '100%' }}
+            >
+              {MAIN_LANGUAGE_OPTIONS.map((o) => (
+                <option key={o.code} value={o.code}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <div
+              className="muted text-label"
+              style={{ marginBottom: 'var(--space-2xs)' }}
+            >
+              Timezone
+            </div>
+            <input
+              className="input"
+              placeholder="e.g. Europe/Istanbul"
+              value={timezone}
+              onChange={(e) => setTimezone(e.target.value)}
+              style={{ width: '100%' }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', gap: 'var(--space-sm)', alignItems: 'center' }}>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => void saveSettings()}
+              disabled={saving || loadingProfile}
+            >
+              {saving ? 'Saving…' : 'Save'}
+            </button>
+            {saved ? (
+              <span className="text-body-sm" style={{ color: 'var(--success-on-soft)' }}>
+                ✓ Saved
+              </span>
+            ) : null}
+          </div>
+
+          <Link
+            to="/profile"
+            className="muted text-body-sm"
+            style={{ textDecoration: 'none' }}
+            onClick={() => setOpen(false)}
+          >
+            View full profile →
+          </Link>
+
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 'var(--space-md)' }}>
+            <button
+              className="btn"
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true)
+                try {
+                  await signOutUser()
+                  setOpen(false)
+                } finally {
+                  setBusy(false)
+                }
+              }}
+              style={{ width: '100%' }}
+            >
+              {busy ? 'Working…' : 'Sign out'}
+            </button>
+          </div>
         </div>
       ) : null}
     </div>
   )
 }
 
+function IconGear() {
+  return (
+    <svg
+      width={18}
+      height={18}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <circle cx={12} cy={12} r={3} />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  )
+}

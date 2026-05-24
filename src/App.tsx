@@ -6,6 +6,7 @@ import { WordDetailPage } from './pages/WordDetailPage'
 import { LearnPage } from './pages/LearnPage'
 import { StackBrowsePage } from './pages/StackBrowsePage'
 import { StackDetailPage } from './pages/StackDetailPage'
+import { ProfilePage } from './pages/ProfilePage'
 import { TestPage } from './pages/TestPage'
 import { SessionPage } from './pages/SessionPage'
 import { ExamHubPage } from './pages/ExamHubPage'
@@ -47,6 +48,7 @@ function App() {
         <Route path="/exam/rc/review/:attemptId" element={<RcReviewPage />} />
         <Route path="/exam/cr/setup" element={<CrSetupPage />} />
         <Route path="/exam/cr/review/:attemptId" element={<CrReviewPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
