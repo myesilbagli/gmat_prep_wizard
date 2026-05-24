@@ -111,7 +111,7 @@ export function LandingPage() {
                 <Link to={APP_HOME} style={{ ...btnPrimary, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
                   Open app
                 </Link>
-                <AuthButton theme={theme} setTheme={setTheme} />
+                <AuthButton />
               </>
             ) : (
               <>

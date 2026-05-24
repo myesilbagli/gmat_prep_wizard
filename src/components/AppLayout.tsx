@@ -5,6 +5,13 @@ import { AuthButton } from './AuthButton'
 
 type Theme = 'dark' | 'light'
 
+/** Outlet context surfaced to all routes nested under <AppLayout />.
+ *  Read it from a route with `useOutletContext<AppLayoutOutletContext>()`. */
+export type AppLayoutOutletContext = {
+  theme: Theme
+  setTheme: (next: Theme) => void
+}
+
 export function AppLayout() {
   const location = useLocation()
   const showBack = location.pathname.startsWith('/words/')
@@ -268,13 +275,13 @@ export function AppLayout() {
             >
               How to Use?
             </button>
-            <AuthButton theme={theme} setTheme={setTheme} />
+            <AuthButton />
           </div>
         </div>
       </header>
 
       <main style={{ flex: 1 }}>
-        <Outlet />
+        <Outlet context={{ theme, setTheme } satisfies AppLayoutOutletContext} />
       </main>
     </div>
   )
