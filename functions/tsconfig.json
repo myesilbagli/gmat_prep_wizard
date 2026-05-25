@@ -15,7 +15,9 @@
     "../shared/wordGeneration.ts",
     "../shared/parseOpenAiJson.ts",
     "../shared/generateGmCardPrompt.ts",
-    "../shared/stackPackTypes.ts"
+    "../shared/stackPackTypes.ts",
+    "../shared/diagnosticTypes.ts",
+    "../shared/verbalTaxonomy.ts"
   ]
 }
 

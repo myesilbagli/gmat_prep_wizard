@@ -12,6 +12,10 @@ import {
 import { parseJsonFromOutputText } from '../../shared/parseOpenAiJson'
 import { validateGeneratedResult } from '../../shared/wordGeneration'
 import type { RcDifficulty, RcQuestionType } from '../../shared/rcTypes'
+import {
+  officialSubtypeForGeneratorType,
+  stemsForSubtype,
+} from '../../shared/verbalTaxonomy'
 import type { CrQuestionType } from '../../shared/crTypes'
 import type { DiagnosticSection } from '../../shared/diagnosticTypes'
 
@@ -962,31 +966,82 @@ const RC_QUESTION_TYPE_RULES = [
   '  answer applies the same reasoning consistently; distractors apply it loosely or invert it.',
 ].join('\n')
 
-const RC_ANSWER_CHOICE_RULES = [
+/**
+ * RC answer-choice / distractor construction spec. Analogous to
+ * CR_TYPE_LOGIC_SPECS for the CR generator — names the canonical
+ * distractor archetypes and the quality rules a real-GMAT-style answer
+ * set must satisfy. Replaces the older, vaguer RC_ANSWER_CHOICE_RULES.
+ *
+ * Internal labeling: the model is told to ensure each distractor maps
+ * to one of the named archetypes (it need not output the label, but
+ * constructing to the archetypes produces better wrong answers — same
+ * design idea as the content-referenced explanation rule).
+ */
+const RC_ANSWER_CHOICE_SPEC = [
   'Exactly 5 choices per question.',
   'Exactly one is correct.',
-  'Distractors must fall into one of these archetypes; ideally use a mix across the 4:',
-  '- Subtle factual error: close to the passage but reverses or misstates a detail.',
-  '- Scope error: too broad (over-generalizes) or too narrow (focuses on a peripheral point).',
-  '- Opposite emphasis: the right facts but the wrong rhetorical role (e.g. presents a',
-  '  counterargument as the thesis).',
-  '- Out of scope: introduces information that is plausible but not in the passage.',
-  'Distractors must be plausible-but-wrong, not obviously wrong.',
-  'Vary choice lengths naturally — do not pad short choices to match a long correct answer,',
-  '  and do not truncate well-formed answers to match a terse distractor.',
-  'Do not repeat passage phrasing verbatim in the correct answer for inference, function, tone,',
-  '  or application questions; verbatim quotes are acceptable for detail questions only.',
-  'Do not start multiple choices with the same 4-word prefix.',
-  'Vary the position of the correct answer across the question set (do not put it at the same',
-  '  index for every question).',
+  '',
+  'DISTRACTOR ARCHETYPES — every wrong answer must follow one of these',
+  'named patterns. Internally tag each distractor with the archetype it',
+  'satisfies before you finalize the question. You do not need to output',
+  'the tag, but constructing to the archetypes produces better wrong',
+  'answers:',
+  '',
+  '- SCOPE ERROR: correct direction but too broad (over-generalizes the',
+  '  passage) or too narrow (focuses on a peripheral point) relative to',
+  '  what the question actually asks.',
+  '- INVERSION: right concept stated in the wrong or opposite direction',
+  '  (e.g. attributes a position to the author that the author argues',
+  '  AGAINST; reverses cause and effect; flips a hedge into a denial).',
+  '- TRUE BUT UNSUPPORTED: plausible or real-world-true, but the passage',
+  '  itself does not actually say or imply it.',
+  '- TOO EXTREME: overstates using absolutes ("only", "never", "always",',
+  '  "must", "cannot") where the passage hedges with "tends to", "often",',
+  '  "suggests", "in some cases", etc.',
+  '- WRONG PART: accurately describes something in the passage, but not',
+  '  the part / paragraph / claim the question is asking about.',
+  '',
+  'CHOICE QUALITY RULES:',
+  '',
+  '- PARALLELISM: all 5 choices must share the same grammatical form',
+  '  (all verb phrases OR all noun phrases OR all complete sentences),',
+  '  sit at a similar level of abstraction, and be similar in length.',
+  '- LENGTH DISCIPLINE: do not make the correct answer the longest or',
+  '  most-detailed choice — that is a giveaway. Do not make all',
+  '  distractors uniformly short either.',
+  '- SEDUCTION REQUIREMENT: at least 1-2 distractors must be STRONGLY',
+  '  SEDUCTIVE — they capture something the passage genuinely says, and',
+  '  are wrong only on scope, precision, or direction. The correct',
+  '  answer should win by being the MOST accurate, not the only',
+  '  on-topic choice. Distractors that are obviously off-topic are not',
+  '  acceptable.',
+  '- HEDGING: the correct answer should be appropriately hedged. Avoid',
+  '  absolutes ("only", "always", "never") unless the passage itself',
+  '  uses them about that point.',
+  '- INFERENCE / APPLICATION nuance: the correct answer may describe',
+  '  something not explicitly stated in the passage, but it MUST follow',
+  '  logically from what is stated. Distractors at these types are',
+  '  often passage-adjacent (re-use real passage vocabulary) yet',
+  '  unsupported by the logic.',
+  '- Do NOT repeat passage phrasing verbatim in the correct answer for',
+  '  inference, function, tone, or application questions; verbatim',
+  '  quotes are acceptable for detail questions only.',
+  '- Do NOT start multiple choices with the same 4-word prefix.',
+  '- Vary the position of the correct answer across the question set',
+  '  (the server also shuffles after generation, but generating with',
+  '  positional variety keeps the initial mapping clean).',
+  '- No "all of the above" / "none of the above" choices.',
 ].join('\n')
 
 const RC_EXPLANATION_RULES = [
   'Explanation must be at least 2 sentences and at least 100 characters.',
   'Sentence 1: state why the correct answer is correct, citing the relevant passage location',
   '  ("the second paragraph hedges...") rather than restating the choice.',
-  'Sentences 2+: address each wrong choice. Name the distractor archetype and the specific',
-  '  failure.',
+  'Sentences 2+: address each wrong choice by content paraphrase. For the most seductive',
+  '  distractor (the one closest to being right), EXPLICITLY name the archetype it falls',
+  '  into — one of SCOPE ERROR, INVERSION, TRUE BUT UNSUPPORTED, TOO EXTREME, or WRONG',
+  '  PART — and the specific way it fails (e.g. "this choice is a SCOPE ERROR: the passage',
+  '  only claims X about start-ups, not about all companies").',
   'CRITICAL — reference each wrong choice by a brief content paraphrase, NOT by its letter or',
   '  position. The choices will be shuffled before display, so letter/position references will',
   '  become incorrect.',
@@ -1076,6 +1131,34 @@ function isValidRcQuestionSetResponse(
   return true
 }
 
+/**
+ * Pull verbatim official-guide example stems for each RC generator type
+ * from the canonical taxonomy module (shared/verbalTaxonomy.ts). Stems
+ * are STYLE guidance, not rigid templates — the model adapts them to
+ * the specific passage and question. Built once per request from the
+ * single source of truth; no duplicate stem strings live in this file.
+ */
+function buildRcStemGuidance(): string {
+  const orderedTypes: RcQuestionType[] = [
+    'main_idea',
+    'detail',
+    'inference',
+    'application',
+    'function',
+    'tone',
+  ]
+  const lines: string[] = []
+  for (const t of orderedTypes) {
+    const subtypeKey = officialSubtypeForGeneratorType('rc', t)
+    if (!subtypeKey) continue
+    const stems = stemsForSubtype(subtypeKey)
+    if (stems.length === 0) continue
+    const examples = stems.map((s) => `"${s}"`).join(', ')
+    lines.push(`- ${t}: ${examples}`)
+  }
+  return lines.join('\n')
+}
+
 function buildRcQuestionSetPrompt(args: {
   passage: string
   topic: string
@@ -1111,8 +1194,23 @@ function buildRcQuestionSetPrompt(args: {
     'QUESTION TYPE RULES (one rule per type; questions of each type must match):',
     RC_QUESTION_TYPE_RULES,
     '',
+    'STEM PHRASING (style guidance — not rigid templates):',
+    'Phrase stems plainly and directly, in the style of the official guide.',
+    'Adapt to your specific passage; do NOT copy these example strings verbatim.',
+    'No ornate or convoluted phrasing.',
+    '',
+    'Example phrasings per type:',
+    buildRcStemGuidance(),
+    '',
+    'EXCEPT-form variety: for detail and application questions, occasional',
+    "EXCEPT-form stems are acceptable as variety (e.g. \"All of the following are",
+    "mentioned in the passage EXCEPT…\", \"Each of the following examples is",
+    "consistent with the passage's reasoning EXCEPT…\"). Use sparingly — most",
+    'questions should be plain stems. EXCEPT questions keep the same 5-choice,',
+    'one-correct structure; the correct answer is the choice that does NOT match.',
+    '',
     'ANSWER CHOICE QUALITY:',
-    RC_ANSWER_CHOICE_RULES,
+    RC_ANSWER_CHOICE_SPEC,
     '',
     'EXPLANATION FORMAT:',
     RC_EXPLANATION_RULES,
