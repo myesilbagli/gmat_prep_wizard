@@ -7,6 +7,16 @@
  * truth on the request/response shape.
  */
 
+/**
+ * Fine-grained CR question types used by the generator + Firestore.
+ *
+ * @see ./verbalTaxonomy.ts — maps these generator values onto the
+ *      canonical CR subtypes (Analysis / Construction / Critique / Plan).
+ *      The taxonomy module references these values; it does not replace
+ *      them. Note: 'inference' here is the CR sense (must-follow); the
+ *      taxonomy module's `officialSubtypeForGeneratorType(section, type)`
+ *      requires the section arg to disambiguate from the RC 'inference'.
+ */
 export type CrQuestionType =
   | 'assumption'
   | 'strengthen'

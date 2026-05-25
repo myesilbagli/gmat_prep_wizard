@@ -12,6 +12,11 @@ export type RcDifficulty = 'easy' | 'medium' | 'hard'
 /**
  * Question types we currently support. All six are valid GMAT RC question
  * categories; the prompt + validator constrain the set per request.
+ *
+ * @see ./verbalTaxonomy.ts — maps these generator values onto the
+ *      canonical RC subtypes (Main Idea / Supporting Idea / Inference /
+ *      Application / Evaluation). The taxonomy module references these
+ *      values; it does not replace them.
  */
 export type RcQuestionType =
   | 'main_idea'
