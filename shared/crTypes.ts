@@ -27,6 +27,26 @@ export type CrQuestionType =
   | 'plan'
   | 'analysis'
 
+/**
+ * Runtime list of all CR question types, in canonical display order.
+ * Kept here so any frontend picker (e.g. the /cr-test dev harness) stays
+ * in sync with the enum without duplicating the literal list.
+ *
+ * NOTE: functions/src/index.ts currently defines its own `CR_QUESTION_TYPES`
+ * with the same contents. A future refactor could consolidate by importing
+ * this one; both must be updated together if the enum gains a new member.
+ */
+export const CR_QUESTION_TYPES: ReadonlyArray<CrQuestionType> = [
+  'assumption',
+  'strengthen',
+  'weaken',
+  'evaluate',
+  'inference',
+  'explain',
+  'plan',
+  'analysis',
+]
+
 export type CrQuestion = {
   questionType: CrQuestionType
   /** ~50-90 word stimulus paragraph. */

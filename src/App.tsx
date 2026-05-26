@@ -17,6 +17,7 @@ import { RcReviewPage } from './pages/RcReviewPage'
 import { CrSetupPage } from './pages/CrSetupPage'
 import { CrPracticePage } from './pages/CrPracticePage'
 import { CrReviewPage } from './pages/CrReviewPage'
+import { CrTestPage } from './pages/CrTestPage'
 import { LandingPage } from './pages/LandingPage'
 import { SignInPage } from './pages/SignInPage'
 import { SignUpPage } from './pages/SignUpPage'
@@ -49,6 +50,7 @@ function App() {
         <Route path="/exam/rc/review/:attemptId" element={<RcReviewPage />} />
         <Route path="/exam/cr/setup" element={<CrSetupPage />} />
         <Route path="/exam/cr/review/:attemptId" element={<CrReviewPage />} />
+        <Route path="/cr-test" element={<CrTestPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/profile/diagnostic" element={<DiagnosticIntakePage />} />
       </Route>
