@@ -110,6 +110,13 @@ export type CrAttempt = {
   totalTimeSeconds: number
   /** Count of isCorrect=true at completion. 0 while in progress. */
   score: number
-  /** Always 5 questions. */
+  /** Always 5 questions for exam sets; configurable (default 10) for drills. */
   questions: CrAttemptQuestion[]
+  /** Tag distinguishing exam-flow timed sets from /test subtype drills.
+   *  Absent (or 'set') for the existing exam attempts so legacy docs read
+   *  back identically. */
+  kind?: 'set' | 'drill'
+  /** Drill-only: the official subtype this drill targeted (e.g.
+   *  'cr_critique'). Used for accuracy aggregation. */
+  drillSubtype?: string
 }

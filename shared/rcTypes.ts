@@ -78,6 +78,38 @@ export type RcQuestionSetResponse = {
 }
 
 /**
+ * Subtype-targeted drill request — sent to /generateRcSubtypeDrill.
+ *
+ * `subtype` is the OFFICIAL RC subtype key (e.g. 'rc_inference',
+ * 'rc_evaluation') from shared/verbalTaxonomy.ts. The handler resolves
+ * the subtype to its generator type(s) (e.g. Evaluation → function+tone)
+ * and produces a multi-passage set in which EVERY question targets that
+ * subtype. Total questions across all passages ≈ `count` (default 10),
+ * with no passage carrying more than 4 same-subtype questions.
+ */
+export type RcSubtypeDrillRequest = {
+  subtype: string
+  difficulty: RcDifficulty
+  count?: number
+  nonce?: string
+}
+
+/** A passage + its same-subtype questions inside a drill response. */
+export type RcSubtypeDrillPassage = {
+  passage: string
+  paragraphs: string[]
+  topic: string
+  questions: RcQuestion[]
+}
+
+/** Drill response — multiple passages, all questions of one subtype. */
+export type RcSubtypeDrillResponse = {
+  subtype: string
+  difficulty: RcDifficulty
+  passages: RcSubtypeDrillPassage[]
+}
+
+/**
  * Per-user attempt document stored at users/{uid}/rcAttempts/{attemptId}.
  *
  * Lifecycle:
@@ -101,8 +133,22 @@ export type RcAttempt = {
     RcQuestion & {
       userAnswerIndex?: number
       timeSeconds?: number
+      /** Drill-only: which passage in `passages[]` this question belongs to.
+       *  Absent for exam single-passage attempts. */
+      passageIndex?: number
     }
   >
   startedAt: unknown
   completedAt?: unknown
+  /** Tag distinguishing exam-flow single-passage attempts from /test
+   *  subtype drills. Absent (or 'set') for the existing exam attempts so
+   *  legacy docs read back identically. */
+  kind?: 'set' | 'drill'
+  /** Drill-only: the official subtype this drill targeted (e.g.
+   *  'rc_inference'). Used for accuracy aggregation. */
+  drillSubtype?: string
+  /** Drill-only: the per-passage stems. The singular `passage`,
+   *  `paragraphs`, `topic` fields above remain for back-compat (they
+   *  mirror passages[0] when this array is present). */
+  passages?: Array<{ passage: string; paragraphs: string[]; topic: string }>
 }

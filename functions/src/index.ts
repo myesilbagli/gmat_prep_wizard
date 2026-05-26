@@ -13,8 +13,11 @@ import { parseJsonFromOutputText } from '../../shared/parseOpenAiJson'
 import { validateGeneratedResult } from '../../shared/wordGeneration'
 import type { RcDifficulty, RcQuestionType } from '../../shared/rcTypes'
 import {
+  ALL_RC_SUBTYPE_KEYS,
+  generatorTypesForOfficialSubtype,
   officialSubtypeForGeneratorType,
   stemsForSubtype,
+  type RcSubtypeKey,
 } from '../../shared/verbalTaxonomy'
 import type { CrQuestionType } from '../../shared/crTypes'
 import type { DiagnosticSection } from '../../shared/diagnosticTypes'
@@ -174,6 +177,11 @@ export const api = onRequest(
 
       if (routeBase === 'generateRcQuestionSet') {
         await handleGenerateRcQuestionSet(req.body as any, decoded.uid, res)
+        return
+      }
+
+      if (routeBase === 'generateRcSubtypeDrill') {
+        await handleGenerateRcSubtypeDrill(req.body as any, decoded.uid, res)
         return
       }
 
@@ -1409,6 +1417,412 @@ async function handleGenerateRcQuestionSet(body: any, _uid: string, res: any) {
     payload.validationStage = last.stage
   }
   res.status(502).json(payload)
+}
+
+// =====================================================================
+// RC — subtype-targeted drill endpoint
+// =====================================================================
+//
+// Distinct from the exam set generator: every question in the drill
+// targets ONE official subtype, spread across ~3 short passages so a
+// learner can pattern-match the same skill repeatedly. Reuses the exam
+// generator's passage prompt + answer-choice spec + explanation rules;
+// the only delta is the per-passage question prompt, which targets a
+// single subtype and pulls the official stems for it.
+//
+// Passage count derives from `count` (default 10): no passage carries
+// more than 4 same-subtype questions, so 10 questions → 3 passages with
+// e.g. [4, 3, 3] questions each. Evaluation distributes across its two
+// generator types ('function' and 'tone'); other subtypes have a single
+// generator type.
+
+const RC_SUBTYPE_DRILL_DEFAULT_COUNT = 10
+const RC_SUBTYPE_DRILL_MIN_COUNT = 3
+const RC_SUBTYPE_DRILL_MAX_COUNT = 20
+const RC_SUBTYPE_DRILL_MAX_PER_PASSAGE = 4
+
+function parseRcDrillSubtype(body: any): RcSubtypeKey {
+  const v = body?.subtype
+  if (typeof v !== 'string') throw new Error('subtype must be a string')
+  if (!(ALL_RC_SUBTYPE_KEYS as readonly string[]).includes(v)) {
+    throw new Error(
+      `subtype must be one of: ${ALL_RC_SUBTYPE_KEYS.join(', ')}`,
+    )
+  }
+  return v as RcSubtypeKey
+}
+
+function parseRcDrillCount(body: any): number {
+  const v = body?.count
+  if (v == null) return RC_SUBTYPE_DRILL_DEFAULT_COUNT
+  if (typeof v !== 'number' || !Number.isInteger(v)) {
+    throw new Error('count must be an integer')
+  }
+  if (v < RC_SUBTYPE_DRILL_MIN_COUNT || v > RC_SUBTYPE_DRILL_MAX_COUNT) {
+    throw new Error(
+      `count must be between ${RC_SUBTYPE_DRILL_MIN_COUNT} and ${RC_SUBTYPE_DRILL_MAX_COUNT}`,
+    )
+  }
+  return v
+}
+
+/**
+ * Split `count` total questions across passages so no passage carries
+ * more than `RC_SUBTYPE_DRILL_MAX_PER_PASSAGE`. Returns the per-passage
+ * question counts (length = number of passages). 10 → [4, 3, 3], 8 →
+ * [4, 4], 12 → [4, 4, 4], 5 → [3, 2]. We aim for 3-4 per passage so
+ * each passage actually exercises the subtype.
+ */
+function splitDrillCountAcrossPassages(count: number): number[] {
+  const max = RC_SUBTYPE_DRILL_MAX_PER_PASSAGE
+  const passageCount = Math.max(1, Math.ceil(count / max))
+  const base = Math.floor(count / passageCount)
+  const remainder = count - base * passageCount
+  const out: number[] = []
+  for (let i = 0; i < passageCount; i += 1) {
+    out.push(base + (i < remainder ? 1 : 0))
+  }
+  return out
+}
+
+/**
+ * Distribute `n` questions across the generator types under one official
+ * subtype. Most subtypes have a single child generator type (so this
+ * returns ['inference', 'inference', ...]). Evaluation has two
+ * ('function' and 'tone'), distributed roughly evenly with the first
+ * type getting the extra when n is odd.
+ */
+function distributeDrillGeneratorTypes(
+  subtype: RcSubtypeKey,
+  n: number,
+): RcQuestionType[] {
+  const childTypes = generatorTypesForOfficialSubtype(subtype) as RcQuestionType[]
+  if (childTypes.length === 0) {
+    throw new Error(`No generator types under subtype ${subtype}`)
+  }
+  if (childTypes.length === 1) {
+    return Array.from({ length: n }, () => childTypes[0])
+  }
+  // Multi-child (today: Evaluation = function + tone). Round-robin so
+  // the model sees a balanced mix per passage.
+  const out: RcQuestionType[] = []
+  for (let i = 0; i < n; i += 1) {
+    out.push(childTypes[i % childTypes.length])
+  }
+  return out
+}
+
+function buildRcSubtypeDrillJsonSchema(expectedCount: number): Record<string, unknown> {
+  return {
+    type: 'object',
+    additionalProperties: false,
+    required: ['questions'],
+    properties: {
+      questions: {
+        type: 'array',
+        minItems: expectedCount,
+        maxItems: expectedCount,
+        items: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['type', 'questionText', 'choices', 'correctIndex', 'explanation'],
+          properties: {
+            type: {
+              type: 'string',
+              enum: ['main_idea', 'inference', 'detail', 'function', 'tone', 'application'],
+            },
+            questionText: { type: 'string' },
+            choices: {
+              type: 'array',
+              minItems: 5,
+              maxItems: 5,
+              items: { type: 'string' },
+            },
+            correctIndex: { type: 'integer', minimum: 0, maximum: 4 },
+            explanation: { type: 'string' },
+          },
+        },
+      },
+    },
+  }
+}
+
+/** Same shape as Stage 2 questions; validation is structural only. */
+function isValidRcDrillQuestionSet(
+  x: any,
+  expectedCount: number,
+  allowedGenTypes: ReadonlyArray<RcQuestionType>,
+): x is { questions: RcQuestionShape[] } {
+  if (!x || typeof x !== 'object') return false
+  if (!Array.isArray(x.questions)) return false
+  if (x.questions.length !== expectedCount) return false
+  const allowed = new Set(allowedGenTypes as readonly string[])
+  for (const q of x.questions) {
+    if (!q || typeof q !== 'object') return false
+    if (!isRcQuestionType(q.type)) return false
+    if (!allowed.has(q.type)) return false
+    if (typeof q.questionText !== 'string' || q.questionText.trim().length === 0) return false
+    if (!Array.isArray(q.choices) || q.choices.length !== 5) return false
+    if (!q.choices.every((c: any) => typeof c === 'string' && c.trim().length > 0)) return false
+    if (
+      typeof q.correctIndex !== 'number' ||
+      !Number.isInteger(q.correctIndex) ||
+      q.correctIndex < 0 ||
+      q.correctIndex > 4
+    ) {
+      return false
+    }
+    if (typeof q.explanation !== 'string' || q.explanation.trim().length === 0) return false
+  }
+  return true
+}
+
+function buildRcSubtypeDrillQuestionPrompt(args: {
+  passage: string
+  topic: string
+  difficulty: RcDifficulty
+  subtype: RcSubtypeKey
+  questionCount: number
+  generatorTypes: ReadonlyArray<RcQuestionType>
+}): string {
+  const { passage, topic, difficulty, subtype, questionCount, generatorTypes } = args
+  const stems = stemsForSubtype(subtype)
+  const stemExamples = stems.length > 0 ? stems.map((s) => `"${s}"`).join(', ') : '(none)'
+  const genTypeList = generatorTypes.join(' | ')
+  const multiChildNote =
+    generatorTypes.length > 1
+      ? `\n- This subtype has multiple sub-skills (${genTypeList}). Distribute the ${questionCount} questions roughly evenly across them while letting the passage's content guide which specific questions are written.`
+      : ''
+  return [
+    'You are a GMAT question writer producing a SUBTYPE-FOCUSED drill — every',
+    'question targets the same official subtype so the learner can pattern-',
+    'match the skill repeatedly. Return JSON only.',
+    '',
+    `DIFFICULTY: ${difficulty}`,
+    `QUESTION COUNT: ${questionCount}`,
+    `TARGET SUBTYPE: ${subtype}`,
+    `ALLOWED generator type values for the "type" field: ${genTypeList}`,
+    '',
+    'PASSAGE:',
+    `"""${escapeRcDoubleQuoted(passage)}"""`,
+    '',
+    `PASSAGE TOPIC (for context only): ${topic}`,
+    '',
+    'HARD RULES (must satisfy or response is rejected):',
+    `- Every question must target the ${subtype} subtype.`,
+    `- Every question\'s "type" field MUST be one of: ${genTypeList}.${multiChildNote}`,
+    '- Do not write a main_idea, detail, function, tone, application, or',
+    '  inference question that does not match the target subtype.',
+    '',
+    'QUESTION TYPE RULES (apply to the allowed generator type(s) only):',
+    RC_QUESTION_TYPE_RULES,
+    '',
+    'STEM PHRASING — official stems for this subtype (style guidance, do not',
+    'copy verbatim; adapt to your passage):',
+    stemExamples,
+    '',
+    'EXCEPT-form variety: where the allowed type permits (detail or',
+    'application), an occasional EXCEPT-form stem is acceptable. Keep the',
+    'same 5-choice, one-correct structure; the correct answer is the choice',
+    'that does NOT match.',
+    '',
+    'ANSWER CHOICE QUALITY:',
+    RC_ANSWER_CHOICE_SPEC,
+    '',
+    'EXPLANATION FORMAT:',
+    RC_EXPLANATION_RULES,
+    '',
+    'PROHIBITIONS:',
+    '- No "all of the above" / "none of the above" choices.',
+    '- No questions that quote the passage and ask "true or false".',
+    '- No questions that ask the reader to evaluate writing style or grammar.',
+    '- correctIndex MUST be an integer 0-4.',
+    '',
+    'OUTPUT FORMAT: Return JSON only, no markdown, no code fences:',
+    '{',
+    '  "questions": [',
+    '    {',
+    `      "type": "${generatorTypes[0]}",`,
+    '      "questionText": "...",',
+    '      "choices": ["...", "...", "...", "...", "..."],',
+    '      "correctIndex": 0,',
+    '      "explanation": "..."',
+    '    }',
+    '  ]',
+    '}',
+  ].join('\n')
+}
+
+async function generateRcDrillPassage(
+  openai: OpenAI,
+  args: { difficulty: RcDifficulty; nonce?: string },
+): Promise<RcPassageResponseShape> {
+  const { difficulty, nonce } = args
+  const model = rcPassageModel()
+  const basePrompt = buildRcPassagePrompt({ difficulty })
+  const nonceTail = nonce
+    ? `\n\nREQUEST_NONCE (vary wording and angle; do not echo in JSON; no semantic load): "${escapeRcDoubleQuoted(nonce)}"`
+    : ''
+
+  async function attempt(extra: string | null): Promise<RcPassageResponseShape | null> {
+    const prompt = `${basePrompt}${nonceTail}${extra ? `\n\n${extra}` : ''}`
+    const completion = await openai.responses.create({
+      model,
+      input: prompt,
+      max_output_tokens: 3500,
+      reasoning: { effort: 'low' },
+      text: {
+        format: {
+          type: 'json_schema',
+          name: 'rc_passage',
+          schema: RC_PASSAGE_JSON_SCHEMA,
+          strict: true,
+        },
+      },
+    })
+    const outputText = completion.output_text?.trim() ?? ''
+    const parsed = parseRcModelJson(outputText)
+    if (parsed == null) return null
+    const vr = validateRcPassageResponseResult(parsed, { difficulty }, outputText)
+    if (!vr.ok) return null
+    return parsed as RcPassageResponseShape
+  }
+
+  const first = await attempt(null)
+  if (first) return first
+  const second = await attempt(
+    'STRICT: Output must conform to the JSON schema. Respect LENGTH: 200-290 words target, hard cap 350 words.',
+  )
+  if (second) return second
+  throw new Error('Failed to generate a passage after 2 attempts.')
+}
+
+async function generateRcDrillQuestionsForPassage(
+  openai: OpenAI,
+  args: {
+    passage: string
+    topic: string
+    difficulty: RcDifficulty
+    subtype: RcSubtypeKey
+    questionCount: number
+    generatorTypes: ReadonlyArray<RcQuestionType>
+    nonce?: string
+  },
+): Promise<RcQuestionShape[]> {
+  const { passage, topic, difficulty, subtype, questionCount, generatorTypes, nonce } = args
+  const model = process.env.OPENAI_MODEL ?? 'gpt-4.1-mini'
+  const schema = buildRcSubtypeDrillJsonSchema(questionCount)
+  const basePrompt = buildRcSubtypeDrillQuestionPrompt({
+    passage,
+    topic,
+    difficulty,
+    subtype,
+    questionCount,
+    generatorTypes,
+  })
+  const nonceTail = nonce
+    ? `\n\nREQUEST_NONCE (vary wording and angle; do not echo in JSON; no semantic load): "${escapeRcDoubleQuoted(nonce)}"`
+    : ''
+
+  async function attempt(extra: string | null): Promise<RcQuestionShape[] | null> {
+    const prompt = `${basePrompt}${nonceTail}${extra ? `\n\n${extra}` : ''}`
+    const completion = await openai.responses.create({
+      model,
+      input: prompt,
+      temperature: 0.4,
+      max_output_tokens: 5500,
+      text: {
+        format: {
+          type: 'json_schema',
+          name: 'rc_subtype_drill_questions',
+          schema,
+          strict: true,
+        },
+      },
+    })
+    const outputText = completion.output_text?.trim() ?? ''
+    const parsed = parseRcModelJson(outputText)
+    if (parsed == null) return null
+    if (!isValidRcDrillQuestionSet(parsed, questionCount, generatorTypes)) return null
+    return (parsed as { questions: RcQuestionShape[] }).questions
+  }
+
+  const first = await attempt(null)
+  if (first) return first
+  const second = await attempt(
+    `STRICT: Return exactly ${questionCount} questions; every "type" must be one of ${generatorTypes.join(', ')}; conform to the JSON schema. Return only the JSON object.`,
+  )
+  if (second) return second
+  const third = await attempt(
+    `FINAL ATTEMPT: Conform to the JSON schema. Exactly ${questionCount} questions with five non-empty choices each. Return only the JSON object.`,
+  )
+  if (third) return third
+  throw new Error('Failed to generate drill questions after 3 attempts.')
+}
+
+async function handleGenerateRcSubtypeDrill(body: any, _uid: string, res: any) {
+  const subtype = parseRcDrillSubtype(body)
+  const difficulty = parseRcDifficulty(body)
+  const count = parseRcDrillCount(body)
+  const reqNonce = parseRcNonce(body)
+
+  const openai = new OpenAI({ apiKey: requireEnv('OPENAI_API_KEY') })
+  const perPassageCounts = splitDrillCountAcrossPassages(count)
+
+  try {
+    // Generate passages in parallel, then questions per passage in parallel.
+    const passages = await Promise.all(
+      perPassageCounts.map((_, i) =>
+        generateRcDrillPassage(openai, {
+          difficulty,
+          nonce: reqNonce ? `${reqNonce}-p${i}` : undefined,
+        }),
+      ),
+    )
+    const passageQuestionLists = await Promise.all(
+      passages.map((p, i) => {
+        const n = perPassageCounts[i]
+        const generatorTypes = distributeDrillGeneratorTypes(subtype, n)
+        // Pass the unique generator types so the schema's allowedList is
+        // tight (Evaluation = [function, tone]; others = single-element).
+        const allowed = Array.from(new Set(generatorTypes)) as RcQuestionType[]
+        return generateRcDrillQuestionsForPassage(openai, {
+          passage: p.passage,
+          topic: p.topic,
+          difficulty,
+          subtype,
+          questionCount: n,
+          generatorTypes: allowed,
+          nonce: reqNonce ? `${reqNonce}-q${i}` : undefined,
+        })
+      }),
+    )
+
+    // Per-passage Fisher-Yates shuffle of correct positions so the set
+    // doesn't all sit at the same index. Reuses the exam generator's
+    // redistribute helper for a consistent feel.
+    for (const questions of passageQuestionLists) {
+      redistributeCorrectPositions(questions)
+    }
+
+    const responsePassages = passages.map((p, i) => ({
+      passage: p.passage,
+      paragraphs: p.paragraphs,
+      topic: p.topic,
+      questions: passageQuestionLists[i],
+    }))
+
+    res.status(200).json({
+      subtype,
+      difficulty,
+      passages: responsePassages,
+    })
+  } catch (e) {
+    res.status(502).json({
+      error: e instanceof Error ? e.message : 'AI could not generate a valid RC drill',
+      code: 'RC_DRILL',
+    })
+  }
 }
 
 // =====================================================================

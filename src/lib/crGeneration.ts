@@ -6,7 +6,11 @@
  * exported there) so the ID token is attached automatically.
  */
 import { postJson } from './rcGeneration'
-import type { CrQuestion, CrQuestionType } from '../../shared/crTypes'
+import { CR_QUESTION_TYPES, type CrQuestion, type CrQuestionType } from '../../shared/crTypes'
+import {
+  generatorTypesForOfficialSubtype,
+  type CrSubtypeKey,
+} from '../../shared/verbalTaxonomy'
 
 function buildNonce(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -114,6 +118,102 @@ export async function generateCrSet(): Promise<CrQuestion[]> {
     const failedTypes = stillMissing.map((i) => types[i])
     const err: CrSetGenerationError = {
       message: `Couldn't generate ${stillMissing.length} of 5 questions (${failedTypes.join(', ')}) after one retry. Try again.`,
+      failedTypes,
+    }
+    throw err
+  }
+
+  return results as CrQuestion[]
+}
+
+// ---------------------------------------------------------------------------
+// CR subtype drill — N questions of one official subtype
+// ---------------------------------------------------------------------------
+
+/**
+ * Distribute `count` questions across the generator types under one
+ * official CR subtype (cr_critique → weaken/strengthen/evaluate, etc.).
+ * For subtypes with a single generator type (Plan, Analysis), every
+ * question is that type. For multi-child subtypes (Construction,
+ * Critique), the distribution round-robins through the child types
+ * after a small jitter so a 10-question drill looks like a realistic
+ * mix rather than [w, s, e, w, s, e, w, s, e, w].
+ */
+export function distributeCrDrillTypes(
+  subtype: CrSubtypeKey,
+  count: number,
+): CrQuestionType[] {
+  const childTypesRaw = generatorTypesForOfficialSubtype(subtype) as CrQuestionType[]
+  if (childTypesRaw.length === 0) {
+    throw new Error(`No CR generator types under subtype ${subtype}`)
+  }
+  const validChild = childTypesRaw.filter((t) =>
+    (CR_QUESTION_TYPES as readonly string[]).includes(t),
+  ) as CrQuestionType[]
+  if (validChild.length === 0) {
+    throw new Error(`Subtype ${subtype} has no valid child generator types`)
+  }
+  if (validChild.length === 1) {
+    return Array.from({ length: count }, () => validChild[0])
+  }
+  // Multi-child: start at a random offset, then round-robin. This gives
+  // every child type roughly even representation without strict cycles.
+  const offset = Math.floor(Math.random() * validChild.length)
+  const out: CrQuestionType[] = []
+  for (let i = 0; i < count; i += 1) {
+    out.push(validChild[(i + offset) % validChild.length])
+  }
+  // Light shuffle inside groups so the order isn't predictable.
+  for (let i = out.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1))
+    const tmp = out[i]
+    out[i] = out[j]
+    out[j] = tmp
+  }
+  return out
+}
+
+/**
+ * Generate `count` CR questions for one official subtype, in parallel,
+ * with a single retry pass for individually-failed questions. Mirrors
+ * the resilience pattern of generateCrSet — partial failures get one
+ * retry, then we throw a structured error rather than returning a
+ * partial drill.
+ */
+export async function generateCrSubtypeDrill(args: {
+  subtype: CrSubtypeKey
+  count: number
+}): Promise<CrQuestion[]> {
+  const { subtype, count } = args
+  const types = distributeCrDrillTypes(subtype, count)
+
+  const first = await Promise.allSettled(types.map((t) => generateCrQuestion(t)))
+  const results: (CrQuestion | null)[] = first.map((r) =>
+    r.status === 'fulfilled' ? r.value : null,
+  )
+  const retryIdx: number[] = []
+  for (let i = 0; i < first.length; i += 1) {
+    if (first[i].status === 'rejected') retryIdx.push(i)
+  }
+
+  if (retryIdx.length > 0) {
+    const retry = await Promise.allSettled(
+      retryIdx.map((i) => generateCrQuestion(types[i])),
+    )
+    for (let k = 0; k < retryIdx.length; k += 1) {
+      const r = retry[k]
+      if (r.status === 'fulfilled') results[retryIdx[k]] = r.value
+    }
+  }
+
+  const stillMissing: number[] = []
+  for (let i = 0; i < results.length; i += 1) {
+    if (results[i] == null) stillMissing.push(i)
+  }
+  if (stillMissing.length > 0) {
+    const failedTypes = stillMissing.map((i) => types[i])
+    const err: CrSetGenerationError = {
+      message: `Couldn't generate ${stillMissing.length} of ${count} drill questions (${failedTypes.join(', ')}). Try again.`,
       failedTypes,
     }
     throw err

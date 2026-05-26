@@ -12,6 +12,9 @@ import {
   collection,
   doc,
   getDoc,
+  getDocs,
+  orderBy,
+  query,
   runTransaction,
   serverTimestamp,
   updateDoc,
@@ -19,8 +22,10 @@ import {
 import { auth, db } from './firebase'
 import type {
   RcAttempt,
+  RcDifficulty,
   RcPassageResponse,
   RcQuestion,
+  RcSubtypeDrillResponse,
 } from '../../shared/rcTypes'
 
 function requireUid(): string {
@@ -58,13 +63,9 @@ export async function createRcAttempt(passage: RcPassageResponse): Promise<strin
   return ref.id
 }
 
-export async function getRcAttempt(attemptId: string): Promise<RcAttempt | null> {
-  const uid = requireUid()
-  const snap = await getDoc(rcAttemptDoc(uid, attemptId))
-  if (!snap.exists()) return null
-  const data = snap.data() as Partial<RcAttempt>
+function readRcAttemptDoc(id: string, data: Partial<RcAttempt>): RcAttempt {
   return {
-    attemptId: snap.id,
+    attemptId: id,
     createdAt: data.createdAt,
     passage: typeof data.passage === 'string' ? data.passage : '',
     paragraphs: Array.isArray(data.paragraphs) ? (data.paragraphs as string[]) : [],
@@ -76,7 +77,36 @@ export async function getRcAttempt(attemptId: string): Promise<RcAttempt | null>
     questions: Array.isArray(data.questions) ? (data.questions as RcAttempt['questions']) : [],
     startedAt: data.startedAt,
     completedAt: data.completedAt,
+    kind: data.kind === 'drill' ? 'drill' : data.kind === 'set' ? 'set' : undefined,
+    drillSubtype: typeof data.drillSubtype === 'string' ? data.drillSubtype : undefined,
+    passages: Array.isArray(data.passages)
+      ? (data.passages as RcAttempt['passages'])
+      : undefined,
   }
+}
+
+export async function getRcAttempt(attemptId: string): Promise<RcAttempt | null> {
+  const uid = requireUid()
+  const snap = await getDoc(rcAttemptDoc(uid, attemptId))
+  if (!snap.exists()) return null
+  return readRcAttemptDoc(snap.id, snap.data() as Partial<RcAttempt>)
+}
+
+/**
+ * List ALL of the current user's RC attempts (exam sets + drills), most
+ * recent first. Used by the /test practice hub to aggregate per-subtype
+ * accuracy. Returns an empty array if the user has none.
+ *
+ * NOTE: Firestore `orderBy('createdAt')` will skip docs that lack the
+ * field — every doc written by createRcAttempt / createRcDrillAttempt
+ * stamps createdAt, so this is safe. If a legacy doc were missing it,
+ * the missing-doc behavior is "filtered out," not "throw."
+ */
+export async function listRcAttempts(): Promise<RcAttempt[]> {
+  const uid = requireUid()
+  const q = query(rcAttemptsCol(uid), orderBy('createdAt', 'desc'))
+  const snap = await getDocs(q)
+  return snap.docs.map((d) => readRcAttemptDoc(d.id, d.data() as Partial<RcAttempt>))
 }
 
 /**
@@ -129,4 +159,54 @@ export async function markRcAttemptComplete(attemptId: string): Promise<void> {
   await updateDoc(rcAttemptDoc(uid, attemptId), {
     completedAt: serverTimestamp(),
   })
+}
+
+/**
+ * Create a drill attempt from a /generateRcSubtypeDrill response.
+ *
+ * Flattens the response's per-passage questions into a single
+ * `questions[]` array, stamping each question with its `passageIndex`
+ * so the runner can render the right passage alongside it. The
+ * singular `passage`/`paragraphs`/`topic` fields mirror passages[0] so
+ * any legacy reader sees a non-empty passage.
+ */
+export async function createRcDrillAttempt(args: {
+  drillSubtype: string
+  difficulty: RcDifficulty
+  drill: RcSubtypeDrillResponse
+}): Promise<string> {
+  const uid = requireUid()
+  const { drillSubtype, difficulty, drill } = args
+  if (drill.passages.length === 0) {
+    throw new Error('Drill response has no passages.')
+  }
+
+  const passages = drill.passages.map((p) => ({
+    passage: p.passage,
+    paragraphs: p.paragraphs,
+    topic: p.topic,
+  }))
+
+  const flat: RcAttempt['questions'] = []
+  drill.passages.forEach((p, pi) => {
+    for (const q of p.questions) {
+      flat.push({ ...(q as RcQuestion), passageIndex: pi })
+    }
+  })
+
+  const first = drill.passages[0]
+  const ref = await addDoc(rcAttemptsCol(uid), {
+    kind: 'drill',
+    drillSubtype,
+    difficulty,
+    passage: first.passage,
+    paragraphs: first.paragraphs,
+    topic: first.topic,
+    passages,
+    questions: flat,
+    createdAt: serverTimestamp(),
+    startedAt: serverTimestamp(),
+  })
+  await updateDoc(ref, { attemptId: ref.id })
+  return ref.id
 }

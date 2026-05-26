@@ -16,6 +16,9 @@ import {
   collection,
   doc,
   getDoc,
+  getDocs,
+  orderBy,
+  query,
   runTransaction,
   serverTimestamp,
   updateDoc,
@@ -70,13 +73,9 @@ export async function createCrAttempt(
   return ref.id
 }
 
-export async function getCrAttempt(attemptId: string): Promise<CrAttempt | null> {
-  const uid = requireUid()
-  const snap = await getDoc(crAttemptDoc(uid, attemptId))
-  if (!snap.exists()) return null
-  const data = snap.data() as Partial<CrAttempt>
+function readCrAttemptDoc(id: string, data: Partial<CrAttempt>): CrAttempt {
   return {
-    attemptId: snap.id,
+    attemptId: id,
     createdAt: data.createdAt,
     completedAt: data.completedAt,
     startedAt: data.startedAt,
@@ -87,7 +86,57 @@ export async function getCrAttempt(attemptId: string): Promise<CrAttempt | null>
     totalTimeSeconds: typeof data.totalTimeSeconds === 'number' ? data.totalTimeSeconds : 0,
     score: typeof data.score === 'number' ? data.score : 0,
     questions: Array.isArray(data.questions) ? (data.questions as CrAttemptQuestion[]) : [],
+    kind: data.kind === 'drill' ? 'drill' : data.kind === 'set' ? 'set' : undefined,
+    drillSubtype: typeof data.drillSubtype === 'string' ? data.drillSubtype : undefined,
   }
+}
+
+export async function getCrAttempt(attemptId: string): Promise<CrAttempt | null> {
+  const uid = requireUid()
+  const snap = await getDoc(crAttemptDoc(uid, attemptId))
+  if (!snap.exists()) return null
+  return readCrAttemptDoc(snap.id, snap.data() as Partial<CrAttempt>)
+}
+
+/**
+ * List ALL of the current user's CR attempts (exam sets + drills), most
+ * recent first. Used by the /test practice hub for per-subtype accuracy.
+ */
+export async function listCrAttempts(): Promise<CrAttempt[]> {
+  const uid = requireUid()
+  const q = query(crAttemptsCol(uid), orderBy('createdAt', 'desc'))
+  const snap = await getDocs(q)
+  return snap.docs.map((d) => readCrAttemptDoc(d.id, d.data() as Partial<CrAttempt>))
+}
+
+/**
+ * Create a CR drill attempt. Same shape as createCrAttempt but tagged
+ * with kind='drill' + drillSubtype, and timerMode forced to 'none' so
+ * the runner skips the countdown.
+ */
+export async function createCrDrillAttempt(args: {
+  drillSubtype: string
+  questions: CrQuestion[]
+}): Promise<string> {
+  const uid = requireUid()
+  const blanked: CrAttemptQuestion[] = args.questions.map((q) => ({
+    ...q,
+    userAnswerIndex: null,
+    isCorrect: false,
+    timeSeconds: 0,
+  }))
+  const ref = await addDoc(crAttemptsCol(uid), {
+    kind: 'drill',
+    drillSubtype: args.drillSubtype,
+    timerMode: 'none',
+    totalTimeSeconds: 0,
+    score: 0,
+    questions: blanked,
+    createdAt: serverTimestamp(),
+    startedAt: serverTimestamp(),
+  })
+  await updateDoc(ref, { attemptId: ref.id })
+  return ref.id
 }
 
 /**

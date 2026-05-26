@@ -18,6 +18,9 @@ import { CrSetupPage } from './pages/CrSetupPage'
 import { CrPracticePage } from './pages/CrPracticePage'
 import { CrReviewPage } from './pages/CrReviewPage'
 import { CrTestPage } from './pages/CrTestPage'
+import { DrillSetupPage } from './pages/DrillSetupPage'
+import { DrillRunnerPage } from './pages/DrillRunnerPage'
+import { DrillReviewPage } from './pages/DrillReviewPage'
 import { LandingPage } from './pages/LandingPage'
 import { SignInPage } from './pages/SignInPage'
 import { SignUpPage } from './pages/SignUpPage'
@@ -45,6 +48,9 @@ function App() {
         <Route path="/learn/stacks" element={<StackBrowsePage />} />
         <Route path="/learn/stacks/:stackId" element={<StackDetailPage />} />
         <Route path="/test" element={<TestPage />} />
+        <Route path="/test/drill/:subtypeKey" element={<DrillSetupPage />} />
+        <Route path="/test/drill/run/:section/:attemptId" element={<DrillRunnerPage />} />
+        <Route path="/test/drill/review/:section/:attemptId" element={<DrillReviewPage />} />
         <Route path="/exam" element={<ExamHubPage />} />
         <Route path="/exam/rc/setup" element={<RcSetupPage />} />
         <Route path="/exam/rc/review/:attemptId" element={<RcReviewPage />} />

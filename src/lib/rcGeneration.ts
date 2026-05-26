@@ -6,10 +6,13 @@
  */
 import { auth } from './firebase'
 import type {
+  RcDifficulty,
   RcPassageRequest,
   RcPassageResponse,
   RcQuestionSetRequest,
   RcQuestionSetResponse,
+  RcSubtypeDrillRequest,
+  RcSubtypeDrillResponse,
 } from '../../shared/rcTypes'
 
 async function getIdToken(): Promise<string> {
@@ -86,4 +89,19 @@ export async function generateRcQuestionSet(
     nonce: args.nonce ?? buildNonce(),
   }
   return postJson<RcQuestionSetResponse>('/generateRcQuestionSet', payload)
+}
+
+export async function generateRcSubtypeDrill(args: {
+  subtype: string
+  difficulty: RcDifficulty
+  count?: number
+  nonce?: string
+}): Promise<RcSubtypeDrillResponse> {
+  const payload: RcSubtypeDrillRequest = {
+    subtype: args.subtype,
+    difficulty: args.difficulty,
+    count: args.count,
+    nonce: args.nonce ?? buildNonce(),
+  }
+  return postJson<RcSubtypeDrillResponse>('/generateRcSubtypeDrill', payload)
 }
