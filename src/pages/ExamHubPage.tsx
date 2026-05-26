@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { PrimaryButton } from '../components/ui/PrimaryButton'
 
 export function ExamHubPage() {
@@ -33,6 +34,23 @@ export function ExamHubPage() {
           to="/exam/cr/setup"
           available
         />
+      </div>
+
+      {/* TEMP: dev harness for CR generator validation. Remove after auditing. */}
+      <div style={{ marginTop: 'var(--space-xl)' }}>
+        <Link
+          to="/cr-test"
+          className="muted text-body-sm"
+          style={{
+            display: 'inline-block',
+            padding: 'var(--space-2xs) var(--space-sm)',
+            border: '1px dashed var(--border)',
+            borderRadius: 'var(--radius-sm)',
+            textDecoration: 'none',
+          }}
+        >
+          CR generator harness (dev)
+        </Link>
       </div>
     </div>
   )
