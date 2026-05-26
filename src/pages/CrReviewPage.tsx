@@ -12,6 +12,7 @@ import {
   PASSAGE_PARAGRAPH_GAP,
   getPassageFontSize,
 } from '../lib/passageTypography'
+import { renderInlineBold } from '../lib/inlineBold'
 
 const QUESTION_TYPE_LABEL: Record<CrQuestionType, string> = {
   assumption: 'Assumption',
@@ -20,6 +21,8 @@ const QUESTION_TYPE_LABEL: Record<CrQuestionType, string> = {
   evaluate: 'Evaluate',
   inference: 'Inference',
   explain: 'Explain',
+  plan: 'Plan',
+  analysis: 'Analysis',
 }
 
 export function CrReviewPage() {
@@ -276,7 +279,7 @@ function ReviewQuestionCard({
             whiteSpace: 'pre-wrap',
           }}
         >
-          {q.argument}
+          {renderInlineBold(q.argument)}
         </p>
       </div>
 

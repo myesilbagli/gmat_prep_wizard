@@ -16,6 +16,7 @@ import {
   PASSAGE_PARAGRAPH_GAP,
   getPassageFontSize,
 } from '../lib/passageTypography'
+import { renderInlineBold } from '../lib/inlineBold'
 
 type Phase = 'loading' | 'reading' | 'submitting' | 'finishing' | 'fatal-error'
 
@@ -281,7 +282,7 @@ export function CrPracticePage() {
               whiteSpace: 'pre-wrap',
             }}
           >
-            {currentQuestion.argument}
+            {renderInlineBold(currentQuestion.argument)}
           </p>
         </div>
 

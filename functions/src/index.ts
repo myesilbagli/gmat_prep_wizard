@@ -1422,6 +1422,8 @@ const CR_QUESTION_TYPES: ReadonlyArray<CrQuestionType> = [
   'evaluate',
   'inference',
   'explain',
+  'plan',
+  'analysis',
 ] as const
 
 function isCrQuestionType(v: unknown): v is CrQuestionType {
@@ -1432,7 +1434,7 @@ function parseCrQuestionType(body: any): CrQuestionType {
   const v = body?.questionType
   if (isCrQuestionType(v)) return v
   throw new Error(
-    "questionType must be one of: 'assumption', 'strengthen', 'weaken', 'evaluate', 'inference', 'explain'",
+    "questionType must be one of: 'assumption', 'strengthen', 'weaken', 'evaluate', 'inference', 'explain', 'plan', 'analysis'",
   )
 }
 
@@ -1452,10 +1454,17 @@ const CR_TYPE_LOGIC_SPECS: Record<CrQuestionType, string> = {
     'The correct answer MUST follow from the stated information with no additional assumptions. Distractors must NOT be guaranteed by the text: they require extra assumptions, overstate, or contradict the stated information.',
   explain:
     'The argument presents a surprising result, paradox, or apparent contradiction. The correct answer reconciles it — provides a reason both sides can be true. Distractors fail to resolve the contradiction (they restate it, deepen it, or are irrelevant).',
+  plan:
+    'A Plan question presents a course of action, strategy, or proposal aimed at a specific goal, and asks what must be true for it to succeed, what would strengthen/undermine it, or which plan best achieves the goal. The argument MUST state a clear goal and a clear proposed action. The correct answer connects the action to the goal (or, for "which plan" questions, is the action that achieves the full stated goal). Distractor archetypes: WRONG GOAL (achieves a different objective than the one stated), HALF THE GOAL (achieves only part of a compound goal — e.g. makes income adequate but not uniform), NECESSARY-NOT-SUFFICIENT (a precondition that doesn\'t by itself secure success), SIDE EFFECT (a real consequence of the plan that\'s irrelevant to whether the goal is met), and PLAN-IRRELEVANT (true but doesn\'t bear on the goal). The goal must be specific enough that distractors can plausibly miss it.',
+  analysis:
+    "An Analysis question asks the test-taker to identify the logical ROLE that one or two bolded portions play in an argument. Construct an argument where each bolded portion maps UNAMBIGUOUSLY to exactly one role from this fixed vocabulary: MAIN CONCLUSION, INTERMEDIATE CONCLUSION (supports the main one), PREMISE/EVIDENCE, OPPOSED POSITION (a view the argument argues against), PLAN/PROPOSAL AT ISSUE, CLAIM THE AUTHOR DOUBTS (used by others to support a conclusion the author qualifies/rejects), or BACKGROUND. The argument's structure must make each bolded role determinable — never ambiguous between premise and conclusion. CRITICAL: be explicit about the author's STANCE toward each bolded portion (endorses / opposes / doubts / neutrally reports), because the hardest distractors flip this. Distractors are ROLE PERMUTATIONS: swap premise↔conclusion, reverse the support direction (first supports second vs second supports first), flip author attitude (defends↔doubts↔rejects), or mislabel the argument's goal. Each distractor must be a coherent, plausible-sounding role pairing that is nonetheless wrong given the argument. Support both ONE-boldface (single role; ~30%) and TWO-boldface (role pair; ~70%) variants. Bolded portions are marked inline in the argument text using **...**.",
 }
 
 /** Canonical question stems per type. The prompt asks the model to use a
- * stem "in this style"; the exact wording can vary slightly. */
+ * stem "in this style"; the exact wording can vary slightly. The two new
+ * subtypes (plan, analysis) pull their stems from the taxonomy's stored
+ * official-guide list so we don't duplicate stem strings — joined with " / "
+ * so the prompt shows the model the family of acceptable phrasings. */
 const CR_TYPE_STEMS: Record<CrQuestionType, string> = {
   assumption: 'Which of the following is an assumption on which the argument depends?',
   strengthen:
@@ -1468,6 +1477,8 @@ const CR_TYPE_STEMS: Record<CrQuestionType, string> = {
     'Which of the following can be properly inferred from the statements above?',
   explain:
     'Which of the following, if true, best explains the apparent discrepancy described above?',
+  plan: stemsForSubtype('cr_plan').join(' / '),
+  analysis: stemsForSubtype('cr_analysis').join(' / '),
 }
 
 const CR_ANSWER_CHOICE_RULES = [
@@ -1518,7 +1529,16 @@ function buildCrQuestionJsonSchema(): Record<string, unknown> {
     properties: {
       questionType: {
         type: 'string',
-        enum: ['assumption', 'strengthen', 'weaken', 'evaluate', 'inference', 'explain'],
+        enum: [
+          'assumption',
+          'strengthen',
+          'weaken',
+          'evaluate',
+          'inference',
+          'explain',
+          'plan',
+          'analysis',
+        ],
       },
       argument: { type: 'string' },
       questionStem: { type: 'string' },
@@ -1570,11 +1590,37 @@ function validateCrQuestionResponseResult(
   if (!trimmed) return { ok: false, stage: 'cr_empty_output' }
   if (parsed == null || typeof parsed !== 'object') return { ok: false, stage: 'cr_not_object' }
   if (!isValidCrQuestionResponse(parsed)) return { ok: false, stage: 'cr_invalid_shape' }
+  // For analysis: structural check only — argument must contain 1 or 2
+  // **...** pairs. We do NOT validate that the choices semantically map to
+  // the correct roles; that's the user's job. Structural just catches the
+  // case where the model forgot to emit the markers at all.
+  if (parsed.questionType === 'analysis') {
+    const matches = parsed.argument.match(/\*\*[^*]+?\*\*/g) ?? []
+    if (matches.length < 1 || matches.length > 2) {
+      return { ok: false, stage: 'cr_analysis_bold_count' }
+    }
+  }
   return { ok: true }
 }
 
 function buildCrPrompt(args: { questionType: CrQuestionType }): string {
   const { questionType } = args
+  const analysisBoldBlock =
+    questionType === 'analysis'
+      ? [
+          'BOLDFACE MARKERS (analysis type only):',
+          '- Bold one or two portions of the argument inline using Markdown-style **...**',
+          '  around each bolded portion (e.g. "The mayor argues that **the new tax will',
+          '  reduce traffic**, but ..."). The ** markers must live inside the "argument"',
+          '  string in the JSON output — do not invent a separate field.',
+          '- ~30% of analysis questions should use ONE boldface portion (a single role).',
+          '- ~70% should use TWO boldface portions (a role pair).',
+          '- Each bolded portion must be a contiguous span of the argument text.',
+          '- The choices must describe the role(s) of the bolded portion(s) in the order',
+          '  they appear (first ... second ... for two-boldface variants).',
+          '',
+        ].join('\n')
+      : ''
   return [
     'You are a GMAT verbal expert writing a Critical Reasoning question. Return JSON only.',
     '',
@@ -1595,6 +1641,7 @@ function buildCrPrompt(args: { questionType: CrQuestionType }): string {
     `QUESTION STEM: use a stem in this style: "${CR_TYPE_STEMS[questionType]}". Phrasing may`,
     'vary slightly to fit the argument, but the role of the stem must match the type above.',
     '',
+    analysisBoldBlock,
     'CONSTRUCTION ORDER (do not skip):',
     "1. First, identify the argument's core logical gap — the unstated link between the",
     '   premises and the conclusion.',

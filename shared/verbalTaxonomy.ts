@@ -17,11 +17,10 @@
  * parsing, or any runtime contract — consumers can opt in to using these
  * mappings; existing consumers are unaffected.
  *
- * Two known coverage gaps are represented explicitly:
- *   - cr_analysis (no generator types under it)
- *   - cr_plan     (no generator types under it)
- * The empty `generatorTypes` array on each makes the gap queryable via
- * UNSERVED_SUBTYPES below.
+ * Every official CR subtype is now served: cr_analysis maps to the
+ * 'analysis' generator type and cr_plan maps to 'plan'. UNSERVED_SUBTYPES
+ * stays as the queryable list of coverage gaps; it should currently be
+ * empty for CR (and empty overall, since every RC subtype is also served).
  *
  * Naming convention:
  *   - Internal keys:  namespaced snake_case (rc_main_idea, cr_weaken-…)
@@ -157,7 +156,7 @@ export const CR_SUBTYPES: Record<CrSubtypeKey, VerbalSubtypeDef> = {
     key: 'cr_analysis',
     section: 'cr',
     label: 'Analysis',
-    generatorTypes: [], // Known coverage gap — see UNSERVED_SUBTYPES.
+    generatorTypes: ['analysis'],
     diagnosticOperation: null,
     stems: [
       'the two portions in boldface play which of the following roles',
@@ -196,7 +195,7 @@ export const CR_SUBTYPES: Record<CrSubtypeKey, VerbalSubtypeDef> = {
     key: 'cr_plan',
     section: 'cr',
     label: 'Plan',
-    generatorTypes: [], // Known coverage gap — see UNSERVED_SUBTYPES.
+    generatorTypes: ['plan'],
     diagnosticOperation: null,
     stems: [
       'what must be true for a plan to succeed',
@@ -229,8 +228,8 @@ export const ALL_VERBAL_SUBTYPE_KEYS: ReadonlyArray<VerbalSubtypeKey> = [
 ]
 
 /** Subtypes with NO generator types nested under them — known coverage
- *  gaps. Should currently equal ['cr_analysis', 'cr_plan']. Computed once
- *  at module load. */
+ *  gaps. Currently empty: every official subtype has at least one
+ *  generator type. Computed once at module load. */
 export const UNSERVED_SUBTYPES: ReadonlyArray<VerbalSubtypeKey> =
   ALL_VERBAL_SUBTYPE_KEYS.filter(
     (k) => ALL_VERBAL_SUBTYPES[k].generatorTypes.length === 0,
@@ -274,8 +273,8 @@ export function officialSubtypeForGeneratorType(
 }
 
 /** Reverse lookup: given an official subtype key, return the generator
- *  enum values that fall under it. Returns an empty array for
- *  known-unserved subtypes (cr_analysis, cr_plan). */
+ *  enum values that fall under it. Returns an empty array for any
+ *  currently-unserved subtype (see UNSERVED_SUBTYPES). */
 export function generatorTypesForOfficialSubtype(
   subtypeKey: VerbalSubtypeKey,
 ): ReadonlyArray<string> {

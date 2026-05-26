@@ -24,6 +24,8 @@ export type CrQuestionType =
   | 'evaluate'
   | 'inference'
   | 'explain'
+  | 'plan'
+  | 'analysis'
 
 export type CrQuestion = {
   questionType: CrQuestionType

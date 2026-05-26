@@ -35,6 +35,11 @@ export async function generateCrQuestion(
  *     ~20% {inference, explain}, ~5% evaluate
  *
  * Then Fisher–Yates shuffle so the sequence isn't predictable.
+ *
+ * NOTE: 'plan' and 'analysis' are generatable individually via
+ * /generateCrQuestion but are intentionally NOT in this set distribution
+ * yet. The learning-curve engine can request them directly; weaving them
+ * into the default 5-question mix is a later decision.
  */
 export function buildCrSetTypes(): CrQuestionType[] {
   const ws = (): CrQuestionType => (Math.random() < 0.5 ? 'weaken' : 'strengthen')
